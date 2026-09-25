@@ -51,18 +51,18 @@ React gère les contrôles et textes accessibles. PixiJS dessine le plateau et s
 
 ## Modèle de données
 
-| Objet | Données principales |
-| --- | --- |
-| Configuration | Version de schéma, liste ordonnée de cases, groupes, coûts, loyers, cartes Chance, options de règles et délais |
-| Case | Identifiant, position, type, nom, côté, groupe éventuel, prix, coûts de construction, loyers par niveau, illustration originale |
-| Joueur | Identifiant stable de siège, nom, pion, équipe éventuelle, cash, position, tours de plateau, état d'île, cartes conservées, élimination |
-| Propriété | Identifiant de case, propriétaire, niveau de construction, investissement valorisable, festival, nombre de championnats |
-| Partie | Version, configuration identifiée par hash, joueurs, propriétés, index de tour, phase, doubles consécutifs, derniers dés, dette, échéances, vainqueurs |
-| Dette | Débiteur, créancier ou banque, montant, raison et reprise de la résolution après paiement |
-| Victoire | Équipe ou joueur(s), condition déclenchée, classement final et valeurs du patrimoine |
-| Événement | Numéro d'action, type, acteurs et données d'affichage ; aucun texte reçu d'un pair n'est interprété comme du HTML |
-| Salon | Identifiant, version de protocole, hôte, époque d'hôte, ordre d'arrivée validé, sièges, pairs connectés et état prêt |
-| Journal réseau | Numéro de séquence, époque, action validée, certificat d'aléa éventuel, hash précédent et hash suivant |
+| Objet          | Données principales                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Configuration  | Version de schéma, liste ordonnée de cases, groupes, coûts, loyers, cartes Chance, options de règles et délais                                         |
+| Case           | Identifiant, position, type, nom, côté, groupe éventuel, prix, coûts de construction, loyers par niveau, illustration originale                        |
+| Joueur         | Identifiant stable de siège, nom, pion, équipe éventuelle, cash, position, tours de plateau, état d'île, cartes conservées, élimination                |
+| Propriété      | Identifiant de case, propriétaire, niveau de construction, investissement valorisable, festival, nombre de championnats                                |
+| Partie         | Version, configuration identifiée par hash, joueurs, propriétés, index de tour, phase, doubles consécutifs, derniers dés, dette, échéances, vainqueurs |
+| Dette          | Débiteur, créancier ou banque, montant, raison et reprise de la résolution après paiement                                                              |
+| Victoire       | Équipe ou joueur(s), condition déclenchée, classement final et valeurs du patrimoine                                                                   |
+| Événement      | Numéro d'action, type, acteurs et données d'affichage ; aucun texte reçu d'un pair n'est interprété comme du HTML                                      |
+| Salon          | Identifiant, version de protocole, hôte, époque d'hôte, ordre d'arrivée validé, sièges, pairs connectés et état prêt                                   |
+| Journal réseau | Numéro de séquence, époque, action validée, certificat d'aléa éventuel, hash précédent et hash suivant                                                 |
 
 La présence réseau est séparée de l'élimination économique. Les identifiants WebRTC peuvent changer lors d'une reconnexion ; une preuve de reprise de siège sera nécessaire. Un lien de salon seul ne donne pas le droit de prendre le siège de quelqu'un d'autre.
 
@@ -98,13 +98,13 @@ Aucun serveur propre, base de données, compte ou secret embarqué. Le champ TUR
 
 ## Livraison et tickets à créer
 
-| Phase / branche | Tickets proposés | Acceptation avant fusion |
-| --- | --- | --- |
-| 0 / `phase-0-cadrage` | Cadrage et règles ambiguës ; direction artistique ; initialisation et CI | Dépôt public créé, documents cohérents poussés, PR créée, README honnête sur l'état |
-| 1 / `phase-1-engine` | Plateau/configuration ; économie et tours ; victoires/équipes ; bots ; tests de simulation | Partie CLI complète, tests de toutes les victoires, 1 000 parties terminées sans invariant violé, couverture mesurée |
-| 2 / `phase-2-local-client` | Scène et illustrations ; parcours solo/hot-seat ; contrôles accessibles ; bilan et reprise locale | Partie de bout en bout sur viewport desktop/mobile, actions/tutoriel compris, pas de débordement bloquant |
-| 3 / `phase-3-network` | Adaptateur Trystero ; salon ; autorité et resynchronisation ; commit-reveal ; migration/reconnexion | Tests mémoire avec défauts réseau, essai WebRTC réel, test extérieur 4 réseaux dont 4G identifié séparément |
-| 4 / `phase-4-release` | Sons/musique ; inventaire d'assets et crédits ; tutoriel ; Pages ; recette finale | URL servie, parcours fonctionnel, CI verte, limites publiées, aucun placeholder, poids des assets mesuré |
+| Phase / branche            | Tickets proposés                                                                                    | Acceptation avant fusion                                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 0 / `phase-0-cadrage`      | Cadrage et règles ambiguës ; direction artistique ; initialisation et CI                            | Dépôt public créé, documents cohérents poussés, PR créée, README honnête sur l'état                                  |
+| 1 / `phase-1-engine`       | Plateau/configuration ; économie et tours ; victoires/équipes ; bots ; tests de simulation          | Partie CLI complète, tests de toutes les victoires, 1 000 parties terminées sans invariant violé, couverture mesurée |
+| 2 / `phase-2-local-client` | Scène et illustrations ; parcours solo/hot-seat ; contrôles accessibles ; bilan et reprise locale   | Partie de bout en bout sur viewport desktop/mobile, actions/tutoriel compris, pas de débordement bloquant            |
+| 3 / `phase-3-network`      | Adaptateur Trystero ; salon ; autorité et resynchronisation ; commit-reveal ; migration/reconnexion | Tests mémoire avec défauts réseau, essai WebRTC réel, test extérieur 4 réseaux dont 4G identifié séparément          |
+| 4 / `phase-4-release`      | Sons/musique ; inventaire d'assets et crédits ; tutoriel ; Pages ; recette finale                   | URL servie, parcours fonctionnel, CI verte, limites publiées, aucun placeholder, poids des assets mesuré             |
 
 Les tickets utilisent `engine`, `ui`, `network`, `assets` et `bug`. Les questions de règles deviennent des décisions documentées, avec leur justification, puisque l'utilisateur a prévalidé l'autonomie. Les tickets et PR ne seront pas annoncés comme créés avant d'exister réellement.
 
@@ -128,4 +128,3 @@ La couverture réelle sera publiée après exécution, sans exclusion artificiel
 - GitHub Pages : https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site — hébergement statique.
 
 Les versions exactes seront choisies au démarrage de l'implémentation et figées dans le lockfile. Aucun composant n'a encore été installé pour ce projet.
-

@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "initialCash": 1500000,
+  "startBonus": 300000,
+  "durationMs": 1200000,
+  "actionTimeoutMs": 30000,
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "groupsToWin": 3,
+  "diceCount": 2,
+  "diceSides": 6,
+  "doublesToIsland": 3,
+  "maxIslandTurns": 3,
+  "islandFee": 200000,
+  "championshipFee": 50000,
+  "travelFee": 50000,
+  "festivalCount": 3,
+  "festivalMultiplier": 2,
+  "initialMaxLevel": 2,
+  "hotelLevel": 4,
+  "buyoutMultiplier": 2,
+  "resaleRate": 0.5,
+  "taxRate": 0.1,
+  "resortRents": [50000, 100000, 200000, 400000],
+  "maxResolutionDepth": 16,
+  "simulationActionLimit": 5000,
+  "botReserve": 250000,
+  "board": [
+    {
+      "id": 0,
+      "name": "Départ",
+      "type": "start"
+    },
+    {
+      "id": 1,
+      "name": "Clairport",
+      "type": "city",
+      "group": "g1",
+      "color": "#85C7A5",
+      "line": 0,
+      "price": 100000,
+      "rents": [10000, 20000, 40000, 70000, 120000],
+      "buildCosts": [0, 50000, 50000, 50000, 50000]
+    },
+    {
+      "id": 2,
+      "name": "Briseciel",
+      "type": "city",
+      "group": "g1",
+      "color": "#85C7A5",
+      "line": 0,
+      "price": 120000,
+      "rents": [12000, 24000, 48000, 84000, 144000],
+      "buildCosts": [0, 60000, 60000, 60000, 60000]
+    },
+    {
+      "id": 3,
+      "name": "Plage des Voiles",
+      "type": "resort",
+      "price": 200000
+    },
+    {
+      "id": 4,
+      "name": "Vallon d'Aube",
+      "type": "city",
+      "group": "g2",
+      "color": "#39B9AF",
+      "line": 0,
+      "price": 140000,
+      "rents": [14000, 28000, 56000, 98000, 168000],
+      "buildCosts": [0, 70000, 70000, 70000, 70000]
+    },
+    {
+      "id": 5,
+      "name": "Ormebrise",
+      "type": "city",
+      "group": "g2",
+      "color": "#39B9AF",
+      "line": 0,
+      "price": 160000,
+      "rents": [16000, 32000, 64000, 112000, 192000],
+      "buildCosts": [0, 80000, 80000, 80000, 80000]
+    },
+    {
+      "id": 6,
+      "name": "Préclair",
+      "type": "city",
+      "group": "g2",
+      "color": "#39B9AF",
+      "line": 0,
+      "price": 180000,
+      "rents": [18000, 36000, 72000, 126000, 216000],
+      "buildCosts": [0, 90000, 90000, 90000, 90000]
+    },
+    {
+      "id": 7,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 8,
+      "name": "Île perdue",
+      "type": "island"
+    },
+    {
+      "id": 9,
+      "name": "Hautelune",
+      "type": "city",
+      "group": "g3",
+      "color": "#75BDEA",
+      "line": 1,
+      "price": 200000,
+      "rents": [20000, 40000, 80000, 140000, 240000],
+      "buildCosts": [0, 100000, 100000, 100000, 100000]
+    },
+    {
+      "id": 10,
+      "name": "Bellefrange",
+      "type": "city",
+      "group": "g3",
+      "color": "#75BDEA",
+      "line": 1,
+      "price": 220000,
+      "rents": [22000, 44000, 88000, 154000, 264000],
+      "buildCosts": [0, 110000, 110000, 110000, 110000]
+    },
+    {
+      "id": 11,
+      "name": "Baie des Perles",
+      "type": "resort",
+      "price": 200000
+    },
+    {
+      "id": 12,
+      "name": "Solegrève",
+      "type": "city",
+      "group": "g4",
+      "color": "#3276BF",
+      "line": 1,
+      "price": 240000,
+      "rents": [24000, 48000, 96000, 168000, 288000],
+      "buildCosts": [0, 120000, 120000, 120000, 120000]
+    },
+    {
+      "id": 13,
+      "name": "Coralune",
+      "type": "city",
+      "group": "g4",
+      "color": "#3276BF",
+      "line": 1,
+      "price": 260000,
+      "rents": [26000, 52000, 104000, 182000, 312000],
+      "buildCosts": [0, 130000, 130000, 130000, 130000]
+    },
+    {
+      "id": 14,
+      "name": "Port Azur",
+      "type": "city",
+      "group": "g4",
+      "color": "#3276BF",
+      "line": 1,
+      "price": 280000,
+      "rents": [28000, 56000, 112000, 196000, 336000],
+      "buildCosts": [0, 140000, 140000, 140000, 140000]
+    },
+    {
+      "id": 15,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 16,
+      "name": "Championnat du monde",
+      "type": "championship"
+    },
+    {
+      "id": 17,
+      "name": "Rochevermeil",
+      "type": "city",
+      "group": "g5",
+      "color": "#EBCF66",
+      "line": 2,
+      "price": 300000,
+      "rents": [30000, 60000, 120000, 210000, 360000],
+      "buildCosts": [0, 150000, 150000, 150000, 150000]
+    },
+    {
+      "id": 18,
+      "name": "Citréa",
+      "type": "city",
+      "group": "g5",
+      "color": "#EBCF66",
+      "line": 2,
+      "price": 320000,
+      "rents": [32000, 64000, 128000, 224000, 384000],
+      "buildCosts": [0, 160000, 160000, 160000, 160000]
+    },
+    {
+      "id": 19,
+      "name": "Lagon des Ailes",
+      "type": "resort",
+      "price": 200000
+    },
+    {
+      "id": 20,
+      "name": "Mont-Safran",
+      "type": "city",
+      "group": "g6",
+      "color": "#EBA85C",
+      "line": 2,
+      "price": 340000,
+      "rents": [34000, 68000, 136000, 238000, 408000],
+      "buildCosts": [0, 170000, 170000, 170000, 170000]
+    },
+    {
+      "id": 21,
+      "name": "Valdoria",
+      "type": "city",
+      "group": "g6",
+      "color": "#EBA85C",
+      "line": 2,
+      "price": 360000,
+      "rents": [36000, 72000, 144000, 252000, 432000],
+      "buildCosts": [0, 180000, 180000, 180000, 180000]
+    },
+    {
+      "id": 22,
+      "name": "Belorizon",
+      "type": "city",
+      "group": "g6",
+      "color": "#EBA85C",
+      "line": 2,
+      "price": 380000,
+      "rents": [38000, 76000, 152000, 266000, 456000],
+      "buildCosts": [0, 190000, 190000, 190000, 190000]
+    },
+    {
+      "id": 23,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 24,
+      "name": "Tour du monde",
+      "type": "travel"
+    },
+    {
+      "id": 25,
+      "name": "Nacreville",
+      "type": "city",
+      "group": "g7",
+      "color": "#E37D78",
+      "line": 3,
+      "price": 400000,
+      "rents": [40000, 80000, 160000, 280000, 480000],
+      "buildCosts": [0, 200000, 200000, 200000, 200000]
+    },
+    {
+      "id": 26,
+      "name": "Lysambre",
+      "type": "city",
+      "group": "g7",
+      "color": "#E37D78",
+      "line": 3,
+      "price": 420000,
+      "rents": [42000, 84000, 168000, 294000, 504000],
+      "buildCosts": [0, 210000, 210000, 210000, 210000]
+    },
+    {
+      "id": 27,
+      "name": "Côte des Brumes",
+      "type": "resort",
+      "price": 200000
+    },
+    {
+      "id": 28,
+      "name": "Grandétoile",
+      "type": "city",
+      "group": "g8",
+      "color": "#A997D2",
+      "line": 3,
+      "price": 440000,
+      "rents": [44000, 88000, 176000, 308000, 528000],
+      "buildCosts": [0, 220000, 220000, 220000, 220000]
+    },
+    {
+      "id": 29,
+      "name": "Opaline",
+      "type": "city",
+      "group": "g8",
+      "color": "#A997D2",
+      "line": 3,
+      "price": 460000,
+      "rents": [46000, 92000, 184000, 322000, 552000],
+      "buildCosts": [0, 230000, 230000, 230000, 230000]
+    },
+    {
+      "id": 30,
+      "name": "Azurielle",
+      "type": "city",
+      "group": "g8",
+      "color": "#A997D2",
+      "line": 3,
+      "price": 480000,
+      "rents": [48000, 96000, 192000, 336000, 576000],
+      "buildCosts": [0, 240000, 240000, 240000, 240000]
+    },
+    {
+      "id": 31,
+      "name": "Contribution locale",
+      "type": "tax"
+    }
+  ],
+  "cards": [
+    {
+      "id": "chance-01",
+      "title": "Prime de quartier",
+      "description": "Recevez 200 000.",
+      "effect": "cash",
+      "amount": 200000
+    },
+    {
+      "id": "chance-02",
+      "title": "Marché du dimanche",
+      "description": "Recevez 100 000.",
+      "effect": "cash",
+      "amount": 100000
+    },
+    {
+      "id": "chance-03",
+      "title": "Belle saison",
+      "description": "Recevez 150 000.",
+      "effect": "cash",
+      "amount": 150000
+    },
+    {
+      "id": "chance-04",
+      "title": "Réparation urgente",
+      "description": "Payez 100 000.",
+      "effect": "cash",
+      "amount": -100000
+    },
+    {
+      "id": "chance-05",
+      "title": "Assurance annuelle",
+      "description": "Payez 150 000.",
+      "effect": "cash",
+      "amount": -150000
+    },
+    {
+      "id": "chance-06",
+      "title": "Travaux de voirie",
+      "description": "Payez 200 000.",
+      "effect": "cash",
+      "amount": -200000
+    },
+    {
+      "id": "chance-07",
+      "title": "Retour en fanfare",
+      "description": "Avancez jusqu'au Départ et recevez sa prime.",
+      "effect": "move_to",
+      "target": 0,
+      "salary": true
+    },
+    {
+      "id": "chance-08",
+      "title": "Courant contraire",
+      "description": "Rejoignez directement l'Île perdue sans prime.",
+      "effect": "move_to",
+      "target": 8,
+      "salary": false
+    },
+    {
+      "id": "chance-09",
+      "title": "Vent favorable",
+      "description": "Avancez de trois cases et résolvez l'arrivée.",
+      "effect": "move_by",
+      "steps": 3,
+      "salary": true
+    },
+    {
+      "id": "chance-10",
+      "title": "Demi-tour",
+      "description": "Reculez de trois cases, sans prime Départ.",
+      "effect": "move_by",
+      "steps": -3,
+      "salary": false
+    },
+    {
+      "id": "chance-11",
+      "title": "Invitation sportive",
+      "description": "Avancez jusqu'au Championnat du monde.",
+      "effect": "move_to",
+      "target": 16,
+      "salary": true
+    },
+    {
+      "id": "chance-12",
+      "title": "Billet d'horizon",
+      "description": "Avancez jusqu'au Tour du monde.",
+      "effect": "move_to",
+      "target": 24,
+      "salary": true
+    },
+    {
+      "id": "chance-13",
+      "title": "Retour au continent",
+      "description": "Conservez cette carte pour quitter l'île gratuitement.",
+      "effect": "escape"
+    },
+    {
+      "id": "chance-14",
+      "title": "Chantier contrarié",
+      "description": "Une maison adverse est retirée. Les hôtels sont protégés.",
+      "effect": "downgrade"
+    }
+  ],
+  "network": {
+    "hostTimeoutMs": 15000,
+    "commitTimeoutMs": 8000,
+    "revealTimeoutMs": 8000,
+    "reconnectTtlMs": 86400000,
+    "maxRandomRetries": 3
+  }
+}
