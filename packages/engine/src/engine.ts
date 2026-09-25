@@ -82,6 +82,7 @@ function validateConfig(config: GameConfig): void {
     'hotelLevel',
     'buyoutMultiplier',
     'maxResolutionDepth',
+    'groupsToWin',
   ] as const;
   if (positive.some((key) => !Number.isSafeInteger(config[key]) || config[key] <= 0))
     throw new Error('Invalid positive integer configuration.');
@@ -603,7 +604,7 @@ function checkVictory(state: GameState, events: GameEvent[]): void {
       reasons.push('line');
     if (
       groups.filter((group) => cities.filter((tile) => tile.group === group).every(owns)).length >=
-      3
+      state.config.groupsToWin
     )
       reasons.push('triple_monopoly');
     if (resorts.length > 0 && resorts.every(owns)) reasons.push('resort_monopoly');
@@ -799,7 +800,7 @@ export function reduceGame(
 ): GameResult {
   if (!action || typeof action !== 'object' || state.phase === 'finished' || state.winner)
     return { state, events: [], error: 'Game is finished or action is invalid.' };
-  let valid = false;
+  let valid: boolean;
   if (action.type === 'tick')
     valid = Number.isSafeInteger(action.elapsedMs) && action.elapsedMs >= 0;
   else if (action.type === 'set_control')
@@ -818,7 +819,19 @@ export function reduceGame(
         (!('tile' in candidate) || ('tile' in action && candidate.tile === action.tile)),
     );
   if (!valid) return { state, events: [], error: 'Action is not legal in the current phase.' };
-  const next = clone(state);
+  // Configuration is immutable during a game. Copy only mutable game data per action.
+  const next: GameState = {
+    ...state,
+    players: state.players.map((player) => ({ ...player, escapeCards: [...player.escapeCards] })),
+    properties: Object.fromEntries(
+      Object.entries(state.properties).map(([id, property]) => [id, { ...property }]),
+    ),
+    festivals: [...state.festivals],
+    deck: [...state.deck],
+    discard: [...state.discard],
+    dice: [...state.dice],
+    debt: state.debt ? { ...state.debt } : null,
+  };
   const events: GameEvent[] = [];
   next.seq += 1;
   if (action.type === 'tick') {

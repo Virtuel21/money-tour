@@ -32,6 +32,7 @@ export interface GameConfig {
   actionTimeoutMs: number;
   minPlayers: number;
   maxPlayers: number;
+  groupsToWin: number;
   diceCount: number;
   diceSides: number;
   doublesToIsland: number;

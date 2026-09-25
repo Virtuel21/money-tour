@@ -17,10 +17,18 @@ export function createRng(seed: string | number = 1): Rng {
 }
 
 export function randomInt(rng: Rng, count: number): number {
-  const value = rng();
-  if (!Number.isFinite(value) || value < 0 || value >= 1)
-    throw new Error('RNG must return a finite value in [0, 1).');
-  if (!Number.isSafeInteger(count) || count < 1)
+  const range = 2 ** 32;
+  if (!Number.isSafeInteger(count) || count < 1 || count > range)
     throw new Error('Random range must be a positive integer.');
-  return Math.floor(value * count);
+  const bucket = Math.floor(range / count);
+  const limit = bucket * count;
+  // Reject the incomplete top bucket; a broken injected RNG cannot hang a game.
+  for (let attempt = 0; attempt < 256; attempt += 1) {
+    const value = rng();
+    if (!Number.isFinite(value) || value < 0 || value >= 1)
+      throw new Error('RNG must return a finite value in [0, 1).');
+    const sample = Math.floor(value * range);
+    if (sample < limit) return Math.floor(sample / bucket);
+  }
+  throw new Error('RNG repeatedly returned rejected samples.');
 }

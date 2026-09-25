@@ -6,6 +6,7 @@
   "actionTimeoutMs": 30000,
   "minPlayers": 2,
   "maxPlayers": 4,
+  "groupsToWin": 3,
   "diceCount": 2,
   "diceSides": 6,
   "doublesToIsland": 3,
