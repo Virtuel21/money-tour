@@ -10,15 +10,15 @@ La direction n'emprunte ni personnages, ni interface, ni composition d'écran au
 
 ## Palette principale
 
-| Nom | Valeur | Usage |
-| --- | --- | --- |
-| Encre marine | `#142D3D` | Textes, contours, fond du menu |
-| Papier crème | `#FFF6DF` | Panneaux et faces des cases |
-| Bleu lagon | `#2BA8BC` | Eau, navigation, joueur 1 |
-| Corail | `#E8725B` | Actions prioritaires, joueur 2 |
-| Miel | `#E6B94A` | Pièces, festivals, joueur 3 |
-| Sauge | `#70A88B` | Jardins, succès, joueur 4 |
-| Lavande | `#9683C5` | Chance et effets spéciaux |
+| Nom          | Valeur    | Usage                           |
+| ------------ | --------- | ------------------------------- |
+| Encre marine | `#142D3D` | Textes, contours, fond du menu  |
+| Papier crème | `#FFF6DF` | Panneaux et faces des cases     |
+| Bleu lagon   | `#2BA8BC` | Eau, navigation, joueur 1       |
+| Corail       | `#E8725B` | Actions prioritaires, joueur 2  |
+| Miel         | `#E6B94A` | Pièces, festivals, joueur 3     |
+| Sauge        | `#70A88B` | Jardins, succès, joueur 4       |
+| Lavande      | `#9683C5` | Chance et effets spéciaux       |
 | Bleu ardoise | `#637E94` | Éléments secondaires et groupes |
 
 Les groupes de villes emploient les huit couleurs avec un motif et un symbole distinctif. Les propriétaires sont toujours identifiés aussi par leur pion et leur nom. Une couleur seule ne signale jamais une action, une équipe ou un état critique. Les contrastes des textes et contrôles doivent être mesurés lors de la réalisation ; la présence d'une couleur dans cette palette n'implique pas sa conformité sur chaque fond.
@@ -39,25 +39,25 @@ Les déplacements suivent les cases, les dés roulent brièvement, un achat soul
 
 ## Inventaire à produire
 
-| Asset / futur emplacement | Quantité | Méthode | Statut |
-| --- | --- | --- | --- |
-| Logo `apps/web/public/logo.svg` | 1 | Lettrage système et emblème voilier originaux en SVG | À créer |
-| Illustrations des villes `src/board/illustrations.ts` | 20 | Petites façades originales avec détails distinctifs en PixiJS | À créer |
-| Illustrations des stations | 4 | Plage, port, lagune et crique originaux | À créer |
-| Illustrations des coins | 4 | Boussole, île, coupe et avion en papier | À créer |
-| Illustrations Chance et Taxe | 4 cases | 2 motifs originaux, déclinaisons Chance | À créer |
-| Pions et avatars joueurs/bots | 4 silhouettes, variantes bot | Formes vectorielles originales | À créer |
-| Dés animés | 2 dés, 6 faces chacun | Géométrie et points générés | À créer |
-| Constructions | 5 niveaux | Formes PixiJS originales | À créer |
-| Marqueurs festival/championnat | 2 familles | Fanions et coupe vectoriels | À créer |
-| Cartes Chance | 14 | Fond papier commun et pictogrammes originaux selon effet | À créer |
-| Icônes HUD | Argent, temps, réglages, son, équipe, lien, retour | SVG originaux cohérents | À créer |
-| Menus, salon et fin | 3 scènes | CSS, illustrations originales et mêmes composants | À créer |
-| Tutoriel et Crédits | 2 vues | Mise en page native accessible | À créer |
-| Favicon `public/favicon.svg` | 1 | Emblème simplifié | À créer |
-| Partage `public/social-card.png` | 1 | Composition originale 1200 × 630, export PNG compatible partage | À créer |
-| Effets `src/audio/synth.ts` | 8 | Web Audio : dés, déplacement, achat, loyer, construction, carte, victoire, faillite | À créer |
-| Musique `src/audio/music.ts` | 1 boucle | Mélodie originale synthétisée, faible volume | À créer |
+| Asset / futur emplacement                             | Quantité                                           | Méthode                                                                             | Statut  |
+| ----------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------- | ------- |
+| Logo `apps/web/public/logo.svg`                       | 1                                                  | Lettrage système et emblème voilier originaux en SVG                                | À créer |
+| Illustrations des villes `src/board/illustrations.ts` | 20                                                 | Petites façades originales avec détails distinctifs en PixiJS                       | À créer |
+| Illustrations des stations                            | 4                                                  | Plage, port, lagune et crique originaux                                             | À créer |
+| Illustrations des coins                               | 4                                                  | Boussole, île, coupe et avion en papier                                             | À créer |
+| Illustrations Chance et Taxe                          | 4 cases                                            | 2 motifs originaux, déclinaisons Chance                                             | À créer |
+| Pions et avatars joueurs/bots                         | 4 silhouettes, variantes bot                       | Formes vectorielles originales                                                      | À créer |
+| Dés animés                                            | 2 dés, 6 faces chacun                              | Géométrie et points générés                                                         | À créer |
+| Constructions                                         | 5 niveaux                                          | Formes PixiJS originales                                                            | À créer |
+| Marqueurs festival/championnat                        | 2 familles                                         | Fanions et coupe vectoriels                                                         | À créer |
+| Cartes Chance                                         | 14                                                 | Fond papier commun et pictogrammes originaux selon effet                            | À créer |
+| Icônes HUD                                            | Argent, temps, réglages, son, équipe, lien, retour | SVG originaux cohérents                                                             | À créer |
+| Menus, salon et fin                                   | 3 scènes                                           | CSS, illustrations originales et mêmes composants                                   | À créer |
+| Tutoriel et Crédits                                   | 2 vues                                             | Mise en page native accessible                                                      | À créer |
+| Favicon `public/favicon.svg`                          | 1                                                  | Emblème simplifié                                                                   | À créer |
+| Partage `public/social-card.png`                      | 1                                                  | Composition originale 1200 × 630, export PNG compatible partage                     | À créer |
+| Effets `src/audio/synth.ts`                           | 8                                                  | Web Audio : dés, déplacement, achat, loyer, construction, carte, victoire, faillite | À créer |
+| Musique `src/audio/music.ts`                          | 1 boucle                                           | Mélodie originale synthétisée, faible volume                                        | À créer |
 
 Le nombre de motifs réutilisés peut être inférieur au nombre de cases ; chaque case conserve son identité, son nom et une illustration pertinente. Aucune image manquante, case grise ou inscription TODO dans le produit fini.
 
@@ -68,4 +68,3 @@ Les sons sont produits par Web Audio après une action explicite de l'utilisateu
 Objectif : moins de 5 Mo d'assets distribués, mesurés séparément du JavaScript des bibliothèques. SVG optimisés ; WebP pour d'éventuelles illustrations raster ; PNG conservé pour l'image de partage. Aucun asset externe prévu. Tout ajout externe exige licence explicite compatible et entrée préalable dans `CREDITS.md` (fichier, auteur, URL, licence, attribution).
 
 Les bibliothèques npm seront listées dans un avis de dépendances distinct des crédits artistiques. Les créations propres seront enregistrées comme « création originale » lorsqu'elles existeront effectivement. La page Crédits sera générée ou alimentée depuis la même source que `CREDITS.md` pour éviter les divergences.
-

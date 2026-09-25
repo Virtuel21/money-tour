@@ -15,51 +15,51 @@ La demande directe de l'utilisateur autorise les décisions autonomes et les val
 
 ## 2. Contradictions et décisions explicites
 
-| Sujet | Problème du document source | Décision de cadrage |
-|---|---|---|
-| Géométrie | 32 cases uniques et 8 cases par côté, coins inclus, sont incompatibles : 4 × 8 − 4 = 28. | Conserver 32 cases uniques ; 8 déplacements entre coins, donc 9 emplacements visuels par côté coins inclus. Coins aux indices 0, 8, 16, 24. |
-| Groupes | Composition annoncée correcte mais ordre absent. | 4 groupes de 2 villes et 4 groupes de 3 ; exactement 5 villes par côté. |
-| Niveau 2 | Le terrain peut être compté comme niveau 0 ou 1. | Terrain = 0 ; maisons = 1, 2, 3 ; hôtel = 4. |
-| Valeur investie | La prime d'un rachat peut faire croître artificiellement valorisation et rachats successifs. | Valeur foncière = prix initial du terrain + coûts des constructions actuellement présentes. Prime de rachat exclue de cette valeur. Écart explicite à une lecture strictement comptable de « l'investi du propriétaire ». |
-| Secret non révélé | Ignorer un secret permet au dernier révélateur de choisir entre plusieurs résultats possibles. | Aucun tirage incomplet n'est accepté. Abandon journalisé, traitement du pair fautif, puis nouvelle cérémonie. Ne pas promettre l'absence absolue de biais d'abandon. |
-| Autorité de l'hôte | Rejouer une action et comparer un hash ne prouve pas que son auteur l'a autorisée. | Intention liée à l'identité du joueur ; signatures et vérification du journal recommandées pour la défense contre un hôte malveillant. |
-| Migration | Après une partition, deux groupes peuvent chacun croire l'ancien hôte absent. | Migration automatique en cas simple de départ ; détection des historiques concurrents et pause en cas de divergence. Pas de promesse de consensus byzantin. |
-| Reconnexion | `sessionStorage` disparaît à la fermeture définitive de l'onglet. | État courant en `sessionStorage`, complété par une identité de reprise propre au salon conservée localement avec expiration. Le lien d'invitation seul ne donne jamais l'identité d'un autre joueur. |
-| Abandon et bots | « Dernier présent gagne » peut contredire le remplacement des déconnectés par des bots. | Déconnexion temporaire : siège conservé et bot. Abandon explicite via l'interface : siège éliminé. Les bots initiaux restent des adversaires actifs. |
-| Validation réseau | Les tests en mémoire ne prouvent pas le fonctionnement sur 4 réseaux réels. | Critère terrain distinct, indiqué comme non vérifié jusqu'à une épreuve réelle. |
-| Validation des phases | Le document demande une validation utilisateur à chaque phase ; la demande directe la préautorise. | Les contrôles techniques restent obligatoires ; aucune demande répétitive de validation éditoriale. |
+| Sujet                 | Problème du document source                                                                        | Décision de cadrage                                                                                                                                                                                                       |
+| --------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Géométrie             | 32 cases uniques et 8 cases par côté, coins inclus, sont incompatibles : 4 × 8 − 4 = 28.           | Conserver 32 cases uniques ; 8 déplacements entre coins, donc 9 emplacements visuels par côté coins inclus. Coins aux indices 0, 8, 16, 24.                                                                               |
+| Groupes               | Composition annoncée correcte mais ordre absent.                                                   | 4 groupes de 2 villes et 4 groupes de 3 ; exactement 5 villes par côté.                                                                                                                                                   |
+| Niveau 2              | Le terrain peut être compté comme niveau 0 ou 1.                                                   | Terrain = 0 ; maisons = 1, 2, 3 ; hôtel = 4.                                                                                                                                                                              |
+| Valeur investie       | La prime d'un rachat peut faire croître artificiellement valorisation et rachats successifs.       | Valeur foncière = prix initial du terrain + coûts des constructions actuellement présentes. Prime de rachat exclue de cette valeur. Écart explicite à une lecture strictement comptable de « l'investi du propriétaire ». |
+| Secret non révélé     | Ignorer un secret permet au dernier révélateur de choisir entre plusieurs résultats possibles.     | Aucun tirage incomplet n'est accepté. Abandon journalisé, traitement du pair fautif, puis nouvelle cérémonie. Ne pas promettre l'absence absolue de biais d'abandon.                                                      |
+| Autorité de l'hôte    | Rejouer une action et comparer un hash ne prouve pas que son auteur l'a autorisée.                 | Intention liée à l'identité du joueur ; signatures et vérification du journal recommandées pour la défense contre un hôte malveillant.                                                                                    |
+| Migration             | Après une partition, deux groupes peuvent chacun croire l'ancien hôte absent.                      | Migration automatique en cas simple de départ ; détection des historiques concurrents et pause en cas de divergence. Pas de promesse de consensus byzantin.                                                               |
+| Reconnexion           | `sessionStorage` disparaît à la fermeture définitive de l'onglet.                                  | État courant en `sessionStorage`, complété par une identité de reprise propre au salon conservée localement avec expiration. Le lien d'invitation seul ne donne jamais l'identité d'un autre joueur.                      |
+| Abandon et bots       | « Dernier présent gagne » peut contredire le remplacement des déconnectés par des bots.            | Déconnexion temporaire : siège conservé et bot. Abandon explicite via l'interface : siège éliminé. Les bots initiaux restent des adversaires actifs.                                                                      |
+| Validation réseau     | Les tests en mémoire ne prouvent pas le fonctionnement sur 4 réseaux réels.                        | Critère terrain distinct, indiqué comme non vérifié jusqu'à une épreuve réelle.                                                                                                                                           |
+| Validation des phases | Le document demande une validation utilisateur à chaque phase ; la demande directe la préautorise. | Les contrôles techniques restent obligatoires ; aucune demande répétitive de validation éditoriale.                                                                                                                       |
 
 ## 3. Paramètres de départ
 
 Toutes les valeurs de règle ci-dessous doivent être portées par `game.config.json`. Le moteur reçoit la configuration validée ; aucune valeur de prix, taux, durée, plafond de règle ou composition de deck n'est dispersée dans les composants. Les montants sont des entiers, sans calcul monétaire en flottants. Ces paramètres sont des hypothèses d'équilibrage, pas des valeurs validées par des parties humaines.
 
-| Paramètre | Valeur proposée |
-|---|---:|
-| Joueurs | 2 à 4 |
-| Joueurs en équipe | 4, répartis en 2 équipes de 2 |
-| Capital initial par joueur | 1 500 000 |
-| Bonus Départ | 300 000 |
-| Durée de partie | 20 minutes |
-| Délai par décision | 30 secondes |
-| Dés | 2 dés à 6 faces |
-| Doubles consécutifs avant île | 3 |
-| Tours d'emprisonnement maximaux | 3 |
-| Sortie payante de l'île | 200 000 |
-| Coût d'un championnat | 50 000 |
-| Coût d'une téléportation | 50 000 |
-| Festivals tirés au lancement | 3 villes distinctes |
-| Multiplicateur festival | 2 |
-| Multiplicateurs de loyer par niveau 0 à 4 | 1, 2, 4, 7, 12 |
-| Coût de chaque amélioration | 50 % du prix initial du terrain |
-| Prix d'un rachat | 200 % de la valeur foncière |
-| Revente à la banque | 50 % de la valeur foncière |
-| Taxe patrimoniale | 10 % de la valeur foncière des biens possédés |
-| Prix de chaque station | 200 000 |
-| Loyers des stations pour 1, 2, 3, 4 stations possédées | 50 000, 100 000, 200 000, 400 000 |
-| Absence de l'hôte avant migration | 15 secondes |
-| Délai de collecte des engagements | 8 secondes |
-| Délai de révélation | 8 secondes |
-| Reprise locale d'un salon | Identité conservée au plus 24 heures après dernière activité |
+| Paramètre                                              |                                              Valeur proposée |
+| ------------------------------------------------------ | -----------------------------------------------------------: |
+| Joueurs                                                |                                                        2 à 4 |
+| Joueurs en équipe                                      |                                4, répartis en 2 équipes de 2 |
+| Capital initial par joueur                             |                                                    1 500 000 |
+| Bonus Départ                                           |                                                      300 000 |
+| Durée de partie                                        |                                                   20 minutes |
+| Délai par décision                                     |                                                  30 secondes |
+| Dés                                                    |                                              2 dés à 6 faces |
+| Doubles consécutifs avant île                          |                                                            3 |
+| Tours d'emprisonnement maximaux                        |                                                            3 |
+| Sortie payante de l'île                                |                                                      200 000 |
+| Coût d'un championnat                                  |                                                       50 000 |
+| Coût d'une téléportation                               |                                                       50 000 |
+| Festivals tirés au lancement                           |                                          3 villes distinctes |
+| Multiplicateur festival                                |                                                            2 |
+| Multiplicateurs de loyer par niveau 0 à 4              |                                               1, 2, 4, 7, 12 |
+| Coût de chaque amélioration                            |                              50 % du prix initial du terrain |
+| Prix d'un rachat                                       |                                  200 % de la valeur foncière |
+| Revente à la banque                                    |                                   50 % de la valeur foncière |
+| Taxe patrimoniale                                      |                10 % de la valeur foncière des biens possédés |
+| Prix de chaque station                                 |                                                      200 000 |
+| Loyers des stations pour 1, 2, 3, 4 stations possédées |                            50 000, 100 000, 200 000, 400 000 |
+| Absence de l'hôte avant migration                      |                                                  15 secondes |
+| Délai de collecte des engagements                      |                                                   8 secondes |
+| Délai de révélation                                    |                                                   8 secondes |
+| Reprise locale d'un salon                              | Identité conservée au plus 24 heures après dernière activité |
 
 Les coûts d'amélioration et loyers figurent explicitement dans les données de chaque ville. La formule ci-dessus décrit la génération du barème initial, sans obliger les futurs réglages à suivre cette progression. Les paramètres techniques du protocole peuvent résider dans une section réseau du même fichier ; sa version et son hash font partie du salon.
 
@@ -67,40 +67,40 @@ Les coûts d'amélioration et loyers figurent explicitement dans les données de
 
 La numérotation est celle du moteur, de 0 à 31, dans le sens de déplacement. Les villes ont des prix croissants et un loyer de terrain égal à 10 % du prix initial. Les autres loyers se déduisent du barème des niveaux et sont stockés en données. Les noms sont des créations de travail ; aucune vérification de marque n'a été effectuée.
 
-| Index | Case | Type | Groupe | Prix | Loyer terrain |
-|---:|---|---|---|---:|---:|
-| 0 | Départ | Coin | — | — | — |
-| 1 | Clairport | Ville | G1 Menthe | 100 000 | 10 000 |
-| 2 | Briseciel | Ville | G1 Menthe | 120 000 | 12 000 |
-| 3 | Plage des Voiles | Station | Stations | 200 000 | Selon collection |
-| 4 | Vallon d'Aube | Ville | G2 Turquoise | 140 000 | 14 000 |
-| 5 | Ormebrise | Ville | G2 Turquoise | 160 000 | 16 000 |
-| 6 | Préclair | Ville | G2 Turquoise | 180 000 | 18 000 |
-| 7 | La bonne étoile | Chance | — | — | — |
-| 8 | Île perdue | Coin | — | — | — |
-| 9 | Hautelune | Ville | G3 Ciel | 200 000 | 20 000 |
-| 10 | Bellefrange | Ville | G3 Ciel | 220 000 | 22 000 |
-| 11 | Baie des Perles | Station | Stations | 200 000 | Selon collection |
-| 12 | Solegrève | Ville | G4 Azur | 240 000 | 24 000 |
-| 13 | Coralune | Ville | G4 Azur | 260 000 | 26 000 |
-| 14 | Port Azur | Ville | G4 Azur | 280 000 | 28 000 |
-| 15 | La bonne étoile | Chance | — | — | — |
-| 16 | Championnat du monde | Coin | — | — | — |
-| 17 | Rochevermeil | Ville | G5 Or | 300 000 | 30 000 |
-| 18 | Citréa | Ville | G5 Or | 320 000 | 32 000 |
-| 19 | Lagon des Ailes | Station | Stations | 200 000 | Selon collection |
-| 20 | Mont-Safran | Ville | G6 Mandarine | 340 000 | 34 000 |
-| 21 | Valdoria | Ville | G6 Mandarine | 360 000 | 36 000 |
-| 22 | Belorizon | Ville | G6 Mandarine | 380 000 | 38 000 |
-| 23 | La bonne étoile | Chance | — | — | — |
-| 24 | Tour du monde | Coin | — | — | — |
-| 25 | Nacreville | Ville | G7 Corail | 400 000 | 40 000 |
-| 26 | Lysambre | Ville | G7 Corail | 420 000 | 42 000 |
-| 27 | Côte des Brumes | Station | Stations | 200 000 | Selon collection |
-| 28 | Grandétoile | Ville | G8 Lavande | 440 000 | 44 000 |
-| 29 | Opaline | Ville | G8 Lavande | 460 000 | 46 000 |
-| 30 | Azurielle | Ville | G8 Lavande | 480 000 | 48 000 |
-| 31 | Contribution locale | Taxe | — | — | — |
+| Index | Case                 | Type    | Groupe       |    Prix |    Loyer terrain |
+| ----: | -------------------- | ------- | ------------ | ------: | ---------------: |
+|     0 | Départ               | Coin    | —            |       — |                — |
+|     1 | Clairport            | Ville   | G1 Menthe    | 100 000 |           10 000 |
+|     2 | Briseciel            | Ville   | G1 Menthe    | 120 000 |           12 000 |
+|     3 | Plage des Voiles     | Station | Stations     | 200 000 | Selon collection |
+|     4 | Vallon d'Aube        | Ville   | G2 Turquoise | 140 000 |           14 000 |
+|     5 | Ormebrise            | Ville   | G2 Turquoise | 160 000 |           16 000 |
+|     6 | Préclair             | Ville   | G2 Turquoise | 180 000 |           18 000 |
+|     7 | La bonne étoile      | Chance  | —            |       — |                — |
+|     8 | Île perdue           | Coin    | —            |       — |                — |
+|     9 | Hautelune            | Ville   | G3 Ciel      | 200 000 |           20 000 |
+|    10 | Bellefrange          | Ville   | G3 Ciel      | 220 000 |           22 000 |
+|    11 | Baie des Perles      | Station | Stations     | 200 000 | Selon collection |
+|    12 | Solegrève            | Ville   | G4 Azur      | 240 000 |           24 000 |
+|    13 | Coralune             | Ville   | G4 Azur      | 260 000 |           26 000 |
+|    14 | Port Azur            | Ville   | G4 Azur      | 280 000 |           28 000 |
+|    15 | La bonne étoile      | Chance  | —            |       — |                — |
+|    16 | Championnat du monde | Coin    | —            |       — |                — |
+|    17 | Rochevermeil         | Ville   | G5 Or        | 300 000 |           30 000 |
+|    18 | Citréa               | Ville   | G5 Or        | 320 000 |           32 000 |
+|    19 | Lagon des Ailes      | Station | Stations     | 200 000 | Selon collection |
+|    20 | Mont-Safran          | Ville   | G6 Mandarine | 340 000 |           34 000 |
+|    21 | Valdoria             | Ville   | G6 Mandarine | 360 000 |           36 000 |
+|    22 | Belorizon            | Ville   | G6 Mandarine | 380 000 |           38 000 |
+|    23 | La bonne étoile      | Chance  | —            |       — |                — |
+|    24 | Tour du monde        | Coin    | —            |       — |                — |
+|    25 | Nacreville           | Ville   | G7 Corail    | 400 000 |           40 000 |
+|    26 | Lysambre             | Ville   | G7 Corail    | 420 000 |           42 000 |
+|    27 | Côte des Brumes      | Station | Stations     | 200 000 | Selon collection |
+|    28 | Grandétoile          | Ville   | G8 Lavande   | 440 000 |           44 000 |
+|    29 | Opaline              | Ville   | G8 Lavande   | 460 000 |           46 000 |
+|    30 | Azurielle            | Ville   | G8 Lavande   | 480 000 |           48 000 |
+|    31 | Contribution locale  | Taxe    | —            |       — |                — |
 
 Les lignes de victoire sont les ensembles de villes **[1, 2, 4, 5, 6]**, **[9, 10, 12, 13, 14]**, **[17, 18, 20, 21, 22]** et **[25, 26, 28, 29, 30]**. Stations, Chance, Taxe et coins sont exclus de ces ensembles. Les identifiants de lignes doivent figurer dans les données ; le moteur ne les devine pas depuis les coordonnées d'affichage.
 
@@ -145,22 +145,22 @@ Le compteur de partie mesure le temps de jeu accepté, hors pause de resynchroni
 
 Un exemplaire de chaque carte est présent. Les cartes sont tirées sans remise parmi les cartes disponibles ; les cartes déjà jouées rejoignent une défausse. Quand la pioche disponible est vide, les cartes défaussées redeviennent disponibles. Une carte de sortie conservée reste hors pioche et défausse jusqu'à son utilisation ou l'élimination de son détenteur. Le tirage sélectionne uniformément une carte disponible à l'aide de l'aléa partagé ; il n'expose pas un ordre secret prétendument caché dans l'état complet de tous les pairs.
 
-| ID | Titre original | Effet exact |
-|---|---|---|
-| chance-01 | Prime de quartier | Recevoir 200 000 de la banque. |
-| chance-02 | Marché du dimanche | Recevoir 100 000 de la banque. |
-| chance-03 | Belle saison | Recevoir 150 000 de la banque. |
-| chance-04 | Réparation urgente | Payer 100 000 à la banque ; dette possible. |
-| chance-05 | Assurance annuelle | Payer 150 000 à la banque ; dette possible. |
-| chance-06 | Travaux de voirie | Payer 200 000 à la banque ; dette possible. |
-| chance-07 | Retour en fanfare | Avancer jusqu'à Départ ; percevoir exactement une prime de 300 000. |
-| chance-08 | Courant contraire | Aller directement sur l'Île perdue ; aucune prime Départ, même si l'indice est franchi. |
-| chance-09 | Vent favorable | Avancer de 3 cases et résoudre l'arrivée ; prime Départ en cas de franchissement. |
-| chance-10 | Demi-tour | Reculer de 3 cases et résoudre l'arrivée ; aucun bonus ni nouveau tour de plateau pour un passage arrière sur Départ. |
-| chance-11 | Invitation sportive | Avancer jusqu'au Championnat du monde ; prime Départ si franchie ; proposer le placement normal. |
-| chance-12 | Billet d'horizon | Avancer jusqu'au Tour du monde ; prime Départ si franchie ; obtenir le droit de téléportation pour le prochain tour. |
-| chance-13 | Retour au continent | Conserver une carte de sortie gratuite de l'île ; l'utiliser lors d'un prochain début de tour détenu. |
-| chance-14 | Chantier contrarié | Retirer un niveau à une ville adverse de niveau 1 à 3. Aucun effet sur un hôtel. |
+| ID        | Titre original      | Effet exact                                                                                                           |
+| --------- | ------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| chance-01 | Prime de quartier   | Recevoir 200 000 de la banque.                                                                                        |
+| chance-02 | Marché du dimanche  | Recevoir 100 000 de la banque.                                                                                        |
+| chance-03 | Belle saison        | Recevoir 150 000 de la banque.                                                                                        |
+| chance-04 | Réparation urgente  | Payer 100 000 à la banque ; dette possible.                                                                           |
+| chance-05 | Assurance annuelle  | Payer 150 000 à la banque ; dette possible.                                                                           |
+| chance-06 | Travaux de voirie   | Payer 200 000 à la banque ; dette possible.                                                                           |
+| chance-07 | Retour en fanfare   | Avancer jusqu'à Départ ; percevoir exactement une prime de 300 000.                                                   |
+| chance-08 | Courant contraire   | Aller directement sur l'Île perdue ; aucune prime Départ, même si l'indice est franchi.                               |
+| chance-09 | Vent favorable      | Avancer de 3 cases et résoudre l'arrivée ; prime Départ en cas de franchissement.                                     |
+| chance-10 | Demi-tour           | Reculer de 3 cases et résoudre l'arrivée ; aucun bonus ni nouveau tour de plateau pour un passage arrière sur Départ. |
+| chance-11 | Invitation sportive | Avancer jusqu'au Championnat du monde ; prime Départ si franchie ; proposer le placement normal.                      |
+| chance-12 | Billet d'horizon    | Avancer jusqu'au Tour du monde ; prime Départ si franchie ; obtenir le droit de téléportation pour le prochain tour.  |
+| chance-13 | Retour au continent | Conserver une carte de sortie gratuite de l'île ; l'utiliser lors d'un prochain début de tour détenu.                 |
+| chance-14 | Chantier contrarié  | Retirer un niveau à une ville adverse de niveau 1 à 3. Aucun effet sur un hôtel.                                      |
 
 Pour **Chantier contrarié**, la cible est déterministe afin d'éviter une décision de ciblage supplémentaire : plus haut niveau de construction admissible, puis plus haute valeur foncière, puis plus petit indice. Aucune ville alliée n'est admissible. S'il n'existe aucune cible, la carte est sans effet. Festivals et championnats sont conservés.
 
@@ -217,14 +217,14 @@ Si le nombre de contributeurs humains devient inférieur à deux, le jeu peut co
 
 ### 11.3 Alternatives documentées
 
-| Option | Avantage | Limite |
-|---|---|---|
-| Ignorer le secret manquant, comme proposé initialement | Continue rapidement | Permet un choix stratégique du résultat ; option rejetée comme valeur par défaut. |
-| Annuler, exclure et recommencer | Preuves acceptées complètes ; incident visible | Biais d'abandon et interruption encore possibles ; choix v1 recommandé. |
-| Arrêter définitivement le match au premier abandon de révélation | Aucun résultat de remplacement dans ce match | Très faible tolérance aux coupures mobiles ; reste un déni de service. |
-| Hasher l'engagement du pair manquant comme remplacement | Résultat toujours calculable | Le pair peut souvent choisir entre révéler et laisser le remplacement ; ne rétablit pas l'équité. |
-| Balise aléatoire indépendante ou service arbitre | Peut retirer ce choix aux joueurs | Dépendance et modèle de confiance supplémentaires ; hors architecture v1. |
-| Cryptographie de seuil et récupération de secrets | Garanties plus fortes sous hypothèses précises | Complexité importante, seuils et gestion des départs à concevoir ; hors v1. |
+| Option                                                           | Avantage                                       | Limite                                                                                            |
+| ---------------------------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Ignorer le secret manquant, comme proposé initialement           | Continue rapidement                            | Permet un choix stratégique du résultat ; option rejetée comme valeur par défaut.                 |
+| Annuler, exclure et recommencer                                  | Preuves acceptées complètes ; incident visible | Biais d'abandon et interruption encore possibles ; choix v1 recommandé.                           |
+| Arrêter définitivement le match au premier abandon de révélation | Aucun résultat de remplacement dans ce match   | Très faible tolérance aux coupures mobiles ; reste un déni de service.                            |
+| Hasher l'engagement du pair manquant comme remplacement          | Résultat toujours calculable                   | Le pair peut souvent choisir entre révéler et laisser le remplacement ; ne rétablit pas l'équité. |
+| Balise aléatoire indépendante ou service arbitre                 | Peut retirer ce choix aux joueurs              | Dépendance et modèle de confiance supplémentaires ; hors architecture v1.                         |
+| Cryptographie de seuil et récupération de secrets                | Garanties plus fortes sous hypothèses précises | Complexité importante, seuils et gestion des départs à concevoir ; hors v1.                       |
 
 ## 12. Validation réseau, migration et reprise
 
@@ -244,25 +244,25 @@ TURN est facultatif et configurable. Un compte TURN statique et réutilisable pl
 
 **Tous les résultats ci-dessous sont NON VÉRIFIÉS au moment de ce cadrage.** Une case ne sera validée qu'avec l'exécution correspondante, sa commande ou son scénario, et son résultat. Aucun test en mémoire ne remplacera une épreuve WebRTC réelle.
 
-| Domaine | Épreuve minimale |
-|---|---|
-| Configuration | 32 indices uniques ; 4 coins ; 20 villes ; tailles de groupes 2/3 alternées ; 4 stations ; 3 Chance ; 1 Taxe ; 14 cartes. |
-| Déplacements | Arrêt et passage Départ sans doublon ; déplacement arrière ; troisième double ; sortie de l'île ; arrivée Chance avec effet chaîné. |
-| Économie | Loyers des 5 niveaux ; festival et championnats cumulés ; 4 paliers de stations ; prix et interdictions de rachat ; taxe ; revente ; dette ; faillite. |
-| Construction | Limite avant premier tour ; progression maison 3 vers hôtel ; absence de saut interdit ; revente remet le terrain à zéro. |
-| Victoires | Un test positif et un test négatif pour chaque type ; équipe ; égalité au chrono ; adversaire éliminé ; aucune action après fin. |
-| Cartes | Chaque effet ; pioche/défausse ; carte conservée ; aucune cible admissible ; hôtel protégé ; cible alliée exclue. |
-| Déterminisme | Même état, même action et même RNG donnent mêmes événements et même hash ; replay complet identique. |
-| Bots | 1 000 parties seedées complètes sans crash, boucle, dette bloquée ni invariant violé ; graines et distribution de résultats conservées. |
-| Couverture | Cible supérieure à 90 % sur le moteur ; publier lignes, branches, fonctions et instructions, sans exclure artificiellement les règles difficiles. |
-| Commit-reveal | Preuve correcte ; engagements divergents ; révélation précoce ; secret invalide ; secret absent ; rejeu ; participant arrivé en cours ; aucun fallback accepté comme vérifié. |
-| Transport simulé | Latence, duplications, réordonnancement, pertes, coupure de l'hôte, reconnexion, action réémise ; états finaux identiques quand le scénario doit converger. |
-| Migration | Départ de l'hôte à différentes phases ; aucune double transaction ; cérémonie annulée ; reprise depuis action validée ; divergence détectée lors d'une partition. |
-| Local | Partie complète hot-seat et solo sur desktop et vue mobile, y compris sons activés par geste, dette et écran final. |
-| Accessibilité | Commandes clavier et tactiles, focus des modales, textes contrastés, mode mouvement réduit et contrôle du son. |
-| Réseau réel | 4 navigateurs sur 4 réseaux distincts dont smartphone en 4G ; partie complète ; fermeture de l'onglet hôte ; retour d'un joueur ; observation des hashes. |
-| Déploiement | URL GitHub Pages réellement servie ; rafraîchissement d'un lien de salon ; aucun backend nécessaire ; CI lint, tests et build verte. |
-| Assets | Aucun placeholder ; inventaire et crédits complets ; assets originaux ; poids total inférieur à 5 Mo ; fichier Open Graph, favicon et sons présents. |
+| Domaine          | Épreuve minimale                                                                                                                                                              |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configuration    | 32 indices uniques ; 4 coins ; 20 villes ; tailles de groupes 2/3 alternées ; 4 stations ; 3 Chance ; 1 Taxe ; 14 cartes.                                                     |
+| Déplacements     | Arrêt et passage Départ sans doublon ; déplacement arrière ; troisième double ; sortie de l'île ; arrivée Chance avec effet chaîné.                                           |
+| Économie         | Loyers des 5 niveaux ; festival et championnats cumulés ; 4 paliers de stations ; prix et interdictions de rachat ; taxe ; revente ; dette ; faillite.                        |
+| Construction     | Limite avant premier tour ; progression maison 3 vers hôtel ; absence de saut interdit ; revente remet le terrain à zéro.                                                     |
+| Victoires        | Un test positif et un test négatif pour chaque type ; équipe ; égalité au chrono ; adversaire éliminé ; aucune action après fin.                                              |
+| Cartes           | Chaque effet ; pioche/défausse ; carte conservée ; aucune cible admissible ; hôtel protégé ; cible alliée exclue.                                                             |
+| Déterminisme     | Même état, même action et même RNG donnent mêmes événements et même hash ; replay complet identique.                                                                          |
+| Bots             | 1 000 parties seedées complètes sans crash, boucle, dette bloquée ni invariant violé ; graines et distribution de résultats conservées.                                       |
+| Couverture       | Cible supérieure à 90 % sur le moteur ; publier lignes, branches, fonctions et instructions, sans exclure artificiellement les règles difficiles.                             |
+| Commit-reveal    | Preuve correcte ; engagements divergents ; révélation précoce ; secret invalide ; secret absent ; rejeu ; participant arrivé en cours ; aucun fallback accepté comme vérifié. |
+| Transport simulé | Latence, duplications, réordonnancement, pertes, coupure de l'hôte, reconnexion, action réémise ; états finaux identiques quand le scénario doit converger.                   |
+| Migration        | Départ de l'hôte à différentes phases ; aucune double transaction ; cérémonie annulée ; reprise depuis action validée ; divergence détectée lors d'une partition.             |
+| Local            | Partie complète hot-seat et solo sur desktop et vue mobile, y compris sons activés par geste, dette et écran final.                                                           |
+| Accessibilité    | Commandes clavier et tactiles, focus des modales, textes contrastés, mode mouvement réduit et contrôle du son.                                                                |
+| Réseau réel      | 4 navigateurs sur 4 réseaux distincts dont smartphone en 4G ; partie complète ; fermeture de l'onglet hôte ; retour d'un joueur ; observation des hashes.                     |
+| Déploiement      | URL GitHub Pages réellement servie ; rafraîchissement d'un lien de salon ; aucun backend nécessaire ; CI lint, tests et build verte.                                          |
+| Assets           | Aucun placeholder ; inventaire et crédits complets ; assets originaux ; poids total inférieur à 5 Mo ; fichier Open Graph, favicon et sons présents.                          |
 
 Une commande de build réussie ne prouve ni l'ergonomie mobile ni la disponibilité du site. Une simulation de 1 000 parties ne prouve pas l'équilibrage ou l'absence de toute erreur. La couverture est une aide à la détection des angles morts, pas un substitut aux scénarios métier et réseau.
 
@@ -276,4 +276,3 @@ Une commande de build réussie ne prouve ni l'ergonomie mobile ni la disponibili
 - Épreuve sur réseaux différents. Si les moyens disponibles ne permettent pas de la réaliser, elle reste explicitement ouverte dans le README et la PR concernée ; elle ne doit pas être déclarée réussie.
 
 Les décisions sont révisables si une contrainte technique apparaît, avec changement explicite de ce document et du journal de phase. Aucune de ces réserves n'exige une nouvelle confirmation utilisateur pour continuer les travaux déjà autorisés dès que les accès nécessaires sont disponibles.
-
