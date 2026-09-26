@@ -16,6 +16,13 @@ Exécution locale sur Windows, Node.js 22.16.0, Vitest 5.0.2.
 
 Ces tests vérifient le moteur, pas encore l'ergonomie ni le transport WebRTC. Les simulations ne démontrent pas l'équilibrage humain.
 
+## Phase 2 — client local
+
+- 184 tests passent, dont la reprise déterministe après sérialisation et le refus des sauvegardes incompatibles. TypeScript, ESLint et build de production passent.
+- Navigateur intégré Chromium, vue desktop : partie express à quatre bots terminée avec classement au chrono.
+- Vue 390 × 844 : partie hot-seat, achat de Bellefrange, construction, passage de tour, catalogue des 32 cases et reprise après actualisation vérifiés. Cela valide un viewport mobile, pas un appareil physique.
+- Plateau et pions PixiJS originaux, dés animés, fiches de cases, pause, abandon, tutoriel, crédits et réduction des animations.
+
 ## Phases suivantes — non réalisées
 
-Client local desktop/mobile, WebRTC et recette extérieure sur quatre réseaux dont 4G, migration réelle d'hôte, sons et livraison GitHub Pages : à tester lors de leur réalisation. Le choix GitHub Actions comme source de Pages est enregistré ; aucune URL de jeu n'est encore publiée.
+WebRTC et recette extérieure sur quatre réseaux dont 4G, migration réelle d'hôte, sons et livraison GitHub Pages : à tester lors de leur réalisation. Le choix GitHub Actions comme source de Pages est enregistré ; aucune URL de jeu n'est encore publiée.
