@@ -5,7 +5,7 @@ import type { LocalSave } from './local';
 export function previewScenario(): LocalSave | null {
   if (!import.meta.env.DEV) return null;
   const name = new URLSearchParams(location.search).get('scenario');
-  if (!name || !['travel', 'build', 'card'].includes(name)) return null;
+  if (!name || !['travel', 'build', 'card', 'crowded'].includes(name)) return null;
   const state = createGame({
     players: [
       { id: 'p1', name: 'Léa' },
@@ -24,6 +24,14 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'crowded') {
+    state.players.forEach((p) => {
+      p.position = 1;
+    });
+    state.properties[1]!.level = 3;
+    state.properties[2]!.level = 4;
+    state.phase = 'property';
+  }
   if (name === 'card') {
     const rolled = reduceGame(
       state,

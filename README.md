@@ -32,7 +32,7 @@ Code sous [licence MIT](LICENSE). Modèles originaux créés dans Blender, textu
 
 Le workflow `Deploy Pages` vérifie format, types, lint, tests, couverture, build et poids des assets avant de publier `apps/web/dist` sur GitHub Pages à chaque push sur `main`. Dans les réglages Pages, la source doit être « GitHub Actions ». Aucun secret applicatif n’est nécessaire. Les salons utilisent un fragment `#room=…`, compatible avec le rechargement d’un site statique.
 
-`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques incluent les modèles glTF, deux textures WebP et les deux musiques MP3 (limite automatisée : 12 Mo). Le modèle source est reproductible avec Blender 5.2 : `blender --background --factory-startup --python scripts/models.py`. `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
+`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques incluent les modèles glTF, deux textures WebP et les deux musiques MP3 (limite automatisée : 12 Mo). Les modèles ont été repris à partir des artworks dans Blender via MCP ; reproduction : `blender --background --factory-startup --python scripts/build_models.py`. Voir [les scènes Blender et leurs contrôles](docs/MODELS.md). `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées et la vérification du GLB et de l’espace occupé sur les cases. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
 
 ## Jouer en ligne
 

@@ -4,11 +4,11 @@ Code original sous licence MIT, voir LICENSE. Le projet n’est pas affilié à 
 
 ## Modèles et interface originaux
 
-Créations originales pour Julien, MIT : scripts/models.py, apps/web/public/models/money-tour.glb (plateau, tuiles, quatre personnages, dés, maisons, hôtel, îlots, palmiers), apps/web/src/board/Board3D.tsx (mise en scène), App.tsx, styles.css, favicon.svg et social-card.svg/png. Les trois artworks fournis par Julien servent de références de direction artistique ; leurs fichiers source ne sont pas redistribués dans le dépôt. Polices système Trebuchet MS/Arial, sans fichier de police redistribué.
+Créations originales pour Julien, MIT : scripts/art_*.py et scripts/build_models.py, apps/web/public/models/money-tour.glb (plateau, tuiles, quatre personnages, dés, maisons, hôtel, jardins, îles à monuments, palmiers et pièces spéciales), apps/web/src/board/Board3D.tsx (mise en scène), App.tsx, styles.css, favicon.svg et social-card.svg/png. Modélisation effectuée dans Blender 5.2.2 via son MCP connecté. Les trois artworks fournis par Julien servent de références de direction artistique ; leurs fichiers source ne sont pas redistribués dans le dépôt. Polices système Trebuchet MS/Arial, sans fichier de police redistribué.
 
 ## Images générées
 
-Créations originales avec le générateur d’images intégré de ChatGPT : apps/web/public/textures/ocean.webp (mer), chance.webp (carte). Prompts et provenance dans docs/IMAGE_PROMPTS.md.
+Créations originales avec le générateur d’images intégré de ChatGPT : apps/web/public/textures/ocean.webp (ancienne mer, conservée mais inutilisée depuis la reprise des artworks), chance.webp (carte). Prompts et provenance dans docs/IMAGE_PROMPTS.md.
 
 ## Audio fourni par Julien
 
