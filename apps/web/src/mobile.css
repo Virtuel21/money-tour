@@ -1,0 +1,944 @@
+/* The desktop layout stays in styles.css. Mobile dedicates the viewport to play. */
+@media (max-width: 999px) {
+  body:has(.game-layout) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+  .app:has(.game-layout) {
+    padding: 0;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .app:has(.game-layout) > .topbar,
+  .app:has(.game-layout) > footer {
+    display: none;
+  }
+  .app .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 44px 62px minmax(0, 1fr) auto;
+    gap: 4px;
+    margin: 0;
+    padding: env(safe-area-inset-top, 0px) 6px env(safe-area-inset-bottom, 0px);
+    height: 100dvh;
+    min-height: 0;
+    max-width: none;
+    overflow: hidden;
+  }
+  .game-layout .game-top {
+    grid-area: 1 / 1;
+    min-height: 0;
+    padding: 0 4px;
+    gap: 4px;
+  }
+  .game-top h1 {
+    display: none;
+  }
+  .game-top .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+  .game-tools {
+    gap: 3px;
+  }
+  .game-tools .icon-button,
+  .game-tools .subtle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 4px 7px;
+    font-size: 12px;
+  }
+  .game-tools .clock {
+    font-size: 13px;
+    margin: 0;
+  }
+  .game-layout .players {
+    grid-area: 2 / 1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin: 0;
+    max-height: none;
+    overflow: visible;
+  }
+  .game-layout .player-card {
+    min-width: 0;
+    min-height: 0;
+    padding: 4px;
+    border-left: 0;
+    border-top: 4px solid var(--player-color);
+    display: flex;
+    gap: 3px;
+    align-content: center;
+    justify-content: center;
+    flex-wrap: nowrap;
+    border-radius: 12px;
+  }
+  .game-layout .player-card.active {
+    box-shadow: 0 0 0 2px var(--player-color);
+  }
+  .game-layout .player-card .avatar {
+    width: 24px;
+    height: 32px;
+    flex: 0 0 24px;
+  }
+  .game-layout .player-card > div {
+    min-width: 0;
+    flex: 1;
+  }
+  .game-layout .player-name {
+    display: block;
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .game-layout .player-card strong {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .game-layout .player-card .player-name small,
+  .game-layout .player-card .property-count,
+  .game-layout .player-card .fraud-risk,
+  .game-layout .player-card .player-inventory,
+  .game-layout .player-card .private-quest {
+    display: none;
+  }
+  .game-layout .board-area,
+  .game-layout .board-area.zoomed {
+    grid-area: 3 / 1;
+    align-self: stretch;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 30px minmax(0, 1fr) 18px 44px;
+    gap: 2px;
+    margin: 0;
+  }
+  .game-layout .adventure-banner {
+    padding: 4px 10px;
+    margin: 0;
+    border-radius: 12px;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+  }
+  .adventure-banner > span,
+  .adventure-banner small {
+    display: none;
+  }
+  .adventure-banner strong {
+    font-size: 10px;
+    line-height: 1.15;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .game-layout .board-viewport,
+  .game-layout .board-area.zoomed .board-viewport {
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+    overflow: hidden;
+  }
+  .game-layout .board-3d,
+  .game-layout .board-area.zoomed .board-shell {
+    height: 100%;
+    min-width: 0;
+    width: 100%;
+    aspect-ratio: auto;
+    transform: none;
+  }
+  .game-layout .board-canvas,
+  .game-layout .board-canvas canvas {
+    height: 100%;
+    width: 100%;
+  }
+  .game-layout .board-watermark,
+  .game-layout .bank-label {
+    display: none;
+  }
+  .game-layout .city-label {
+    width: calc(6.7% * var(--camera-label-scale, 1));
+    font-size: calc(1.4cqw * var(--camera-label-scale, 1));
+    padding: 0;
+  }
+  .game-layout .city-label b {
+    font-size: 1em;
+  }
+  .game-layout .city-label .tile-rent {
+    font-size: calc(1.8cqw * var(--camera-label-scale, 1));
+  }
+  .game-layout .roll-status {
+    font-size: 11px;
+    line-height: 18px;
+    margin: 0;
+    min-height: 0;
+  }
+  .game-layout .board-controls {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+    padding: 0;
+  }
+  .game-layout .board-controls button {
+    min-height: 42px;
+    padding: 5px;
+    font-size: 11px;
+    border: 1px solid #abcaca;
+    border-radius: 12px;
+  }
+  .game-layout .board-controls button[aria-pressed='true'] {
+    background: #173c4d;
+    color: #fff8e9;
+  }
+  .game-layout .game-sidebar {
+    grid-area: 4 / 1;
+    display: block;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    margin: 0;
+  }
+  .game-sidebar .journal,
+  .game-sidebar .tip,
+  .game-sidebar .mondial-picker {
+    display: none;
+  }
+  .game-layout .action-card {
+    position: static;
+    transform: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-height: none;
+    overflow: visible;
+    margin: 0;
+    padding: 10px 12px;
+    gap: 3px;
+    border-radius: 20px 20px 0 0;
+    color: #fff9e7;
+    background: #103849;
+    box-shadow: 0 -3px 15px #17495125;
+  }
+  .action-card .eyebrow {
+    font-size: 9px;
+    color: #99e0dc;
+  }
+  .game-layout .action-card h2 {
+    font-size: 19px;
+    line-height: 1.1;
+    margin: 0;
+  }
+  .game-layout .action-card > p {
+    font-size: 11px;
+    line-height: 1.3;
+    margin: 2px 0;
+    color: #d0e6e9;
+  }
+  .game-layout .action-card .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin: 3px 0 0;
+  }
+  .game-layout .action-card .actions > button:only-child {
+    grid-column: 1 / -1;
+  }
+  .game-layout .action-card .actions button {
+    min-height: 46px;
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 13px;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    align-items: center;
+  }
+  .game-layout .action-card .actions .primary {
+    background: #ffd568;
+    color: #133747;
+    box-shadow: 0 3px 0 #b98a2d;
+  }
+  .game-layout .action-card .actions .secondary {
+    background: #e9f0ea;
+    color: #153d4e;
+  }
+  .game-layout .action-card .actions button:disabled {
+    background: #385866;
+    color: #e6ebed;
+    opacity: 0.65;
+    box-shadow: none;
+  }
+  .game-layout .action-card .chance-card,
+  .game-layout .action-card .action-help,
+  .game-layout .action-card .world-event-status,
+  .game-layout .action-card .network-status {
+    display: none;
+  }
+  .game-layout .action-card .reclaim-seat,
+  .game-layout .action-card .text-button {
+    min-height: 44px;
+    padding: 5px;
+    font-size: 12px;
+  }
+  .game-layout .decision-time {
+    height: 4px;
+    margin: 3px 0;
+  }
+  .game-layout .board-choice-hint {
+    display: none;
+  }
+  .notice {
+    max-width: calc(100vw - 20px);
+    left: 10px;
+    right: 10px;
+    bottom: 165px;
+    padding: 14px 40px 14px 14px;
+    font-size: 13px;
+    transform: none;
+  }
+  .turn-banner {
+    top: 36%;
+    width: calc(100% - 32px);
+    padding: 18px;
+  }
+  .turn-banner strong {
+    font-size: 25px;
+  }
+  .modal {
+    width: calc(100vw - 20px);
+    max-width: 520px;
+    max-height: calc(
+      100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
+    padding: 14px;
+    border-radius: 22px;
+    overscroll-behavior: contain;
+  }
+  .modal-heading {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .modal-heading h2 {
+    font-size: 21px;
+    line-height: 1.1;
+  }
+  .modal-heading .icon-button {
+    min-width: 44px;
+    min-height: 44px;
+    flex-shrink: 0;
+  }
+  .modal button {
+    min-height: 44px;
+  }
+  .modal .purchase-cover {
+    gap: 8px;
+    padding: 8px;
+  }
+  .modal .purchase-cover .property-art,
+  .modal .island-offer-icon {
+    width: 60px;
+    height: 60px;
+    flex-basis: 60px;
+  }
+  .modal .purchase-cover p {
+    margin: 0;
+    font-size: 11px;
+  }
+  .modal .purchase-cover h3 {
+    font-size: 23px;
+    margin: 2px 0;
+  }
+  .modal .property-stats {
+    margin: 8px 0;
+    gap: 5px;
+    padding: 0;
+  }
+  .modal .property-stats > div {
+    padding: 6px;
+  }
+  .modal .property-stats strong {
+    font-size: 18px;
+  }
+  .modal .purchase-table th,
+  .modal .purchase-table td {
+    padding: 5px 3px;
+    font-size: 11px;
+  }
+  .modal .setup-note {
+    font-size: 10px;
+    margin: 6px 0;
+    line-height: 1.3;
+  }
+  .modal .purchase-cta,
+  .modal .purchase-pass {
+    min-height: 46px;
+    padding: 9px;
+    margin-top: 6px;
+    font-size: 13px;
+  }
+  .modal .tax-illustration {
+    width: 72px;
+    height: 72px;
+    margin-bottom: 8px;
+  }
+  .modal .tax-reveal blockquote {
+    font-size: 17px;
+    margin: 10px 0;
+    padding: 10px;
+  }
+  .mobile-pocket nav,
+  .pocket-owners {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .mobile-pocket nav button,
+  .pocket-owners button {
+    padding: 6px 2px;
+    font-size: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-pocket button[aria-pressed='true'] {
+    background: #153d4e;
+    color: #fff5d8;
+  }
+  .pocket-cities {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .pocket-cities button {
+    min-height: 64px;
+    border-top: 5px solid;
+    display: grid;
+    padding: 8px;
+    text-align: left;
+  }
+  .pocket-cities span {
+    font-size: 12px;
+  }
+  .pocket-pages {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px;
+    margin-top: 10px;
+  }
+  .pocket-pages button {
+    min-width: 48px;
+  }
+  .pocket-bonuses p,
+  .pocket-rule p {
+    padding: 10px;
+    background: #edf2e9;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+  .mobile-pocket .private-quest {
+    background: #173d4d;
+    color: #fff7df;
+    padding: 16px;
+    border-radius: 14px;
+  }
+  .mobile-pocket .private-quest button {
+    font-size: 13px;
+    padding: 10px;
+  }
+  .mobile-pocket .private-quest strong,
+  .mobile-pocket .private-quest span {
+    display: block;
+    margin-bottom: 12px;
+  }
+  .modal .purchase-cover .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+    line-height: 1.3;
+  }
+  .modal .purchase-cover p:not(.eyebrow) {
+    display: none;
+  }
+  .modal .purchase-table {
+    margin: 6px 0;
+  }
+  .modal .cta-clock {
+    font-size: 10px;
+    padding: 4px 5px;
+  }
+  .modal .modal-countdown {
+    margin-bottom: 4px;
+  }
+  .modal .purchase-cta,
+  .modal .purchase-pass {
+    gap: 5px;
+  }
+  .modal .purchase-cta > span:first-child {
+    flex: 1;
+    font-size: 13px;
+  }
+  .game-layout .city-label.special-label b {
+    font-size: 0.8em;
+  }
+  .mobile-tile-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mobile-tile-list button {
+    min-height: 65px;
+    padding: 8px;
+    font-size: 12px;
+  }
+  .modal .property-hero {
+    padding: 8px;
+  }
+  .modal .property-hero .property-art {
+    width: 66px;
+    height: 72px;
+  }
+  .modal .rent-table div {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .modal .group-detail {
+    margin: 8px 0;
+    font-size: 11px;
+  }
+  .modal .auction-property {
+    padding: 8px;
+  }
+  .modal .auction-property > span {
+    font-size: 22px;
+  }
+  .modal .auction-property h3 {
+    font-size: 22px;
+    margin: 2px 0;
+  }
+  .modal .auction-view p,
+  .modal .duel-view p {
+    margin: 8px 0;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+  .modal .duel-hands {
+    font-size: 34px;
+    margin: 4px 0;
+  }
+  .modal .auction-view input,
+  .modal .duel-view input {
+    font-size: 16px;
+    min-height: 40px;
+    padding: 6px;
+  }
+  .modal .decision-actions {
+    gap: 5px;
+  }
+  .modal .decision-actions button,
+  .modal .auction-view button,
+  .modal .duel-view button {
+    margin-top: 5px;
+    padding: 8px;
+    font-size: 12px;
+  }
+}
+@media (max-width: 999px) and (max-height: 700px) and (orientation: portrait) {
+  .app .game-layout {
+    grid-template-rows: 42px 48px minmax(0, 1fr) auto;
+    gap: 2px;
+  }
+  .game-layout .player-card .avatar {
+    display: none;
+  }
+  .game-layout .board-area {
+    grid-template-rows: 26px minmax(0, 1fr) 16px 42px;
+  }
+  .game-layout .action-card {
+    padding: 7px 10px;
+  }
+  .game-layout .action-card h2 {
+    font-size: 17px;
+  }
+  .game-layout .action-card > p:not(.board-choice-hint) {
+    display: none;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .app .game-layout {
+    grid-template-columns: minmax(0, 1fr) 245px;
+    grid-template-rows: 42px 48px minmax(0, 1fr);
+    gap: 4px 8px;
+    padding-left: max(6px, env(safe-area-inset-left, 0px));
+    padding-right: max(6px, env(safe-area-inset-right, 0px));
+  }
+  .game-layout .game-top {
+    grid-area: 1 / 1 / 2 / 3;
+  }
+  .game-layout .players {
+    grid-area: 2 / 2;
+  }
+  .game-layout .player-card .avatar {
+    display: none;
+  }
+  .game-layout .board-area {
+    grid-area: 2 / 1 / 4 / 2;
+    grid-template-rows: 26px minmax(0, 1fr) 16px 42px;
+  }
+  .game-layout .game-sidebar {
+    grid-area: 3 / 2;
+    align-self: end;
+  }
+  .game-layout .action-card {
+    border-radius: 18px;
+    padding: 10px;
+  }
+  .game-layout .action-card > p {
+    display: none;
+  }
+  .game-layout .action-card h2 {
+    font-size: 17px;
+  }
+  .game-layout .action-card .actions {
+    grid-template-columns: 1fr;
+  }
+  .modal:has(.purchase-offer) {
+    max-width: 740px;
+  }
+  .modal .purchase-offer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 14px;
+  }
+  .modal .purchase-table {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: start;
+  }
+  .modal .purchase-offer .setup-note {
+    grid-column: 2;
+    grid-row: 4 / span 3;
+  }
+  .modal .purchase-offer > button {
+    grid-column: 1;
+  }
+  .modal .purchase-cover .property-art {
+    width: 44px;
+    height: 44px;
+    flex-basis: 44px;
+  }
+  .modal .purchase-cover h3 {
+    font-size: 19px;
+  }
+  .modal .purchase-cover p:not(.eyebrow) {
+    display: none;
+  }
+}
+@media (max-width: 999px) {
+  .purchase-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .purchase-tabs button {
+    flex: 1;
+    padding: 6px;
+    font-size: 12px;
+  }
+  .purchase-tabs button[aria-pressed='true'] {
+    background: #173d4d;
+    color: #fff7df;
+  }
+  .purchase-summary {
+    font-size: 12px;
+    line-height: 1.35;
+    margin: 8px 0;
+  }
+  .modal .purchase-offer .fraud-risk {
+    font-size: 11px;
+    line-height: 1.3;
+    margin: 6px 0 0;
+  }
+  .modal .roulette-stage {
+    width: 104px;
+    height: 104px;
+    margin: 10px auto 14px;
+  }
+  .modal .roulette-wheel:after {
+    inset: 28px;
+  }
+  .modal .casino-view h3 {
+    font-size: 20px;
+    margin: 8px 0;
+  }
+  .modal .casino-view p {
+    font-size: 12px;
+    line-height: 1.35;
+    margin: 8px 0;
+  }
+  .modal .casino-view .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .modal .casino-actions {
+    margin: 8px 0;
+    gap: 6px;
+  }
+  .modal .casino-actions button {
+    min-height: 48px;
+    padding: 6px;
+    gap: 4px;
+    font-size: 12px;
+    margin: 0;
+  }
+  .modal .casino-actions button > span:first-child {
+    font-size: 12px;
+  }
+  .modal .casino-view > .secondary {
+    font-size: 12px;
+    padding: 8px;
+    width: 100%;
+  }
+  .modal .slot-reels {
+    padding: 10px;
+    margin: 8px auto 14px;
+  }
+  .modal .slot-reels .reel-window,
+  .modal .slot-reels b {
+    height: 60px;
+  }
+  .modal .slot-reels .reel-window {
+    font-size: 32px;
+  }
+  .modal .chance-reveal img {
+    width: 100px;
+  }
+  .modal .chance-reveal h2 {
+    font-size: 22px;
+    margin: 8px 0;
+  }
+  .modal .chance-reveal p {
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .modal .chance-reveal button {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .modal .purchase-tabs {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .modal .purchase-offer .purchase-table {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .modal .purchase-offer .setup-note {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .modal .purchase-offer .purchase-cta,
+  .modal .purchase-offer .purchase-pass {
+    grid-column: 2;
+  }
+  .modal .purchase-offer .fraud-risk {
+    grid-column: 2;
+  }
+  .modal .casino-view {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 4px 12px;
+  }
+  .modal .casino-view .roulette-stage,
+  .modal .casino-view .slot-reels {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    align-self: center;
+  }
+  .modal .casino-view > :not(.roulette-stage):not(.slot-reels) {
+    grid-column: 2;
+  }
+  .modal:has(.casino-view),
+  .modal:has(.duel-view),
+  .modal:has(.auction-view) {
+    max-width: 740px;
+  }
+  .modal .duel-view .duel-hands,
+  .modal .auction-property > span {
+    display: none;
+  }
+  .modal .duel-view .decision-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 4px 0;
+  }
+  .modal .auction-property {
+    float: left;
+    width: 35%;
+    margin-right: 12px;
+  }
+  .modal .auction-view {
+    font-size: 12px;
+  }
+  .modal .auction-view > button {
+    width: calc(50% - 4px);
+    margin-right: 4px;
+  }
+}
+@media (max-width: 999px) {
+  .modal .auction-seals {
+    margin: 6px 0;
+    gap: 4px;
+  }
+  .modal .auction-view label {
+    font-size: 12px;
+  }
+  .game-layout .action-card .network-status.connection-blocked {
+    display: block;
+    color: #ffe09b;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .modal .modal-countdown {
+    position: absolute;
+    right: 72px;
+    top: 24px;
+    margin: 0;
+  }
+  .modal-heading h2 {
+    max-width: 55%;
+  }
+  .modal .purchase-tabs {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .modal .purchase-cover {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .modal .purchase-offer .property-stats {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .modal .purchase-summary {
+    grid-column: 1;
+    grid-row: 4 / span 2;
+  }
+  .modal .purchase-offer .purchase-cta {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: end;
+  }
+  .modal .purchase-offer .purchase-pass {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: start;
+  }
+  .modal .purchase-offer .purchase-cta.secondary {
+    grid-column: 2;
+    grid-row: 4;
+  }
+  .modal .purchase-offer .fraud-risk {
+    grid-column: 2;
+    grid-row: 5;
+  }
+  .modal .purchase-offer .purchase-table {
+    grid-column: 1;
+    grid-row: 2 / span 3;
+  }
+  .modal .purchase-offer .setup-note {
+    grid-column: 2;
+    grid-row: 1;
+    font-size: 9px;
+  }
+  .modal .auction-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+  }
+  .modal .auction-property {
+    float: none;
+    width: auto;
+    margin: 0;
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+  .modal .auction-view > p {
+    grid-column: 1;
+    grid-row: 3 / span 3;
+  }
+  .modal .auction-view > .auction-seals,
+  .modal .auction-view > label,
+  .modal .auction-view > button {
+    grid-column: 2;
+    width: 100%;
+    margin: 0;
+  }
+  .modal .casino-view h3 {
+    font-size: 18px;
+  }
+}
+@media (max-width: 999px) {
+  .game-layout .roll-status .clear-owner {
+    display: none;
+  }
+}
+@media (max-width: 999px) and (orientation: portrait) {
+  .modal:has(.purchase-offer) {
+    padding: 12px;
+  }
+}
+@media (max-width: 999px) {
+  .board-3d.dice-overlay .board-labels {
+    visibility: hidden;
+  }
+}
+@media (max-width: 999px) {
+  .modal .island-rents {
+    gap: 4px;
+  }
+  .modal .island-rents span {
+    min-width: 0;
+    padding: 6px 2px;
+    font-size: 11px;
+  }
+  .modal .island-rents strong {
+    font-size: 10px;
+  }
+  .modal .toggle {
+    min-height: 44px;
+    margin: 4px 0;
+    font-size: 13px;
+  }
+  .modal .field {
+    margin: 8px 0;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .modal:has(> .toggle) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+    max-width: 740px;
+  }
+  .modal:has(> .toggle) .modal-heading {
+    grid-column: 1 / -1;
+  }
+  .modal:has(> .toggle) > button {
+    margin-top: 4px;
+  }
+  .modal:has(> .toggle) > p {
+    font-size: 11px;
+    margin: 4px 0;
+  }
+}

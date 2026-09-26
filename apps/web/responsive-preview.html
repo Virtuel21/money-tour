@@ -20,6 +20,13 @@
     </style>
   </head>
   <body>
-    <iframe title="Money Tour sur écran mobile" src="/?scenario=auction"></iframe>
+    <iframe title="Money Tour sur écran mobile" src="/?scenario=showcase"></iframe>
+    <script>
+      const q = new URLSearchParams(location.search);
+      const f = document.querySelector('iframe');
+      f.style.width = (Number(q.get('w')) || 390) + 'px';
+      f.style.height = (Number(q.get('h')) || 844) + 'px';
+      f.src = '/?scenario=' + (q.get('scenario') || 'showcase');
+    </script>
   </body>
 </html>

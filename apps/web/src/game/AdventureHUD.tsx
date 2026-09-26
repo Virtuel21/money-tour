@@ -38,18 +38,23 @@ export function PrivateQuest({
   const rule = questRules[q.kind];
   return (
     <section className="private-quest" aria-label="Mon objectif secret">
-      {q.completed ? (
-        <p>✦ Objectif accompli · {rule.title} · 100 k reçus</p>
-      ) : self || opened ? (
+      {opened ? (
         <>
-          <strong>🔒 {rule.title}</strong>
+          <strong>
+            {q.completed ? '✦ Objectif accompli · ' : '🔒 '}
+            {rule.title}
+          </strong>
           <span>
             {Math.min(q.progress, rule.goal)} / {rule.goal} · Récompense 100 k
           </span>
-          {!self && <button onClick={() => setOpened(false)}>Masquer mon objectif</button>}
+          <button aria-expanded={true} onClick={() => setOpened(false)}>
+            Masquer mon objectif
+          </button>
         </>
       ) : (
-        <button onClick={() => setOpened(true)}>🔒 {player.name} · voir mon objectif secret</button>
+        <button aria-expanded={false} onClick={() => setOpened(true)}>
+          🔒 {player.name} · voir mon objectif secret
+        </button>
       )}
     </section>
   );

@@ -1,3 +1,4 @@
+import { cameraBounds, followPlayer } from './camera';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -74,6 +75,10 @@ export default function Board({
   cue,
   choices = [],
   selecting = false,
+  mobile = false,
+  overview = false,
+  self,
+  inspectedOwner,
 }: {
   state: GameState;
   onTile: (id: number) => void;
@@ -82,10 +87,14 @@ export default function Board({
   cue?: Cue;
   choices?: number[];
   selecting?: boolean;
+  mobile?: boolean;
+  overview?: boolean;
+  self?: string;
+  inspectedOwner?: string | null;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const live = useRef({ state, cue, reducedMotion, choices });
-  live.current = { state, cue, reducedMotion, choices };
+  const live = useRef({ state, cue, reducedMotion, choices, mobile, overview, selecting, self });
+  live.current = { state, cue, reducedMotion, choices, mobile, overview, selecting, self };
   const update = useRef<() => void>(() => {});
   const [error, setError] = useState(''),
     [ready, setReady] = useState(false);
@@ -125,8 +134,15 @@ export default function Board({
         camera.lookAt(0, 0, 0);
         camera.updateMatrixWorld();
         const resize = () => {
-          const size = element.clientWidth;
-          renderer!.setSize(size, size * (8.3 / 12.2), false);
+          const width = element.clientWidth,
+            height = element.clientHeight;
+          renderer!.setSize(width, height, false);
+          const bounds = cameraBounds(width, height, live.current.mobile);
+          camera.left = -bounds.halfWidth;
+          camera.right = bounds.halfWidth;
+          camera.top = bounds.halfHeight;
+          camera.bottom = -bounds.halfHeight;
+          camera.updateProjectionMatrix();
         };
         observer = new ResizeObserver(resize);
         observer.observe(element);
@@ -239,16 +255,6 @@ export default function Board({
           return units;
         });
         const shownWealth = live.current.state.players.map((p) => p.cash);
-        setBankAnchors(
-          wealthPoints.map((p) => {
-            const v = new THREE.Vector3(
-              p.x + (Math.abs(p.x) > Math.abs(p.z) ? Math.sign(p.x) * 1.2 : 0),
-              0,
-              p.z + (Math.abs(p.z) > Math.abs(p.x) ? Math.sign(p.z) * 1.2 : 0),
-            ).project(camera);
-            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50 };
-          }),
-        );
         const textureLoader = new THREE.TextureLoader();
         const [travelers, architecture, specialTiles, expansionTiles] = await Promise.all([
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
@@ -394,10 +400,10 @@ export default function Board({
           surface.receiveShadow = true;
           resources.add(surface);
           const trim = new THREE.Mesh(
-            new THREE.BoxGeometry((p.corner ? shape.depth : shape.step) - 0.04, 0.25, 0.16),
+            new THREE.BoxGeometry((p.corner ? shape.depth : shape.step) - 0.04, 0.5, 0.16),
             new THREE.MeshStandardMaterial({ color: 0xffffff }),
           );
-          trim.position.set(p.x + p.normal.x * 1.69, 0.18, p.z + p.normal.z * 1.69);
+          trim.position.set(p.x + p.normal.x * 1.69, 0.305, p.z + p.normal.z * 1.69);
           trim.rotation.y = p.angle;
           resources.add(trim);
           trims.push(trim);
@@ -474,39 +480,58 @@ export default function Board({
           resources.add(shower);
           confetti.push(shower);
         }
-        setAnchors(
-          live.current.state.config.board.map((t) => {
-            const p = tileFrame(t.id, live.current.state.config.board.length);
-            const labelOffset = p.corner ? 0.85 : 0.5;
-            const v = new THREE.Vector3(
-              p.x + p.normal.x * labelOffset,
-              0.32,
-              p.z + p.normal.z * labelOffset,
-            ).project(camera);
-            const points = [
-              [-p.width / 2, -p.depth / 2],
-              [-p.width / 2, p.depth / 2],
-              [p.width / 2, p.depth / 2],
-              [p.width / 2, -p.depth / 2],
-            ]
-              .map(([x, z]) => {
-                const corner = new THREE.Vector3(p.x + x!, 0.27, p.z + z!).project(camera);
-                return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
-              })
-              .join(' ');
-            const alongX = p.side % 2 === 0;
-            const a = new THREE.Vector3(p.x, 0.3, p.z).project(camera);
-            const b = new THREE.Vector3(
-              p.x + (alongX ? 1 : 0),
-              0.3,
-              p.z + (alongX ? 0 : 1),
-            ).project(camera);
-            let angle = (Math.atan2((-(b.y - a.y) * 8.3) / 12.2, b.x - a.x) * 180) / Math.PI;
-            if (angle > 90) angle -= 180;
-            if (angle < -90) angle += 180;
-            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points, angle };
-          }),
-        );
+        const projectLabels = () => {
+          setBankAnchors(
+            wealthPoints.map((p) => {
+              const v = new THREE.Vector3(
+                p.x + (Math.abs(p.x) > Math.abs(p.z) ? Math.sign(p.x) * 1.2 : 0),
+                0,
+                p.z + (Math.abs(p.z) > Math.abs(p.x) ? Math.sign(p.z) * 1.2 : 0),
+              ).project(camera);
+              return { x: (v.x + 1) * 50, y: (1 - v.y) * 50 };
+            }),
+          );
+          setAnchors(
+            live.current.state.config.board.map((t) => {
+              const p = tileFrame(t.id, live.current.state.config.board.length);
+              const labelOffset = p.corner ? 0.85 : 0.5;
+              const v = new THREE.Vector3(
+                p.x + p.normal.x * labelOffset,
+                0.32,
+                p.z + p.normal.z * labelOffset,
+              ).project(camera);
+              const points = [
+                [-p.width / 2, -p.depth / 2],
+                [-p.width / 2, p.depth / 2],
+                [p.width / 2, p.depth / 2],
+                [p.width / 2, -p.depth / 2],
+              ]
+                .map(([x, z]) => {
+                  const corner = new THREE.Vector3(p.x + x!, 0.27, p.z + z!).project(camera);
+                  return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
+                })
+                .join(' ');
+              const alongX = p.side % 2 === 0;
+              const a = new THREE.Vector3(p.x, 0.3, p.z).project(camera);
+              const b = new THREE.Vector3(
+                p.x + (alongX ? 1 : 0),
+                0.3,
+                p.z + (alongX ? 0 : 1),
+              ).project(camera);
+              let angle =
+                (Math.atan2(
+                  (-(b.y - a.y) * element.clientHeight) / element.clientWidth,
+                  b.x - a.x,
+                ) *
+                  180) /
+                Math.PI;
+              if (angle > 90) angle -= 180;
+              if (angle < -90) angle += 180;
+              return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points, angle };
+            }),
+          );
+        };
+        projectLabels();
         const pawns = live.current.state.players.map((_, i) => {
           const pawn = new THREE.Group();
           const character = atlasSprite(travelers, i, 2, 2.55, 2.55);
@@ -596,6 +621,11 @@ export default function Board({
         };
         update.current = draw;
         draw();
+        const focus = new THREE.Vector3();
+        const cameraOffset = new THREE.Vector3(18, 22, 18);
+        let previousTime = performance.now(),
+          lastProjection = 0,
+          projectionSignature = '';
         renderer.setAnimationLoop(() => {
           if (disposed) return;
           const { state: game, cue: activeCue, reducedMotion: reduced } = live.current;
@@ -658,6 +688,44 @@ export default function Board({
               }
             });
           });
+          const currentPlayer = game.players[game.currentPlayer]!;
+          const following = followPlayer({
+            mobile: live.current.mobile,
+            overview: live.current.overview,
+            selecting: live.current.selecting,
+            phase: game.phase,
+            cue: activeCue?.kind,
+            bot: currentPlayer.bot,
+            self: live.current.self,
+            active: currentPlayer.id,
+            winner: Boolean(game.winner),
+          });
+          const target = following
+            ? pawns[game.currentPlayer]!.position.clone().setY(0.6)
+            : new THREE.Vector3();
+          const factor = reduced ? 1 : 1 - Math.exp(-Math.min(100, now - previousTime) / 170);
+          previousTime = now;
+          focus.lerp(target, factor);
+          const zoomTarget = following ? Math.max(2.15, (camera.right - camera.left) / 14) : 1;
+          camera.zoom = THREE.MathUtils.lerp(camera.zoom, zoomTarget, factor);
+          camera.position.copy(cameraOffset).add(focus);
+          camera.lookAt(focus);
+          camera.updateProjectionMatrix();
+          camera.updateMatrixWorld();
+          // DOM labels and touch polygons share the exact camera projection, including during hops.
+          const signature = [focus.x, focus.z, camera.zoom, camera.right, camera.top]
+            .map((v) => v.toFixed(3))
+            .join(':');
+          if (signature !== projectionSignature && now - lastProjection > 32) {
+            projectLabels();
+            element.parentElement?.style.setProperty(
+              '--camera-label-scale',
+              String((camera.zoom * 18) / camera.right),
+            );
+            element.parentElement?.setAttribute('data-camera', following ? 'follow' : 'overview');
+            projectionSignature = signature;
+            lastProjection = now;
+          }
           wealth.forEach((units, i) => {
             const target = game.players[i]?.eliminated ? 0 : (game.players[i]?.cash ?? 0);
             shownWealth[i] = reduced ? target : THREE.MathUtils.lerp(shownWealth[i]!, target, 0.12);
@@ -725,6 +793,7 @@ export default function Board({
           renderer!.setViewport(0, 0, fullSize.x, fullSize.y);
           renderer!.render(scene, camera);
           if (activeCue?.kind === 'dice') diceVisibleUntil = now + 450;
+          element.parentElement?.classList.toggle('dice-overlay', now < diceVisibleUntil);
           if (now < diceVisibleUntil) {
             const width = Math.min(390, fullSize.x * 0.8),
               height = width * 0.72;
@@ -814,7 +883,15 @@ export default function Board({
                   role="button"
                   aria-label={(choices.includes(t.id) ? 'Choisir ' : 'Voir ') + t.name}
                   className={
-                    choices.includes(t.id) ? 'selectable' : selecting ? 'choice-dimmed' : ''
+                    inspectedOwner
+                      ? state.properties[t.id]?.ownerId === inspectedOwner
+                        ? 'profile-highlight'
+                        : 'choice-dimmed'
+                      : choices.includes(t.id)
+                        ? 'selectable'
+                        : selecting
+                          ? 'choice-dimmed'
+                          : ''
                   }
                   onClick={() => onTile(t.id)}
                   onKeyDown={(e) => {
@@ -840,7 +917,7 @@ export default function Board({
                   }}
                 >
                   <b>{p.name}</b>
-                  <strong>{new Intl.NumberFormat('fr-FR').format(p.cash)} ¤</strong>
+                  <strong>{new Intl.NumberFormat('fr-FR').format(p.cash)} 💵</strong>
                 </div>
               ))}
             <div className="board-watermark">
@@ -861,7 +938,9 @@ export default function Board({
                         : t.type === 'casino'
                           ? 'CASINO'
                           : t.type === 'insurance'
-                            ? 'ASSURANCE'
+                            ? mobile
+                              ? 'ASSUR.'
+                              : 'ASSURANCE'
                             : t.type === 'karma'
                               ? 'KARMA'
                               : t.name;
@@ -871,7 +950,13 @@ export default function Board({
                   data-tile-label={t.id}
                   className={
                     'city-label' +
-                    (selecting && !choices.includes(t.id) ? ' label-dimmed' : '') +
+                    ((
+                      inspectedOwner
+                        ? state.properties[t.id]?.ownerId !== inspectedOwner
+                        : selecting && !choices.includes(t.id)
+                    )
+                      ? ' label-dimmed'
+                      : '') +
                     (['casino', 'insurance', 'karma'].includes(t.type) ? ' special-label' : '')
                   }
                   style={
