@@ -471,6 +471,7 @@ export class Session {
   async start(count: number, teams: boolean, durationMs: number): Promise<void> {
     this.enqueue(async () => {
       if (!this.isHost || this.state) return;
+      if (teams) count = 4;
       const players = this.members.map((m, i) => ({
         id: m.id,
         name: m.name,

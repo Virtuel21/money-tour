@@ -276,3 +276,11 @@ Une commande de build réussie ne prouve ni l'ergonomie mobile ni la disponibili
 - Épreuve sur réseaux différents. Si les moyens disponibles ne permettent pas de la réaliser, elle reste explicitement ouverte dans le README et la PR concernée ; elle ne doit pas être déclarée réussie.
 
 Les décisions sont révisables si une contrainte technique apparaît, avec changement explicite de ce document et du journal de phase. Aucune de ces réserves n'exige une nouvelle confirmation utilisateur pour continuer les travaux déjà autorisés dès que les accès nécessaires sont disponibles.
+
+## 15. Implémentation réseau livrée
+
+L’unité de cérémonie est une action atomique (ou la création du plateau), liée au hash exact de sa commande. Tous les tirages internes nécessaires à cette transition utilisent sa graine partagée ; il n’existe pas de choix humain entre les tirages internes. Le moteur est sondé avec un RNG qui lève une exception pour détecter les transitions qui nécessitent une cérémonie, y compris les actions automatiques au délai. Les transitions sans aléa ne font pas de cérémonie.
+
+Les contributions sont échangées en maillage ; les intentions et décisions métier restent dirigées par l’hôte. Après accord sur l’ensemble des engagements et révélation, chaque contributeur signe aussi la preuve complète ECDSA P-256. Ce certificat est conservé avec l’action et vérifié lors du replay. L’identité est le hash de la clé publique. Le code d’invitation contient 128 bits d’entropie ; une clé de reprise différente est stockée localement, avec expiration de 24 h. Le champ TURN reste en mémoire uniquement.
+
+Le snapshot de reprise est un historique signé rejoué depuis la création, pas un état métier adopté aveuglément. L’historique connu doit en être un préfixe. Les signatures n’empêchent pas un hôte de manipuler sa politique de temps ou d’absence : contrôles en bot et ticks restent sous sa responsabilité. Le protocole vise la cohérence des parties privées, pas une compétition hostile. Les partitions divergentes sont bloquées ; une migration n’offre pas un consensus byzantin. Les écarts et limites du cadrage sont explicités dans le README.
