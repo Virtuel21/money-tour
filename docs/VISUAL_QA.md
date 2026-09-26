@@ -43,3 +43,11 @@ Prime de Départ inchangée à 300 k : animation maintenant déclenchée sur le 
 Le Mondial permet de sélectionner une ville possédée sur le plateau : Lisbonne sélectionnée, 50 k prélevés, multiplicateur augmenté de 1. Les îles et propriétés adverses sont exclues. Les cartes automatiques indiquent simplement que la partie reprend dans un instant.
 
 223 tests passent (13 fichiers), dont contrôle de l'offre selon le siège, changement de nom des deux participants en transport simulé, prime au Départ et Mondial sur ville possédée. La recette multiréseau #10 demeure ouverte.
+
+## Tuiles rectangulaires et plateau variable — 26 septembre 2026
+
+26 cases : sept rues de deux villes mélangées par graine, quatre îles, trois Chance, une Taxe fixe en position 25 avant Départ et quatre coins. Les tests géométriques contrôlent les 26 cases et la compatibilité des anciens plateaux à 28 cases, sans intersections. Les sauvegardes anciennes gardent leur géographie.
+
+235 tests passent ; typage, lint, couverture et build réussis. Couverture moteur : lignes 99,23 %, branches 95,22 %, fonctions 100 %. Playlist vérifiée sur trois fins de piste et retour accueil. Budget statique 14 268 028 octets / 16 Mo.
+
+Recette navigateur locale : fenêtre Madrid passée de 30 à 18 secondes, mêmes temps en en-tête et dans Acheter / Non merci. Achat réalisé : 1 500 k → 1 350 k, puis fin de décision automatique à expiration. Capture achat-minuteur.png. Les commandes désactivées ont un fond bleu et un texte clair ; l'état réseau n'a plus de rectangle crème. Suppression de l'outline HTML appliqué au polygone SVG, remplacé par un contour SVG fin avec épaisseur constante. Le rendu du plateau utilise les nouvelles couleurs, une frange d'eau sur le sable et les constructions recolorées selon leur propriétaire.

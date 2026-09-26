@@ -1,4 +1,4 @@
-import { createGame, createRng, reduceGame } from '@money-tour/engine';
+import { config, createGame, createRng, reduceGame } from '@money-tour/engine';
 import type { LocalSave } from './local';
 
 /** Deterministic UI acceptance scenes, compiled out of production by Vite. */
@@ -23,6 +23,7 @@ export function previewScenario(): LocalSave | null {
   )
     return null;
   const state = createGame({
+    config: { ...config, shuffleStreets: false },
     players: [
       { id: 'p1', name: 'Léa' },
       { id: 'p2', name: 'Max' },
@@ -32,7 +33,7 @@ export function previewScenario(): LocalSave | null {
     seed: 'visual-review',
   });
   const player = state.players[0]!;
-  player.position = name === 'travel' ? 21 : name === 'build' ? 1 : 5;
+  player.position = name === 'travel' ? 20 : name === 'build' ? 1 : 4;
   state.phase = name === 'travel' ? 'travel' : name === 'build' ? 'property' : 'roll';
   player.travelPending = name === 'travel';
   player.laps = 1;
@@ -47,13 +48,13 @@ export function previewScenario(): LocalSave | null {
     for (const tile of state.config.board.filter((t) => t.type === 'resort'))
       state.properties[tile.id]!.ownerId = 'p3';
     state.players.forEach((p, i) => {
-      p.position = [5, 12, 19, 22][i]!;
+      p.position = [4, 11, 17, 21][i]!;
     });
     [
       [1, 2],
       [8, 9],
-      [15, 16],
-      [22, 23],
+      [14, 15],
+      [21, 22],
     ].forEach((pair, i) => {
       pair.forEach((id, j) => {
         state.properties[id] = {
@@ -73,15 +74,15 @@ export function previewScenario(): LocalSave | null {
     state.phase = 'property';
   }
   if (name === 'purchase') {
-    player.position = 5;
+    player.position = 4;
     state.phase = 'property';
   }
   if (name === 'mondial') {
-    player.position = 14;
+    player.position = 13;
     state.phase = 'championship';
   }
   if (name === 'rent') {
-    state.properties[5] = { ownerId: 'p2', level: 2, championships: 0 };
+    state.properties[4] = { ownerId: 'p2', level: 2, championships: 0 };
   }
   if (name === 'card' || name === 'attack' || name === 'rent' || name === 'tax') {
     const rolled = reduceGame(
@@ -90,9 +91,9 @@ export function previewScenario(): LocalSave | null {
       createRng('visual-review:0'),
     );
     const dice = rolled.events.find((event) => event.type === 'dice')!.dice!;
-    const target = name === 'rent' ? 5 : name === 'tax' ? 11 : 4;
+    const target = name === 'rent' ? 4 : name === 'tax' ? 25 : 6;
     if (name === 'attack') state.deck = ['chance-15'];
-    player.position = (target - dice.reduce((sum, value) => sum + value, 0) + 28) % 28;
+    player.position = (target - dice.reduce((sum, value) => sum + value, 0) + 26) % 26;
   }
   return { version: 1, seed: 'visual-review', state };
 }

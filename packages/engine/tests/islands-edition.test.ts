@@ -1,9 +1,12 @@
+import legacyConfig from '../src/legacy-v5.config.json';
+import type { GameConfig } from '../src/index';
 import { describe, expect, it } from 'vitest';
 import { createGame, getLegalActions, getRent, reduceGame, validateState } from '../src/index';
 import { sequence } from './helpers';
 
 const game = (teams = false) =>
   createGame({
+    config: legacyConfig as GameConfig,
     players: Array.from({ length: 4 }, (_, i) => ({
       id: `p${i + 1}`,
       name: `Player ${i + 1}`,

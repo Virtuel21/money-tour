@@ -2,8 +2,10 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { Soundscape } from '../src/audio/synth';
 
 const sources: { stop: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }[] = [];
+const tracks: { src: string; loop: boolean; onended: (() => void) | null }[] = [];
 beforeEach(() => {
   sources.length = 0;
+  tracks.length = 0;
   vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
   vi.stubGlobal('fetch', () => new Promise(() => {}));
   vi.stubGlobal(
@@ -12,7 +14,12 @@ beforeEach(() => {
       loop = false;
       preload = '';
       volume = 0;
-      src = '';
+      src: string;
+      onended: (() => void) | null = null;
+      constructor(src: string) {
+        this.src = src;
+        tracks.push(this);
+      }
       pause() {}
       play() {
         return Promise.resolve();
@@ -57,6 +64,28 @@ beforeEach(() => {
   );
 });
 afterEach(() => vi.unstubAllGlobals());
+
+it('plays all three game songs in rotation and returns to looping menu music', async () => {
+  const sound = new Soundscape();
+  sound.configure({ effects: true, music: true, volume: 0.4 });
+  await sound.unlock();
+  sound.setScene('game');
+  const track = tracks[0]!;
+  const heard = new Set<string>();
+  for (let i = 0; i < 3; i++) {
+    heard.add(track.src.split('/').pop()!);
+    expect(track.loop).toBe(false);
+    track.onended!();
+  }
+  expect([...heard].sort()).toEqual(['game-2.mp3', 'game-3.mp3', 'game.mp3']);
+  sound.setScene('menu');
+  expect(track.src).toMatch(/audio\/menu.mp3$/);
+  expect(track.loop).toBe(true);
+  track.onended!();
+  expect(track.src).toMatch(/menu.mp3$/);
+  sound.close();
+  expect(track.onended).toBeNull();
+});
 
 it('cancels every scheduled game note immediately when returning home', async () => {
   const sound = new Soundscape();

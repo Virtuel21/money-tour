@@ -10,11 +10,22 @@ export function streetSurface(tile: Tile) {
   ctx.fillStyle = sand ? '#f1d38e' : (tile.color ?? '#f5cf67');
   ctx.fillRect(0, 0, 256, 256);
   ctx.fillStyle = '#fff5e4';
-  ctx.globalAlpha = sand ? 0 : 0.58;
+  ctx.globalAlpha = sand ? 0 : 0.22;
   ctx.fillRect(0, 0, 256, 256);
   ctx.globalAlpha = 1;
   const group = Number(tile.group?.slice(1) ?? 0);
   if (sand) {
+    ctx.fillStyle = '#36c8d4';
+    ctx.fillRect(0, 0, 256, 29);
+    ctx.strokeStyle = '#e4fffa';
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    for (let x = 0; x <= 256; x += 4) {
+      const y = 29 + Math.sin(x / 26) * 5;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
     for (let i = 0; i < 130; i++) {
       ctx.fillStyle = i % 2 ? '#c69c54' : '#fff0c1';
       ctx.fillRect((i * 73) % 256, (i * 47) % 256, 2, 2);

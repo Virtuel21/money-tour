@@ -1,5 +1,8 @@
 import {
   config,
+  legacyConfig,
+  sameRules,
+  type GameConfig,
   createGame,
   createRng,
   reduceGame,
@@ -15,7 +18,7 @@ export interface LocalSave {
   seed: string;
   state: GameState;
 }
-const key = 'money-tour.local.v5'; // Keep the original 32-cell save untouched.
+const key = 'money-tour.local.v6'; // Keep the original 32-cell save untouched.
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
   return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
@@ -29,17 +32,20 @@ export function applyLocal(
 }
 export function loadLocal(): LocalSave | null {
   try {
-    const raw = localStorage.getItem(key) ?? localStorage.getItem('money-tour.local.v4');
+    const raw =
+      localStorage.getItem(key) ??
+      localStorage.getItem('money-tour.local.v5') ??
+      localStorage.getItem('money-tour.local.v4');
     if (!raw) return null;
     const save = JSON.parse(raw) as LocalSave;
     if (save?.version === 1 && save.state?.config?.version === 4) {
-      const oldConfig = { ...config, version: 4 };
+      const oldConfig: GameConfig = { ...legacyConfig, version: 4 } as GameConfig;
       delete oldConfig.championshipDuration;
       if (
         JSON.stringify(save.state.config) === JSON.stringify(oldConfig) &&
         validateState(save.state).length === 0
       ) {
-        save.state.config = structuredClone(config);
+        save.state.config = structuredClone(legacyConfig) as GameConfig;
         for (const property of Object.values(save.state.properties))
           if (property.championships) {
             property.championships = 1;
@@ -50,7 +56,10 @@ export function loadLocal(): LocalSave | null {
     if (
       save.version !== 1 ||
       typeof save.seed !== 'string' ||
-      JSON.stringify(save.state.config) !== JSON.stringify(config) ||
+      !(
+        sameRules(save.state.config, config) ||
+        sameRules(save.state.config, legacyConfig as GameConfig)
+      ) ||
       validateState(save.state).length
     )
       return null;

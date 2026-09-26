@@ -7,14 +7,7 @@ import type { Cue } from '../game/presentation';
 import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
 
-export function tilePoint(id: number, count = 28) {
-  const side = count / 4;
-  const step = 14.4 / side;
-  if (id <= side) return { x: 7.2 - id * step, z: 7.2 };
-  if (id <= side * 2) return { x: -7.2, z: 7.2 - (id - side) * step };
-  if (id <= side * 3) return { x: -7.2 + (id - side * 2) * step, z: -7.2 };
-  return { x: 7.2, z: -7.2 + (id - side * 3) * step };
-}
+import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
 const up = new THREE.Vector3(0, 1, 0);
 // Blender Z up -> glTF Y up. Opposite faces sum to seven.
 const faceNormals = [
@@ -94,6 +87,7 @@ export default function Board({
   const update = useRef<() => void>(() => {});
   const [error, setError] = useState(''),
     [ready, setReady] = useState(false);
+  const [bankAnchors, setBankAnchors] = useState<{ x: number; y: number }[]>([]);
   const [anchors, setAnchors] = useState<{ x: number; y: number; points: string; angle: number }[]>(
     [],
   );
@@ -124,7 +118,7 @@ export default function Board({
         element.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         scene.add(resources);
-        const camera = new THREE.OrthographicCamera(-12.2, 12.2, 8.3, -8.3, 0.1, 80);
+        const camera = new THREE.OrthographicCamera(-16, 16, 10.885, -10.885, 0.1, 80);
         camera.position.set(18, 22, 18);
         camera.lookAt(0, 0, 0);
         camera.updateMatrixWorld();
@@ -181,7 +175,66 @@ export default function Board({
           templates.set(name, compact(original));
         }
         const clone = (name: string) => templates.get(name)!.clone(true);
-        resources.add(clone('board'));
+        const shape = boardShape(live.current.state.config.board.length);
+        const platform = clone('board');
+        platform.scale.set(
+          (shape.x * 2 + shape.depth) / 16.65,
+          1,
+          (shape.z * 2 + shape.depth) / 16.65,
+        );
+        resources.add(platform);
+        const wealthGltf = await loader.loadAsync(import.meta.env.BASE_URL + 'models/wealth.glb');
+        if (disposed) {
+          disposePending(wealthGltf.scene);
+          disposePending(gltf.scene);
+          return;
+        }
+        const note = compact(wealthGltf.scene.getObjectByName('banknote_bundle')!);
+        const ingot = compact(wealthGltf.scene.getObjectByName('gold_bar')!);
+        // glTF already converts these models to Y-up; keep the bundles horizontal.
+        for (const source of [note, ingot])
+          source.traverse((node) => {
+            if (node instanceof THREE.Mesh) {
+              node.geometry.scale(1, 1, 1.5);
+              if (
+                node.material instanceof THREE.MeshStandardMaterial &&
+                node.material.metalness > 0
+              )
+                node.material.metalness = 0.22;
+            }
+          });
+        const wealth = live.current.state.players.map((_, i) => {
+          const pile = new THREE.Group();
+          const pos = wealthPoints[i]!;
+          pile.position.set(pos.x, -0.4, pos.z);
+          const plinth = new THREE.Mesh(
+            new THREE.BoxGeometry(2.3, 0.06, 1.4),
+            new THREE.MeshStandardMaterial({ color: colors[i], roughness: 0.6 }),
+          );
+          plinth.position.y = -0.04;
+          pile.add(plinth);
+          const units = new THREE.Group();
+          pile.add(units);
+          for (let k = 0; k < 24; k++) {
+            const unit = (k % 3 < 2 ? note : ingot).clone(true);
+            unit.position.set(
+              ((k % 3) - 1) * 0.76,
+              Math.floor(k / 6) * 0.23,
+              Math.floor((k % 6) / 3) * 0.7 - 0.35,
+            );
+            unit.rotation.y = k % 2 ? 0.06 : -0.04;
+            units.add(unit);
+          }
+          resources.add(pile);
+          return units;
+        });
+        const shownWealth = live.current.state.players.map((p) => p.cash);
+        setBankAnchors(
+          wealthPoints.map((p) => {
+            const v = new THREE.Vector3(p.x, 0, p.z + 1).project(camera);
+            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50 };
+          }),
+        );
         const textureLoader = new THREE.TextureLoader();
         const [travelers, architecture, specialTiles] = await Promise.all([
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
@@ -220,25 +273,37 @@ export default function Board({
           sprite.scale.set(width, height, 1);
           return sprite;
         };
+        const ownerSprite = (sprite: THREE.Sprite, owner: number) => {
+          sprite.material.onBeforeCompile = (shader) => {
+            shader.uniforms.ownerTone = { value: new THREE.Color(colors[owner] ?? '#278fc0') };
+            shader.fragmentShader = 'uniform vec3 ownerTone;\n' + shader.fragmentShader;
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <map_fragment>',
+              `#include <map_fragment>
+              float chroma=max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b))-min(diffuseColor.r,min(diffuseColor.g,diffuseColor.b));
+              if(chroma>0.07 && ((diffuseColor.r>diffuseColor.g*1.25 && diffuseColor.r>diffuseColor.b*1.08) || (diffuseColor.b>diffuseColor.r*1.18 && diffuseColor.b>diffuseColor.g*1.10))) {
+                float shade=clamp(max(diffuseColor.r,max(diffuseColor.g,diffuseColor.b))*1.65,0.28,1.3);
+                diffuseColor.rgb=ownerTone*shade;
+              }
+            `,
+            );
+          };
+          sprite.material.customProgramCacheKey = () => 'owner-color-v1';
+          return sprite;
+        };
         // Detailed pre-rendered dioramas: a fixed three-quarter camera lets the art retain its fine detail.
         [
-          [-2.5, 1.5],
-          [1.5, -2.5],
-          [-0.2, 4.9],
-          [4.9, -0.2],
+          [-2.5, -1.6],
+          [2.5, -1.6],
+          [-2.5, 2.2],
+          [2.5, 2.2],
         ].forEach(([x, z], i) => {
-          const island = atlasSprite(
-            architecture,
-            i + 2,
-            3,
-            i < 2 ? 3.45 : 3.9,
-            i < 2 ? 3.45 : 3.9,
-          );
+          const island = atlasSprite(architecture, i + 2, 3, 3.05, 3.05);
           island.position.set(x!, 0.08, z!);
           resources.add(island);
         });
         const sea = new THREE.Mesh(
-          new THREE.BoxGeometry(12.6, 0.06, 12.6),
+          new THREE.BoxGeometry(shape.x * 2 - shape.depth, 0.06, shape.z * 2 - shape.depth),
           new THREE.MeshStandardMaterial({ color: '#31cbd0', roughness: 0.4 }),
         );
         sea.position.y = 0.02;
@@ -261,10 +326,10 @@ export default function Board({
           championships: THREE.Group[] = [],
           confetti: THREE.Group[] = [];
         for (const tile of live.current.state.config.board) {
-          const p = tilePoint(tile.id, live.current.state.config.board.length),
+          const p = tileFrame(tile.id, live.current.state.config.board.length),
             cell = clone('tile');
           cell.position.set(p.x, 0, p.z);
-          cell.scale.set(1.12, 1, 1.12);
+          cell.scale.set(p.width / 1.66, 1, p.depth / 1.66);
           resources.add(cell);
           const special = tile.type === 'chance' || tile.type === 'tax';
           const tileMap = special ? specialTiles.clone() : streetSurface(tile);
@@ -275,7 +340,7 @@ export default function Board({
             tileMap.anisotropy = renderer!.capabilities.getMaxAnisotropy();
           }
           const surface = new THREE.Mesh(
-            new THREE.PlaneGeometry(1.86, 1.86),
+            new THREE.PlaneGeometry(p.width - 0.12, p.depth - 0.12),
             new THREE.MeshStandardMaterial({ map: tileMap, roughness: 0.95 }),
           );
           surface.rotation.x = -Math.PI / 2;
@@ -283,31 +348,23 @@ export default function Board({
           surface.receiveShadow = true;
           resources.add(surface);
           const strip = new THREE.Mesh(
-            new THREE.BoxGeometry(1.55, 0.045, 0.24),
+            new THREE.BoxGeometry((p.corner ? shape.depth : shape.step) - 0.3, 0.045, 0.2),
             new THREE.MeshStandardMaterial({ color: tile.color ?? '#f9c34f' }),
           );
-          strip.position.set(0, 0.27, -0.72);
+          strip.position.set(p.x - p.normal.x * 1.4, 0.3, p.z - p.normal.z * 1.4);
+          strip.rotation.y = p.angle;
           strip.visible = !special;
-          cell.add(strip);
+          resources.add(strip);
           const trim = new THREE.Mesh(
-            new THREE.BoxGeometry(1.99, 0.25, 0.23),
+            new THREE.BoxGeometry((p.corner ? shape.depth : shape.step) - 0.04, 0.25, 0.16),
             new THREE.MeshStandardMaterial({ color: 0xffffff }),
           );
-          trim.position.set(p.x, 0.18, p.z);
-          if (tile.id <= live.current.state.config.board.length / 4) trim.position.z += 1.02;
-          else if (tile.id <= live.current.state.config.board.length / 2) {
-            trim.rotation.y = Math.PI / 2;
-            trim.position.x -= 1.02;
-          } else if (tile.id <= (live.current.state.config.board.length * 3) / 4)
-            trim.position.z -= 1.02;
-          else {
-            trim.rotation.y = Math.PI / 2;
-            trim.position.x += 1.02;
-          }
+          trim.position.set(p.x + p.normal.x * 1.69, 0.18, p.z + p.normal.z * 1.69);
+          trim.rotation.y = p.angle;
           resources.add(trim);
           trims.push(trim);
           const outline = new THREE.Mesh(
-            new THREE.BoxGeometry(1.74, 0.025, 1.74),
+            new THREE.BoxGeometry(p.width - 0.15, 0.025, p.depth - 0.15),
             new THREE.MeshStandardMaterial({ color: 0xffdf55, transparent: true, opacity: 0.7 }),
           );
           outline.position.set(p.x, 0.27, p.z);
@@ -315,18 +372,19 @@ export default function Board({
           resources.add(outline);
           borders.push(outline);
           const city = new THREE.Group();
-          city.position.set(p.x, 0.26, p.z - 0.44);
+          city.position.set(p.x - p.normal.x * 0.85, 0.26, p.z - p.normal.z * 0.85);
+          city.rotation.y = p.angle;
           resources.add(city);
           buildings.push(city);
           if (tile.type === 'resort' || tile.type === 'island') {
             const palm = clone('palm');
             palm.scale.setScalar(0.9);
-            palm.position.set(p.x, 0.26, p.z - 0.3);
+            palm.position.set(p.x - p.normal.x * 0.65, 0.26, p.z - p.normal.z * 0.65);
             resources.add(palm);
           }
           if (!['city', 'resort', 'island', 'chance', 'tax'].includes(tile.type)) {
             const icon = clone(tile.type);
-            icon.position.set(p.x, 0.27, p.z - 0.3);
+            icon.position.set(p.x - p.normal.x * 0.3, 0.27, p.z - p.normal.z * 0.3);
             resources.add(icon);
           }
           const flag = caption('⚑ ×2', 0.38, 0.22, '#b55b20');
@@ -335,16 +393,17 @@ export default function Board({
           flags.push(flag);
           const celebration = new THREE.Group();
           celebration.position.set(p.x, 0.29, p.z);
+          celebration.rotation.y = p.angle;
           if (tile.type === 'city') {
             const trophy = clone('championship');
             trophy.scale.setScalar(0.3);
             trophy.position.set(-0.66, 0, -0.5);
             celebration.add(trophy);
             const ribbon = new THREE.Mesh(
-              new THREE.BoxGeometry(1.72, 0.07, 0.13),
+              new THREE.BoxGeometry(1.92, 0.07, 0.13),
               new THREE.MeshStandardMaterial({ color: '#ffd45c', metalness: 0.3, roughness: 0.4 }),
             );
-            ribbon.position.set(0, 0.03, 0.81);
+            ribbon.position.set(0, 0.03, 1.5);
             celebration.add(ribbon);
           }
           resources.add(celebration);
@@ -368,22 +427,25 @@ export default function Board({
         }
         setAnchors(
           live.current.state.config.board.map((t) => {
-            const p = tilePoint(t.id, live.current.state.config.board.length);
-            const labelOffset = t.type === 'city' ? 0 : t.type === 'resort' ? 0.18 : 0.48;
-            const v = new THREE.Vector3(p.x + labelOffset, 0.32, p.z + labelOffset).project(camera);
+            const p = tileFrame(t.id, live.current.state.config.board.length);
+            const labelOffset = p.corner ? 0.85 : 0.5;
+            const v = new THREE.Vector3(
+              p.x + p.normal.x * labelOffset,
+              0.32,
+              p.z + p.normal.z * labelOffset,
+            ).project(camera);
             const points = [
-              [-0.98, -0.98],
-              [-0.98, 0.98],
-              [0.98, 0.98],
-              [0.98, -0.98],
+              [-p.width / 2, -p.depth / 2],
+              [-p.width / 2, p.depth / 2],
+              [p.width / 2, p.depth / 2],
+              [p.width / 2, -p.depth / 2],
             ]
               .map(([x, z]) => {
                 const corner = new THREE.Vector3(p.x + x!, 0.27, p.z + z!).project(camera);
                 return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
               })
               .join(' ');
-            const alongX =
-              Math.floor(t.id / (live.current.state.config.board.length / 4)) % 2 === 0;
+            const alongX = p.side % 2 === 0;
             const a = new THREE.Vector3(p.x, 0.3, p.z).project(camera);
             const b = new THREE.Vector3(
               p.x + (alongX ? 1 : 0),
@@ -449,7 +511,9 @@ export default function Board({
             const n = level === 4 ? 1 : level;
             for (let j = 0; j < n; j++) {
               const building = new THREE.Group();
-              building.add(atlasSprite(architecture, level === 4 ? 1 : 0, 3, 1.85, 1.85));
+              building.add(
+                ownerSprite(atlasSprite(architecture, level === 4 ? 1 : 0, 3, 1.85, 1.85), owner),
+              );
               building.scale.setScalar(level === 4 ? 0.61 : n === 1 ? 0.66 : 0.44);
               building.position.x = (j - (n - 1) / 2) * 0.46;
               building.position.z = -(j - (n - 1) / 2) * 0.46;
@@ -478,11 +542,11 @@ export default function Board({
               return;
             }
             pawn.visible = !player.eliminated;
-            let point = tilePoint(player.position),
+            let point = tilePoint(player.position, game.config.board.length),
               height = 0.27;
             if (activeCue?.kind === 'hop' && activeCue.playerId === player.id && !reduced) {
-              const from = tilePoint(activeCue.from!),
-                to = tilePoint(activeCue.to!);
+              const from = tilePoint(activeCue.from!, game.config.board.length),
+                to = tilePoint(activeCue.to!, game.config.board.length);
               point = {
                 x: THREE.MathUtils.lerp(from.x, to.x, progress),
                 z: THREE.MathUtils.lerp(from.z, to.z, progress),
@@ -508,7 +572,12 @@ export default function Board({
                     : -0.37
                   : 0;
             const offsetZ = peers.length > 2 ? (slot < 2 ? 0.15 : 0.6) : 0.35;
-            pawn.position.set(point.x + offsetX, height, point.z + offsetZ);
+            const frame = tileFrame(player.position, game.config.board.length);
+            pawn.position.set(
+              point.x + offsetX + frame.normal.x * 0.25,
+              height,
+              point.z + offsetZ + frame.normal.z * 0.25,
+            );
             // A crowded cell remains readable: the active traveler stays solid; companions become translucent.
             pawn.traverse((node) => {
               if (node instanceof THREE.Sprite && node.material.map) {
@@ -516,6 +585,19 @@ export default function Board({
                 node.material.alphaTest = 0.7 * node.material.opacity;
               }
             });
+          });
+          wealth.forEach((units, i) => {
+            const target = game.players[i]?.eliminated ? 0 : (game.players[i]?.cash ?? 0);
+            shownWealth[i] = reduced ? target : THREE.MathUtils.lerp(shownWealth[i]!, target, 0.12);
+            const amount = Math.min(24, shownWealth[i]! / 100000);
+            units.children.forEach((unit, k) => {
+              const fill = THREE.MathUtils.clamp(amount - k, 0, 1);
+              unit.visible = fill > 0.01;
+              unit.scale.y = Math.max(0.01, fill);
+            });
+            units.scale.setScalar(
+              1 + Math.max(0, Math.log2(Math.max(1, shownWealth[i]! / 2400000))) * 0.1,
+            );
           });
           dice.forEach((die, i) => {
             const value = (activeCue?.kind === 'dice' ? activeCue.dice?.[i] : game.dice[i]) ?? 1;
@@ -587,6 +669,9 @@ export default function Board({
             });
           gather(resources);
           gather(gltf.scene);
+          gather(wealthGltf.scene);
+          gather(note);
+          gather(ingot);
           templates.forEach(gather);
           textures.add(travelers);
           textures.add(architecture);
@@ -649,6 +734,21 @@ export default function Board({
             </svg>
           )}
           <div className="board-labels" aria-hidden="true">
+            {!demo &&
+              state.players.map((p, i) => (
+                <div
+                  className="bank-label"
+                  key={p.id}
+                  style={{
+                    left: bankAnchors[i]?.x + '%',
+                    top: bankAnchors[i]?.y + '%',
+                    borderColor: colors[i],
+                  }}
+                >
+                  <b>{p.name}</b>
+                  <strong>{new Intl.NumberFormat('fr-FR').format(p.cash)} ¤</strong>
+                </div>
+              ))}
             <div className="board-watermark">
               MONEY
               <br />

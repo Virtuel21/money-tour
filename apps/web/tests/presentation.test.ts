@@ -1,9 +1,10 @@
 import { expect, it } from 'vitest';
-import { createGame } from '@money-tour/engine';
+import { createGame, legacyConfig, type GameConfig } from '@money-tour/engine';
 import { presentation } from '../src/game/presentation';
 
 const game = () =>
   createGame({
+    config: legacyConfig as GameConfig,
     players: [
       { id: 'a', name: 'A' },
       { id: 'b', name: 'B' },

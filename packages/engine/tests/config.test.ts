@@ -2,14 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { config } from '../src/index';
 
 describe('published board and economic data', () => {
-  it('contains exactly the 28 unique positions and requested board composition', () => {
-    expect(config.board.map((tile) => tile.id)).toEqual(Array.from({ length: 28 }, (_, i) => i));
+  it('contains exactly the 26 unique positions and requested board composition', () => {
+    expect(config.board.map((tile) => tile.id)).toEqual(Array.from({ length: 26 }, (_, i) => i));
     const count = (type: string) => config.board.filter((tile) => tile.type === type).length;
     expect(count('city')).toBe(14);
     expect(count('resort')).toBe(4);
-    expect(count('chance')).toBe(4);
-    expect(count('tax')).toBe(2);
-    expect([0, 7, 14, 21].map((i) => config.board[i]!.type)).toEqual([
+    expect(count('chance')).toBe(3);
+    expect(count('tax')).toBe(1);
+    expect([0, 7, 13, 20].map((i) => config.board[i]!.type)).toEqual([
       'start',
       'island',
       'championship',
@@ -29,10 +29,10 @@ describe('published board and economic data', () => {
         cities.filter((tile) => tile.line === line).map((tile) => tile.id),
       ),
     ).toEqual([
-      [1, 2, 5, 6],
-      [8, 9, 12, 13],
-      [15, 16, 19, 20],
-      [22, 23],
+      [1, 2, 4, 5],
+      [8, 9, 11, 12],
+      [14, 15, 17, 18],
+      [21, 22],
     ]);
   });
 

@@ -2833,3 +2833,122 @@ footer a {
     font-size: 17px;
   }
 }
+
+/* Portrait spaces, readable action states and a restrained keyboard highlight. */
+.board-hit-polygons polygon {
+  -webkit-tap-highlight-color: transparent;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 2px;
+}
+.board-hit-polygons polygon:focus {
+  outline: none !important;
+}
+.board-hit-polygons polygon:hover {
+  stroke: #ffffff;
+  fill: #ffffff18;
+}
+.board-hit-polygons polygon:focus-visible,
+.board-hit-polygons polygon.selectable {
+  outline: none !important;
+  stroke: #ffdd45;
+  stroke-width: 2.5px;
+  fill: #ffdd4518;
+}
+.action-card .actions .secondary {
+  background: #fff5db;
+  color: #173a4b;
+  border-color: #e9dbaa;
+}
+.action-card .actions button:disabled {
+  opacity: 1;
+  background: #385565;
+  color: #c8dce5;
+  border-color: #5d7a88;
+  box-shadow: none;
+  cursor: wait;
+}
+.action-card .network-status {
+  background: transparent;
+  color: #b9dce6;
+  border: 0;
+  padding: 0;
+  font-size: 11px;
+  grid-column: 1 / -1;
+}
+.cta-clock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0;
+  line-height: 1.2;
+  background: #12374b14;
+  color: inherit;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.clock-urgent {
+  background: #a42f16;
+  color: #fff;
+}
+.purchase-cta,
+.purchase-pass {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.modal-countdown {
+  margin-bottom: 10px;
+}
+.modal-countdown:has(.cta-clock:only-child) {
+  text-align: right;
+}
+.modal-countdown:empty {
+  display: none;
+}
+.action-card .actions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.bank-label {
+  position: absolute;
+  transform: translate(-50%, 0);
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  background: #fff9e8ee;
+  border: 2px solid;
+  border-radius: 8px;
+  padding: 3px 8px;
+  color: #173b4c;
+  font-size: clamp(7px, 1.1cqw, 14px);
+  box-shadow: 0 3px 8px #16384d18;
+}
+.bank-label strong {
+  font-size: 1.1em;
+  white-space: nowrap;
+}
+.city-label {
+  width: 6.7%;
+}
+@media (max-width: 600px) {
+  .bank-label {
+    padding: 1px 3px;
+    border-width: 1px;
+    border-radius: 4px;
+    font-size: 6px;
+  }
+  .modal-countdown .cta-clock {
+    font-size: 11px;
+  }
+  .purchase-cta > span:first-child {
+    text-align: left;
+  }
+}

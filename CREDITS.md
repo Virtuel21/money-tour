@@ -16,6 +16,12 @@ Créations originales avec le générateur d’images intégré de ChatGPT : app
 
 - apps/web/public/audio/menu.mp3 : « Property Party - main menu.mp3 ».
 - apps/web/public/audio/game.mp3 : « Property Party - Party running song.mp3 ».
+- apps/web/public/audio/game-2.mp3 : « Property Party - party running song 2.mp3 ».
+- apps/web/public/audio/game-3.mp3 : « Property Party - party running song 3.mp3 ».
+
+Les deux nouvelles pistes sont intégrales, encodées en MP3 stéréo 64 kb/s pour le téléchargement. La playlist alterne les trois morceaux en partie ; un seul fichier est chargé à la fois, sans préchargement de la playlist.
+
+`models/wealth.glb` et `scripts/wealth_models.py` : liasses à huit couches, bande de papier, lingots biseautés et poinçons, créés dans Blender via MCP pour les réserves de chaque joueur. Créations originales, MIT.
 
 Sources : dossier local Money tour assets/songs, fourni pour intégration au jeu. Ces enregistrements sont distincts de la licence MIT du code ; aucune licence CC0 ne leur est attribuée.
 

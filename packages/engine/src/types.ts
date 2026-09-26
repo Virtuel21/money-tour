@@ -26,6 +26,7 @@ export interface ChanceCard {
 }
 export interface GameConfig {
   version: number;
+  shuffleStreets?: boolean;
   lineVictory?: boolean;
   resortVictory?: boolean;
   initialCash: number;
