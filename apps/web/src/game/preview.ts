@@ -17,6 +17,8 @@ export function previewScenario(): LocalSave | null {
       'attack',
       'purchase',
       'mondial',
+      'tax',
+      'celebration',
     ].includes(name)
   )
     return null;
@@ -38,6 +40,9 @@ export function previewScenario(): LocalSave | null {
   for (const id of [8, 9]) state.properties[id]!.ownerId = 'p2';
   state.properties[8]!.level = 2;
   state.properties[9]!.level = 4;
+  if (name === 'celebration') {
+    state.properties[1] = { ownerId: 'p1', level: 2, championships: 1, championshipTurns: 4 };
+  }
   if (name === 'showcase') {
     state.players.forEach((p, i) => {
       p.position = [5, 12, 19, 22][i]!;
@@ -76,14 +81,14 @@ export function previewScenario(): LocalSave | null {
   if (name === 'rent') {
     state.properties[5] = { ownerId: 'p2', level: 2, championships: 0 };
   }
-  if (name === 'card' || name === 'attack' || name === 'rent') {
+  if (name === 'card' || name === 'attack' || name === 'rent' || name === 'tax') {
     const rolled = reduceGame(
       state,
       { type: 'roll', playerId: 'p1' },
       createRng('visual-review:0'),
     );
     const dice = rolled.events.find((event) => event.type === 'dice')!.dice!;
-    const target = name === 'rent' ? 5 : 4;
+    const target = name === 'rent' ? 5 : name === 'tax' ? 11 : 4;
     if (name === 'attack') state.deck = ['chance-15'];
     player.position = (target - dice.reduce((sum, value) => sum + value, 0) + 28) % 28;
   }

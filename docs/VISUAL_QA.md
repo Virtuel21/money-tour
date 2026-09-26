@@ -1,5 +1,15 @@
 # Contrôle visuel — édition Îles, 26 septembre 2026
 
+## Mise à jour Mondial, taxes et commandes centrales
+
+Contrôle dans le navigateur intégré, 1440 × 900 et 390 × 844. L’action principale est maintenant un grand bouton doré dans un bandeau bleu sous le plateau sur ordinateur ; le mobile garde ses commandes sous le plateau, avec une cible de 57 px. Aucun débordement horizontal sur la vue mobile testée. Les noms de villes sont ancrés au centre géométrique de leur case et conservent l’angle de leur côté du plateau. Les cases Chance violettes et Taxe corail utilisent le nouvel atlas original.
+
+Scénario d’achat : fermeture de l’offre Madrid, même joueur et compte 1 500 k ; clic sur Madrid, réouverture ; achat à 150 k, troisième propriété puis compte 1 350 k. Scénario Taxe : après les dés et les bonds, fenêtre humoristique indiquant 72 500 (50 k + 10 % des deux terrains possédés). Après « Aïe, j’ai compris », animation des pièces et compte affiché 1 428 k arrondi. Le bouton acquitte la lecture ; le prélèvement vient uniquement du moteur.
+
+Scène préparée de Mondial : Lisbonne porte un trophée, un ruban doré, des confettis continus et un badge « 4 tours ». Les confettis sont désactivés en pause ou en mouvement réduit. La durée est testée dans le moteur : quatre retours du propriétaire, aucune consommation sur un double, aucun cumul à la réorganisation. Captures locales : `mondial-hud.png`, `taxe-popup.png`, `mondial-mobile.png` dans le dossier de livraison. Les scènes préparées servent à la recette visuelle.
+
+Les sections suivantes conservent l’historique des versions antérieures ; leurs mentions de Mondial permanent sont remplacées par la règle temporaire décrite ci-dessus.
+
 Références : artworks et capture Business Tour fournis par Julien, pages officielles Business Tour/Steam et MONOPOLY/Marmalade. Contrôle dans Chromium intégré, 1440 × 900 et 390 × 844.
 
 ## Vérifications de cette édition

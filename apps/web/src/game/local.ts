@@ -15,7 +15,7 @@ export interface LocalSave {
   seed: string;
   state: GameState;
 }
-const key = 'money-tour.local.v4'; // Keep the original 32-cell save untouched.
+const key = 'money-tour.local.v5'; // Keep the original 32-cell save untouched.
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
   return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
@@ -29,9 +29,24 @@ export function applyLocal(
 }
 export function loadLocal(): LocalSave | null {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = localStorage.getItem(key) ?? localStorage.getItem('money-tour.local.v4');
     if (!raw) return null;
     const save = JSON.parse(raw) as LocalSave;
+    if (save?.version === 1 && save.state?.config?.version === 4) {
+      const oldConfig = { ...config, version: 4 };
+      delete oldConfig.championshipDuration;
+      if (
+        JSON.stringify(save.state.config) === JSON.stringify(oldConfig) &&
+        validateState(save.state).length === 0
+      ) {
+        save.state.config = structuredClone(config);
+        for (const property of Object.values(save.state.properties))
+          if (property.championships) {
+            property.championships = 1;
+            property.championshipTurns = config.championshipDuration;
+          }
+      }
+    }
     if (
       save.version !== 1 ||
       typeof save.seed !== 'string' ||

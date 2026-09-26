@@ -2673,3 +2673,143 @@ footer a {
     align-items: stretch;
   }
 }
+
+/* Central command deck and special-square celebrations. */
+.city-label {
+  transform: translate(-50%, -50%) rotate(var(--label-angle, 0deg));
+  text-align: center;
+}
+.world-badge {
+  display: block;
+  width: max-content;
+  margin: 2px auto 0;
+  padding: 2px 4px;
+  border-radius: 5px;
+  background: #ffe298;
+  color: #65380b;
+  font-size: 0.85em;
+  text-shadow: none;
+}
+.tax-reveal {
+  text-align: center;
+}
+.tax-illustration {
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 16px;
+  border-radius: 25px;
+  background: url('/textures/special-tiles-v1.webp') 100% 0 / 200% 100%;
+  box-shadow: 0 7px 0 #eab384;
+}
+.tax-reveal blockquote {
+  margin: 18px 0;
+  padding: 16px;
+  border-radius: 14px;
+  background: #fff0df;
+  font-size: 21px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+.tax-amount {
+  display: block;
+  font-size: 38px;
+  color: #b33b20;
+  margin: 12px 0;
+}
+.tax-reveal .primary {
+  min-height: 58px;
+  width: 100%;
+  font-size: 19px;
+}
+@media (min-width: 1000px) {
+  .game-layout {
+    padding-bottom: 176px;
+    min-height: 100dvh;
+  }
+  .game-layout .board-area {
+    max-width: min(100%, calc((100dvh - 265px) * 1.47));
+  }
+  .game-sidebar .action-card {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(760px, calc(100vw - 390px));
+    max-height: 220px;
+    overflow: auto;
+    z-index: 45;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 1.15fr);
+    gap: 4px 22px;
+    padding: 18px 24px 12px;
+    border: 2px solid #65c3c7;
+    border-radius: 26px;
+    background: linear-gradient(140deg, #153f52, #0c293e);
+    color: #fff9e9;
+    box-shadow:
+      0 10px 30px #08314540,
+      inset 0 1px #a8e6e34d;
+  }
+  .action-card > .eyebrow,
+  .action-card > h2,
+  .action-card > p,
+  .action-card > .action-help {
+    grid-column: 1;
+    margin: 0;
+  }
+  .action-card > .eyebrow {
+    color: #a0ede2;
+  }
+  .action-card h2 {
+    font-size: 24px;
+    color: #fff9e9;
+  }
+  .action-card > p {
+    color: #d2e5ec;
+    font-size: 13px;
+  }
+  .action-card .action-help {
+    color: #bdd3dd;
+    font-size: 10px;
+  }
+  .action-card .actions {
+    grid-column: 2;
+    grid-row: 1 / span 4;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+  }
+  .action-card .actions button {
+    min-height: 58px;
+    font-size: 18px;
+    border-radius: 16px;
+  }
+  .action-card .actions .primary {
+    box-shadow: 0 5px 0 #a67523;
+    background: linear-gradient(#ffe595, #ffc746);
+    color: #153547;
+  }
+  .action-card .decision-time {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    height: 4px;
+    background: #ffffff20;
+  }
+  .action-card > .chance-card {
+    display: none;
+  }
+  .action-card > .board-choice-hint {
+    grid-column: 1 / -1;
+  }
+  .action-card > .text-button {
+    color: #a0ede2;
+  }
+}
+@media (max-width: 999px) {
+  .action-card .actions button {
+    min-height: 56px;
+    font-size: 17px;
+  }
+}

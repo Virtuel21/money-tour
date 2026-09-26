@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -396,5 +396,6 @@
     "maxRandomRetries": 3
   },
   "lineVictory": false,
-  "resortVictory": false
+  "resortVictory": false,
+  "championshipDuration": 4
 }

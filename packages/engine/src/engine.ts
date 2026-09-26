@@ -84,6 +84,11 @@ function validateConfig(config: GameConfig): void {
     'maxResolutionDepth',
     'groupsToWin',
   ] as const;
+  if (
+    config.championshipDuration !== undefined &&
+    (!Number.isSafeInteger(config.championshipDuration) || config.championshipDuration < 1)
+  )
+    throw new Error('Invalid championship duration.');
   if (positive.some((key) => !Number.isSafeInteger(config[key]) || config[key] <= 0))
     throw new Error('Invalid positive integer configuration.');
   if (
@@ -530,22 +535,19 @@ function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0)
     case 'travel':
       player.travelPending = true;
       break;
-    case 'tax':
-      charge(
-        state,
+    case 'tax': {
+      const amount =
         (state.config.taxBase ?? 0) +
-          Math.floor(
-            propertyTiles(state, player.id).reduce(
-              (sum, item) => sum + getPropertyValue(state, item.id),
-              0,
-            ) * state.config.taxRate,
-          ),
-        null,
-        'tax',
-        'end',
-        events,
-      );
+        Math.floor(
+          propertyTiles(state, player.id).reduce(
+            (sum, item) => sum + getPropertyValue(state, item.id),
+            0,
+          ) * state.config.taxRate,
+        );
+      events.push({ type: 'tax_notice', playerId: player.id, tile: player.position, amount });
+      charge(state, amount, null, 'tax', 'end', events);
       break;
+    }
     case 'chance':
       drawCard(state, rng, events, depth);
       break;
@@ -580,6 +582,15 @@ function nextTurn(state: GameState, events: GameEvent[]): void {
     }
   }
   state.turn += 1;
+  for (const [id, property] of Object.entries(state.properties)) {
+    if (property.ownerId !== activePlayer(state).id || !property.championshipTurns) continue;
+    property.championshipTurns -= 1;
+    if (!property.championshipTurns) {
+      property.championships = 0;
+      delete property.championshipTurns;
+      events.push({ type: 'championship_expired', playerId: property.ownerId, tile: Number(id) });
+    }
+  }
   beginTurn(state);
   events.push({ type: 'turn', playerId: activePlayer(state).id, turn: state.turn });
 }
@@ -785,7 +796,10 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       break;
     }
     case 'place_championship':
-      state.properties[action.tile]!.championships += 1;
+      if (state.config.championshipDuration) {
+        state.properties[action.tile]!.championships = 1;
+        state.properties[action.tile]!.championshipTurns = state.config.championshipDuration;
+      } else state.properties[action.tile]!.championships += 1;
       player.cash -= state.config.championshipFee;
       state.phase = 'end';
       events.push({
@@ -1035,6 +1049,20 @@ export function validateState(state: GameState): string[] {
       errors.push(`Invalid level on ${key}.`);
     if (!safe(property.championships) || (tile.type === 'resort' && property.championships !== 0))
       errors.push(`Invalid championship count on ${key}.`);
+    if (
+      property.championshipTurns !== undefined &&
+      (!safe(property.championshipTurns) ||
+        property.championshipTurns < 1 ||
+        property.championshipTurns > (state.config.championshipDuration ?? 0) ||
+        !property.championships)
+    )
+      errors.push('Invalid championship duration on ' + key);
+    if (
+      state.config.championshipDuration &&
+      property.championships &&
+      (property.championships !== 1 || !property.championshipTurns)
+    )
+      errors.push('Missing championship duration on ' + key);
     if (!property.ownerId && (property.level !== 0 || property.championships !== 0))
       errors.push(`Unowned improved property ${key}.`);
   }

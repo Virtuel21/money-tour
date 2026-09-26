@@ -1,7 +1,7 @@
 import type { GameEvent, GameState } from '@money-tour/engine';
 
 export interface Cue {
-  kind: 'dice' | 'hop' | 'card' | 'build' | 'money' | 'turn' | 'settle';
+  kind: 'dice' | 'hop' | 'card' | 'tax' | 'build' | 'money' | 'turn' | 'settle';
   duration: number;
   amount?: number;
   payerId?: string;
@@ -91,6 +91,15 @@ export function presentation(
         }
       }
     }
+    if (event.type === 'tax_notice')
+      add({
+        kind: 'tax',
+        playerId: event.playerId,
+        tile: event.tile,
+        amount: event.amount,
+        sound: 'card',
+        duration: 5000,
+      });
     if (event.type === 'card')
       add({ kind: 'card', playerId: event.playerId, cardId: event.cardId, duration: 5500 });
     if (['payment', 'income', 'start_bonus', 'sale'].includes(event.type)) money(event);
@@ -134,15 +143,17 @@ export function presentationMs(events: GameEvent[]): number {
             ? 1400
             : e.type === 'move'
               ? Math.abs(Number(e.steps ?? 0)) * 270
-              : e.type === 'card'
-                ? 5500
-                : ['build', 'purchase', 'buyout'].includes(e.type)
-                  ? 2200
-                  : e.type === 'championship'
-                    ? 1500
-                    : e.type === 'island'
-                      ? 8640
-                      : 0),
+              : e.type === 'tax_notice'
+                ? 5000
+                : e.type === 'card'
+                  ? 5500
+                  : ['build', 'purchase', 'buyout'].includes(e.type)
+                    ? 2200
+                    : e.type === 'championship'
+                      ? 1500
+                      : e.type === 'island'
+                        ? 8640
+                        : 0),
     0,
   );
 }

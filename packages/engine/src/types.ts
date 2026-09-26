@@ -41,6 +41,7 @@ export interface GameConfig {
   maxIslandTurns: number;
   islandFee: number;
   championshipFee: number;
+  championshipDuration?: number;
   travelFee: number;
   festivalCount: number;
   festivalMultiplier: number;
@@ -85,6 +86,7 @@ export interface Property {
   ownerId: string | null;
   level: number;
   championships: number;
+  championshipTurns?: number;
 }
 export type DebtContinuation = 'property' | 'end';
 export interface Debt {

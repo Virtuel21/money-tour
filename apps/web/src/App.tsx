@@ -129,6 +129,8 @@ function eventText(event: GameEvent, state: GameState): string {
       return `${name} fait escale sur l’île perdue.`;
     case 'island_exit':
       return `${name} quitte l’île.`;
+    case 'championship_expired':
+      return `Le Mondial de ${tile} est terminé.`;
     case 'championship':
       return `${name} organise un championnat à ${tile}.`;
     case 'travel':
@@ -186,6 +188,7 @@ export default function App() {
   useEffect(() => {
     sound.current?.configure(audioPrefs);
   }, [audioPrefs]);
+  const [dismissedOffer, setDismissedOffer] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(4),
     [mode, setMode] = useState<'solo' | 'local' | 'teams'>('solo');
@@ -338,10 +341,20 @@ export default function App() {
     active.bot ||
     Boolean(current.winner) ||
     Boolean(online && (online.self !== active.id || online.busy || online.blocked));
-  const offer =
+  const eligibleOffer =
     screen === 'game' && !interactionDisabled && !modal
       ? purchaseOffer(current, online?.self)
       : null;
+  const offerKey = [save?.seed, active.id, current.turn, active.position].join(':');
+  const offer = eligibleOffer && dismissedOffer !== offerKey ? eligibleOffer : null;
+  const chooseTile = (id: number) => {
+    const action = options.find((a) => a.tile === id);
+    if (action && !interactionDisabled) act(action);
+    else if (eligibleOffer?.tile.id === id) {
+      setSelected(null);
+      setDismissedOffer('');
+    } else if (!rolling) setSelected(id);
+  };
   const available = legal.filter((a) => !['quit', 'travel', 'place_championship'].includes(a.type));
   const options = legal.filter(
     (a): a is Extract<GameAction, { type: 'sell' | 'travel' | 'place_championship' }> =>
@@ -355,7 +368,7 @@ export default function App() {
         : current.phase === 'travel'
           ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
           : current.phase === 'championship'
-            ? `Choisissez une de vos villes sur le plateau pour y organiser le Mondial : ${money(current.config.championshipFee, true)}. Son multiplicateur de loyer augmente de 1 (×1 → ×2, puis ×3…).`
+            ? `Choisissez une de vos villes sur le plateau pour y organiser le Mondial : ${money(current.config.championshipFee, true)}. Loyer ×2 pendant quatre de vos tours, sans cumul. Cliquez sur une de vos villes en surbrillance.`
             : current.phase === 'property'
               ? current.properties[active.position]?.ownerId &&
                 current.properties[active.position]?.ownerId !== active.id
@@ -659,12 +672,8 @@ export default function App() {
                   state={display}
                   cue={cinema.frame.cue}
                   choices={interactionDisabled ? [] : options.map((a) => a.tile)}
-                  onTile={(id) => {
-                    const action = options.find((a) => a.tile === id);
-                    if (action && !interactionDisabled) act(action);
-                    else if (!rolling) setSelected(id);
-                  }}
-                  reducedMotion={reduced}
+                  onTile={chooseTile}
+                  reducedMotion={reduced || paused}
                 />
               </Suspense>
             </div>
@@ -745,7 +754,10 @@ export default function App() {
                       className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
                       disabled={interactionDisabled}
                       onClick={() => {
-                        if (!interactionDisabled) act(a);
+                        if (!interactionDisabled) {
+                          if (a.type === 'buy' && eligibleOffer) setDismissedOffer('');
+                          else act(a);
+                        }
                       }}
                     >
                       {actionLabel(a)}
@@ -968,10 +980,7 @@ export default function App() {
         </Modal>
       )}
       {offer && (
-        <Modal
-          title={'Bienvenue à ' + offer.tile.name}
-          onClose={() => act({ type: 'finish', playerId: active.id })}
-        >
+        <Modal title={'Bienvenue à ' + offer.tile.name} onClose={() => setDismissedOffer(offerKey)}>
           <PurchaseDetails
             state={current}
             onBuy={() => act({ type: 'buy', playerId: active.id })}
@@ -1040,7 +1049,7 @@ export default function App() {
               <p>
                 {current.festivals.includes(tile.id) ? '✦ Festival permanent : loyers ×2. ' : ''}
                 {property?.championships
-                  ? `Championnat : ×${property.championships + 1} supplémentaire.`
+                  ? `Mondial : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`
                   : ''}
               </p>
             </>
@@ -1051,7 +1060,7 @@ export default function App() {
                 : tile.type === 'island'
                   ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200 k.'
                   : tile.type === 'championship'
-                    ? 'Pour 50 k, placez un championnat sur une de vos villes.'
+                    ? 'Pour 50 k, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Mondial renouvelle la durée, sans cumuler le bonus.'
                     : tile.type === 'travel'
                       ? 'Au prochain tour, voyagez pour 50 k vers une case libre ou alliée.'
                       : tile.type === 'tax'
@@ -1062,6 +1071,42 @@ export default function App() {
           <button className="secondary" onClick={() => setSelected(null)}>
             Retour au plateau
           </button>
+        </Modal>
+      )}
+      {screen === 'game' && cinema.frame.cue.kind === 'tax' && (
+        <Modal
+          title="Aïe… passage à la caisse !"
+          onClose={!online && !active.bot ? cinema.advance : undefined}
+        >
+          <div className="tax-reveal">
+            <div className="tax-illustration" aria-hidden="true" />
+            <small>LES ACTUALITÉS DÉCALÉES DE L’ARCHIPEL</small>
+            <h3>
+              {
+                [
+                  'Le président augmente encore le prix de l’essence. Même votre pion fait le plein !',
+                  'Oups, dissolution de l’assemblée ! L’inflation explose… votre portefeuille demande des vacances.',
+                  'Le président américain augmente les droits de douane. Vos souvenirs passent à la caisse !',
+                ][(current.turn + (cinema.frame.cue.tile ?? 0)) % 3]
+              }
+            </h3>
+            <p>
+              {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name} · somme à
+              régler
+            </p>
+            <strong className="tax-amount">{money(cinema.frame.cue.amount ?? 0)}</strong>
+            <p>
+              Taxe : {money(current.config.taxBase ?? 0, true)} + {current.config.taxRate * 100} %
+              de votre patrimoine immobilier.
+            </p>
+            {!online && !active.bot ? (
+              <button className="primary" onClick={cinema.advance}>
+                Aïe, j’ai compris !
+              </button>
+            ) : (
+              <p>Le trésor public s’en occupe… la partie reprend dans un instant.</p>
+            )}
+          </div>
         </Modal>
       )}
       {screen === 'game' && cinema.frame.cue.kind === 'card' && (

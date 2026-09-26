@@ -183,13 +183,15 @@ export default function Board({
         const clone = (name: string) => templates.get(name)!.clone(true);
         resources.add(clone('board'));
         const textureLoader = new THREE.TextureLoader();
-        const [travelers, architecture] = await Promise.all([
+        const [travelers, architecture, specialTiles] = await Promise.all([
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/architecture-v3.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/special-tiles-v1.webp'),
         ]);
         if (disposed) {
           travelers.dispose();
           architecture.dispose();
+          specialTiles.dispose();
           disposePending(gltf.scene);
           return;
         }
@@ -255,16 +257,26 @@ export default function Board({
         const buildings: THREE.Group[] = [],
           trims: THREE.Mesh[] = [],
           borders: THREE.Mesh[] = [],
-          flags: THREE.Sprite[] = [];
+          flags: THREE.Sprite[] = [],
+          championships: THREE.Group[] = [],
+          confetti: THREE.Group[] = [];
         for (const tile of live.current.state.config.board) {
           const p = tilePoint(tile.id, live.current.state.config.board.length),
             cell = clone('tile');
           cell.position.set(p.x, 0, p.z);
           cell.scale.set(1.12, 1, 1.12);
           resources.add(cell);
+          const special = tile.type === 'chance' || tile.type === 'tax';
+          const tileMap = special ? specialTiles.clone() : streetSurface(tile);
+          if (special) {
+            tileMap.repeat.set(0.5, 1);
+            tileMap.offset.x = tile.type === 'chance' ? 0 : 0.5;
+            tileMap.colorSpace = THREE.SRGBColorSpace;
+            tileMap.anisotropy = renderer!.capabilities.getMaxAnisotropy();
+          }
           const surface = new THREE.Mesh(
             new THREE.PlaneGeometry(1.86, 1.86),
-            new THREE.MeshStandardMaterial({ map: streetSurface(tile), roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ map: tileMap, roughness: 0.95 }),
           );
           surface.rotation.x = -Math.PI / 2;
           surface.position.set(p.x, 0.28, p.z);
@@ -275,6 +287,7 @@ export default function Board({
             new THREE.MeshStandardMaterial({ color: tile.color ?? '#f9c34f' }),
           );
           strip.position.set(0, 0.27, -0.72);
+          strip.visible = !special;
           cell.add(strip);
           const trim = new THREE.Mesh(
             new THREE.BoxGeometry(1.99, 0.25, 0.23),
@@ -311,7 +324,7 @@ export default function Board({
             palm.position.set(p.x, 0.26, p.z - 0.3);
             resources.add(palm);
           }
-          if (!['city', 'resort', 'island'].includes(tile.type)) {
+          if (!['city', 'resort', 'island', 'chance', 'tax'].includes(tile.type)) {
             const icon = clone(tile.type);
             icon.position.set(p.x, 0.27, p.z - 0.3);
             resources.add(icon);
@@ -320,11 +333,47 @@ export default function Board({
           flag.position.set(p.x - 0.58, 0.7, p.z - 0.5);
           resources.add(flag);
           flags.push(flag);
+          const celebration = new THREE.Group();
+          celebration.position.set(p.x, 0.29, p.z);
+          if (tile.type === 'city') {
+            const trophy = clone('championship');
+            trophy.scale.setScalar(0.3);
+            trophy.position.set(-0.66, 0, -0.5);
+            celebration.add(trophy);
+            const ribbon = new THREE.Mesh(
+              new THREE.BoxGeometry(1.72, 0.07, 0.13),
+              new THREE.MeshStandardMaterial({ color: '#ffd45c', metalness: 0.3, roughness: 0.4 }),
+            );
+            ribbon.position.set(0, 0.03, 0.81);
+            celebration.add(ribbon);
+          }
+          resources.add(celebration);
+          championships.push(celebration);
+          const shower = new THREE.Group();
+          shower.position.copy(celebration.position);
+          if (tile.type === 'city')
+            for (let k = 0; k < 18; k++) {
+              const flake = new THREE.Mesh(
+                new THREE.PlaneGeometry(0.075, 0.13),
+                new THREE.MeshBasicMaterial({
+                  color: ['#ffd45c', '#f34b90', '#4bdddf', '#fff5cc'][k % 4],
+                  side: THREE.DoubleSide,
+                }),
+              );
+              flake.position.set(((k * 7) % 17) / 12 - 0.65, 0, ((k * 11) % 17) / 12 - 0.65);
+              shower.add(flake);
+            }
+          resources.add(shower);
+          confetti.push(shower);
         }
         setAnchors(
           live.current.state.config.board.map((t) => {
             const p = tilePoint(t.id, live.current.state.config.board.length);
-            const v = new THREE.Vector3(p.x + 0.48, 0.3, p.z + 0.48).project(camera);
+            const v = new THREE.Vector3(
+              p.x + (t.type === 'city' ? 0 : 0.48),
+              0.32,
+              p.z + (t.type === 'city' ? 0 : 0.48),
+            ).project(camera);
             const points = [
               [-0.98, -0.98],
               [-0.98, 0.98],
@@ -387,6 +436,7 @@ export default function Board({
             );
             borders[i]!.visible = live.current.choices.includes(tile.id);
             flags[i]!.visible = game.festivals.includes(tile.id);
+            championships[i]!.visible = (prop?.championships ?? 0) > 0;
             const signature = String(prop?.level ?? 0) + ':' + String(prop?.ownerId);
             if (signatures[i] === signature) return;
             signatures[i] = signature;
@@ -508,6 +558,14 @@ export default function Board({
                   )
                 : 1;
           });
+          confetti.forEach((shower, i) => {
+            shower.visible = championships[i]!.visible && !reduced;
+            if (!shower.visible) return;
+            shower.children.forEach((flake, k) => {
+              flake.position.y = 0.1 + (1 - ((now / 2900 + k / 18) % 1)) * 1.55;
+              flake.rotation.set(now / 700 + k, now / 900, k + now / 1200);
+            });
+          });
           borders.forEach((b) => {
             (b.material as THREE.MeshStandardMaterial).opacity =
               0.42 + (reduced ? 0 : Math.sin(now / 240) * 0.18);
@@ -535,6 +593,7 @@ export default function Board({
           templates.forEach(gather);
           textures.add(travelers);
           textures.add(architecture);
+          textures.add(specialTiles);
           detached.forEach(gather);
           geometries.forEach((g) => g.dispose());
           materials.forEach((m) => m.dispose());
@@ -624,6 +683,11 @@ export default function Board({
                   }
                 >
                   <b>{short}</b>
+                  {!!state.properties[t.id]?.championships && (
+                    <small className="world-badge">
+                      🏆 {state.properties[t.id]?.championshipTurns ?? 4} tours
+                    </small>
+                  )}
                 </div>
               );
             })}

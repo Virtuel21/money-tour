@@ -10,6 +10,22 @@ const game = () =>
     ],
     seed: 1,
   });
+it('shows the tax notice after arriving, before money leaves the payer account', () => {
+  const before = game(),
+    after = structuredClone(before);
+  before.players[0]!.position = 10;
+  after.players[0]!.position = 11;
+  after.players[0]!.cash -= 50000;
+  const frames = presentation(before, after, [
+    { type: 'move', playerId: 'a', tile: 11, steps: 1 },
+    { type: 'tax_notice', playerId: 'a', tile: 11, amount: 50000 },
+    { type: 'payment', payerId: 'a', amount: 50000, reason: 'tax' },
+  ]);
+  expect(frames.map((f) => f.cue.kind)).toEqual(['hop', 'tax', 'money', 'settle']);
+  expect(frames[1]!.state.players[0]!.cash).toBe(before.players[0]!.cash);
+  expect(frames[2]!.state.players[0]!.cash).toBe(after.players[0]!.cash);
+  expect(frames[2]!.cue.sound).toBe('coin-out');
+});
 it('keeps the result hidden until dice settle, hops across start and then reveals the card', () => {
   const before = game();
   before.players[0]!.position = 26;
