@@ -942,3 +942,21 @@
     margin: 4px 0;
   }
 }
+@media (max-width: 999px) {
+  .modal .toggle {
+    padding: 10px;
+  }
+  .modal .field:has(input[type='range']) {
+    gap: 4px;
+  }
+  .modal input[type='range'] {
+    min-height: 36px;
+    height: 36px;
+    padding: 0;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .modal:has(> .toggle) > .secondary {
+    align-self: center;
+  }
+}
