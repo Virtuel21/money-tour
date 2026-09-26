@@ -15,7 +15,7 @@ pnpm simulate 1000
 
 Pour construire, le propriétaire doit posséder toutes les villes du même groupe de couleur (les propriétés d’un coéquipier ne complètent pas ce groupe). Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
 
-Le moteur couvre les 32 cases, les 14 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
+Le moteur couvre les 28 cases, les 18 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 
 - [Plan et critères de livraison](PLAN.md)
 - [Règles, hypothèses et limites du protocole](DECISIONS.md)
@@ -49,6 +49,8 @@ Le lien contient un secret aléatoire de 128 bits dans son fragment, non envoyé
 - Une révélation manquante annule le tirage et exclut temporairement le contributeur. Cela n’élimine pas l’abandon sélectif ni le déni de service. Avec un seul contributeur, l’interface indique explicitement « aléa local : hôte seul ».
 - Tests en mémoire et test WebRTC réel entre deux origines sur un ordinateur réalisés. **Quatre réseaux distincts, dont un smartphone physique en 4G : non vérifié.** Voir [journal de validation](docs/VALIDATION.md).
 
-## Édition Voyage
+## Édition Îles
 
-Vue en trois-quarts, textes HTML nets, villes réelles, couleurs de groupes contrastées et propriété identifiée par couleur et numéro de joueur. Les personnages et les bâtiments sur une case occupée peuvent devenir translucides. La pause reste solo/local ; revenir à l’accueil arrête les animations et sons en attente. Les sauvegardes dont seules les anciennes couleurs et appellations diffèrent sont conservées. Voir [direction artistique](ART_DIRECTION.md) et [contrôle visuel](docs/VISUAL_QA.md).
+Sept rues de deux villes, quatre îles achetables, quatre cases cartes, deux taxes et quatre coins spéciaux. Les quatre îles réunies donnent un loyer de 500 k au lieu d’une victoire immédiate. Trois rues complètes, la faillite des adversaires ou le meilleur patrimoine au chrono permettent de gagner. Le loyer est prélevé automatiquement et le transfert est visible avec des pièces d’or. Les cartes d’attaque prennent un montant plafonné aux réserves des adversaires ; les coéquipiers sont épargnés.
+
+Vue en trois-quarts, noms seuls sur les cases, comptes à gauche et fiche de propriété/commandes à droite. Les personnages et constructions occupées peuvent devenir translucides. Avion, coupe et palmier détaillés dans Blender. Le joueur actif est annoncé et les cartes adverses restent en lecture seule. La pause reste solo/local ; revenir à l’accueil arrête les animations et sons en attente. Le réseau v4 sépare les versions et le stockage local v4 préserve l’ancienne sauvegarde de 32 cases dans son emplacement d’origine. Voir [direction artistique](ART_DIRECTION.md) et [contrôle visuel](docs/VISUAL_QA.md).

@@ -1,3 +1,5 @@
+import legacy from './legacy-board.json';
+import type { GameConfig } from '../src/index';
 import { expect } from 'vitest';
 import { createGame, reduceGame } from '../src/index';
 
@@ -14,6 +16,8 @@ export function game(count = 2, teams = false): State {
     })),
     mode: teams ? 'teams' : 'free-for-all',
     seed: 'fixture',
+    // Stable historical fixture keeps regression coverage of the original board rules.
+    config: legacy as GameConfig,
   });
 }
 

@@ -36,28 +36,23 @@ describe('local session', () => {
       '{"version":2}',
       '{"version":1,"seed":"x","state":{}}',
     ]) {
-      data.set('money-tour.local.v1', value);
+      data.set('money-tour.local.v4', value);
       expect(loadLocal()).toBeNull();
     }
   });
-  it('migrates only the old cosmetic city palette and preserves the random stream', () => {
+  it('preserves the previous board save and rejects old topology in the new slot', () => {
     const save = newLocal({
       players: [
         { id: 'a', name: 'A' },
         { id: 'b', name: 'B' },
       ],
     });
-    const legacy = structuredClone(save);
-    legacy.state.config.version = 2;
-    legacy.state.config.board[1]!.name = 'Clairport';
-    legacy.state.config.board[1]!.color = '#85C7A5';
-    persistLocal(legacy);
+    data.set('money-tour.local.v1', 'old game preserved');
+    persistLocal(save);
+    expect(data.get('money-tour.local.v1')).toBe('old game preserved');
     expect(loadLocal()).toEqual(save);
-    const action = { type: 'roll', playerId: 'a' } as const;
-    expect(applyLocal(loadLocal()!, action).result.error).toBeUndefined();
-    expect(applyLocal(loadLocal()!, action)).toEqual(applyLocal(save, action));
-    legacy.state.config.initialCash += 1;
-    persistLocal(legacy);
+    save.state.config.version = 3;
+    persistLocal(save);
     expect(loadLocal()).toBeNull();
   });
   it('handles denied storage without crashing', () => {

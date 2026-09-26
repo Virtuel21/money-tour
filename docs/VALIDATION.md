@@ -57,3 +57,15 @@ La [recette terrain #10](https://github.com/Virtuel21/money-tour/issues/10) deme
 - Assets publics : 7 622 186 octets sur un budget révisé de 12 Mo, dont environ 6,3 Mo de musiques fournies. Les SHA Git des deux MP3 et du GLB publiés correspondent aux fichiers locaux.
 
 La recette multiréseau/4G de #10 reste à effectuer. La nouvelle présentation ne constitue pas une certification de compatibilité sur tous les GPU et téléphones.
+
+## Édition Îles — 26 septembre 2026
+
+Sept groupes de deux villes, quatre îles privées, quatre Chance et deux Taxes : 28 cases. Les quatre îles donnent un loyer de 500 k au lieu d'une victoire immédiate. Deux attaques financières, un contrôle fiscal et une bourse complètent les 18 cartes. Les Taxes prélèvent au minimum 50 k, plus 10 % du patrimoine immobilier.
+
+217 tests dans douze fichiers passent, ainsi que typage, lint et build. Couverture : lignes 99,34 %, instructions 98,81 %, branches 95,55 %, fonctions 100 %. Simulation distincte : 1 000 parties, 250 994 décisions, zéro invariant invalide (840 triples monopoles, 147 fins au chrono, 13 faillites). Les régressions historiques utilisent leur configuration figée ; les tests de cette édition et les simulations utilisent le nouveau plateau.
+
+Contrôle graphique desktop 1440 × 900 et mobile 390 × 844 : noms seuls sur les cases, comptes et fiche sur les côtés, avion/coupe/palmier détaillés dans Blender. Transfert de loyer de 60 k joué et observé, débiteur et créancier mis à jour, pièces animées. Voir VISUAL_QA.md pour les limites et les captures livrées localement.
+
+Réseau : tests des intentions signées hors tour et des noms dupliqués ajoutés. Affichage d'un hôte seul et d'un bot contrôlé. La tentative à deux origines réelles de cette édition a échoué avec avertissement de relais Trystero ; ne pas confondre avec le succès historique ci-dessus. La recette terrain #10 reste ouverte.
+
+Sauvegarde et identifiant de réseau passent en v4 pour éviter de mélanger les plateaux. Les anciennes sauvegardes restent stockées, sans migration de position. Assets publics : 8 254 728 octets, GLB : 1 080 716 octets.

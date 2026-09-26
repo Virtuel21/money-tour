@@ -56,7 +56,7 @@ describe('shared randomness', () => {
   });
 });
 
-async function setup(count = 3) {
+async function setup(count = 3, names?: string[]) {
   const network = new MemoryNetwork();
   let time = 100000;
   const sessions: Session[] = [];
@@ -64,7 +64,7 @@ async function setup(count = 3) {
     const session = new Session(
       new MemoryTransport(`peer-${i}`, network),
       await identity(),
-      `Joueur ${i}`,
+      names?.[i] ?? `Joueur ${i}`,
       i === 0,
       () => time,
     );
@@ -88,6 +88,15 @@ async function setup(count = 3) {
   };
 }
 describe('network sessions', () => {
+  it('stores distinct public names even when clients arrive with the old Vous default', async () => {
+    const { sessions, flush } = await setup(2, ['Vous', 'Vous']);
+    await sessions[0]!.start(2, false, 60000);
+    await sessions[0]!.idle();
+    await flush();
+    for (const s of sessions)
+      expect(s.state!.players.map((p) => p.name)).toEqual(['Joueur 1', 'Joueur 2']);
+    sessions.forEach((s) => s.close());
+  });
   it('lets the former host return after a completed migration', async () => {
     const { network, sessions, flush, advance } = await setup(2);
     const host = sessions[0]!,
@@ -185,6 +194,13 @@ describe('network sessions', () => {
     await sessions[1]!.intent({ type: 'roll', playerId: host.user.id });
     await flush();
     expect(host.head).toBe(initial);
+    // Even a correctly signed request from the waiting player's own seat is out of turn.
+    await sessions[1]!.intent({ type: 'roll', playerId: sessions[1]!.user.id });
+    await sessions[1]!.intent({ type: 'finish', playerId: sessions[1]!.user.id });
+    await sessions[1]!.intent({ type: 'sell', playerId: sessions[1]!.user.id, tile: 1 });
+    await flush();
+    expect(host.head).toBe(initial);
+    expect(sessions.every((s) => !s.blocked)).toBe(true);
     await host.intent({ type: 'roll', playerId: host.user.id });
     await host.idle();
     await flush();

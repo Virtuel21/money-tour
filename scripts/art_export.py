@@ -71,17 +71,18 @@ def presentation():
     duplicate_model('board',display);duplicate_model('islands',display)
     config=json.load(open(os.path.join(ROOT,'packages/engine/src/game.config.json'),encoding='utf-8'))
     def point(i):
-        if i<=8:return ((4-i)*1.8,-7.2)
-        if i<=16:return (-7.2,(i-12)*1.8)
-        if i<=24:return ((i-20)*1.8,7.2)
-        return (7.2,(28-i)*1.8)
+        side=len(config['board'])/4;step=14.4/side
+        if i<=side:return (7.2-i*step,-7.2)
+        if i<=side*2:return (-7.2,-7.2+(i-side)*step)
+        if i<=side*3:return (-7.2+(i-side*2)*step,7.2)
+        return (7.2,7.2-(i-side*3)*step)
     # Geometry labels are stored in a separate presentation collection.
     for t in config['board']:
         x,y=point(t['id']);duplicate_model('tile',display,(x,y,0))
         kind=t['type']
         if kind=='city':duplicate_model('hotel' if t['id']%5==0 else 'house',display,(x,y+.30,.26),.52 if t['id']%5==0 else .57)
         else:duplicate_model('palm' if kind in ('resort','island') else kind,display,(x,y+.3,.26),.9)
-    for i,t in enumerate([2,11,20,28]):
+    for i,t in enumerate([2,9,19,23]):
         x,y=point(t);duplicate_model('pawn_'+str(i),display,(x,y-.35,.27),.70)
     for x in [-.64,.64]:duplicate_model('die',display,(x,-.85,.60),1.15)
     studio(scene,(0,0,0),(7,-18,23),21,(1800,1600))

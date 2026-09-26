@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 3,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -21,8 +21,7 @@
   "buyoutMultiplier": 2,
   "resaleRate": 0.5,
   "taxRate": 0.1,
-  "taxBase": 50000,
-  "resortRents": [50000, 100000, 200000, 500000],
+  "resortRents": [50000, 100000, 200000, 400000],
   "maxResolutionDepth": 16,
   "simulationActionLimit": 5000,
   "botReserve": 250000,
@@ -50,171 +49,204 @@
       "group": "g1",
       "color": "#E73B51",
       "line": 0,
-      "price": 125000,
-      "rents": [12500, 25000, 50000, 87500, 150000],
-      "buildCosts": [0, 62500, 62500, 62500, 62500]
+      "price": 120000,
+      "rents": [12000, 24000, 48000, 84000, 144000],
+      "buildCosts": [0, 60000, 60000, 60000, 60000]
     },
     {
       "id": 3,
-      "name": "Bali",
+      "name": "Cascais",
       "type": "resort",
       "price": 200000
     },
     {
       "id": 4,
-      "name": "La bonne étoile",
-      "type": "chance"
-    },
-    {
-      "id": 5,
       "name": "Madrid",
       "type": "city",
       "group": "g2",
       "color": "#FF9200",
       "line": 0,
-      "price": 150000,
-      "rents": [15000, 30000, 60000, 105000, 180000],
-      "buildCosts": [0, 75000, 75000, 75000, 75000]
+      "price": 140000,
+      "rents": [14000, 28000, 56000, 98000, 168000],
+      "buildCosts": [0, 70000, 70000, 70000, 70000]
     },
     {
-      "id": 6,
+      "id": 5,
       "name": "Barcelone",
       "type": "city",
       "group": "g2",
       "color": "#FF9200",
       "line": 0,
-      "price": 175000,
-      "rents": [17500, 35000, 70000, 122500, 210000],
-      "buildCosts": [0, 87500, 87500, 87500, 87500]
+      "price": 160000,
+      "rents": [16000, 32000, 64000, 112000, 192000],
+      "buildCosts": [0, 80000, 80000, 80000, 80000]
+    },
+    {
+      "id": 6,
+      "name": "Séville",
+      "type": "city",
+      "group": "g2",
+      "color": "#FF9200",
+      "line": 0,
+      "price": 180000,
+      "rents": [18000, 36000, 72000, 126000, 216000],
+      "buildCosts": [0, 90000, 90000, 90000, 90000]
     },
     {
       "id": 7,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 8,
       "name": "Île perdue",
       "type": "island"
     },
     {
-      "id": 8,
+      "id": 9,
       "name": "Rome",
       "type": "city",
       "group": "g3",
-      "color": "#EAC000",
+      "color": "#F0C900",
       "line": 1,
       "price": 200000,
       "rents": [20000, 40000, 80000, 140000, 240000],
       "buildCosts": [0, 100000, 100000, 100000, 100000]
     },
     {
-      "id": 9,
+      "id": 10,
       "name": "Venise",
       "type": "city",
       "group": "g3",
-      "color": "#EAC000",
+      "color": "#F0C900",
       "line": 1,
-      "price": 225000,
-      "rents": [22500, 45000, 90000, 157500, 270000],
-      "buildCosts": [0, 112500, 112500, 112500, 112500]
-    },
-    {
-      "id": 10,
-      "name": "Malte",
-      "type": "resort",
-      "price": 200000
+      "price": 220000,
+      "rents": [22000, 44000, 88000, 154000, 264000],
+      "buildCosts": [0, 110000, 110000, 110000, 110000]
     },
     {
       "id": 11,
-      "name": "Impôt foncier",
-      "type": "tax"
+      "name": "Nice",
+      "type": "resort",
+      "price": 200000
     },
     {
       "id": 12,
       "name": "Paris",
       "type": "city",
       "group": "g4",
-      "color": "#259B3D",
+      "color": "#29A044",
       "line": 1,
-      "price": 250000,
-      "rents": [25000, 50000, 100000, 175000, 300000],
-      "buildCosts": [0, 125000, 125000, 125000, 125000]
+      "price": 240000,
+      "rents": [24000, 48000, 96000, 168000, 288000],
+      "buildCosts": [0, 120000, 120000, 120000, 120000]
     },
     {
       "id": 13,
       "name": "Lyon",
       "type": "city",
       "group": "g4",
-      "color": "#259B3D",
+      "color": "#29A044",
       "line": 1,
-      "price": 275000,
-      "rents": [27500, 55000, 110000, 192500, 330000],
-      "buildCosts": [0, 137500, 137500, 137500, 137500]
+      "price": 260000,
+      "rents": [26000, 52000, 104000, 182000, 312000],
+      "buildCosts": [0, 130000, 130000, 130000, 130000]
     },
     {
       "id": 14,
+      "name": "Bordeaux",
+      "type": "city",
+      "group": "g4",
+      "color": "#29A044",
+      "line": 1,
+      "price": 280000,
+      "rents": [28000, 56000, 112000, 196000, 336000],
+      "buildCosts": [0, 140000, 140000, 140000, 140000]
+    },
+    {
+      "id": 15,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 16,
       "name": "Championnat du monde",
       "type": "championship"
     },
     {
-      "id": 15,
+      "id": 17,
       "name": "Berlin",
       "type": "city",
       "group": "g5",
-      "color": "#00ADBD",
+      "color": "#00B9CA",
       "line": 2,
       "price": 300000,
       "rents": [30000, 60000, 120000, 210000, 360000],
       "buildCosts": [0, 150000, 150000, 150000, 150000]
     },
     {
-      "id": 16,
+      "id": 18,
       "name": "Munich",
       "type": "city",
       "group": "g5",
-      "color": "#00ADBD",
+      "color": "#00B9CA",
       "line": 2,
-      "price": 325000,
-      "rents": [32500, 65000, 130000, 227500, 390000],
-      "buildCosts": [0, 162500, 162500, 162500, 162500]
+      "price": 320000,
+      "rents": [32000, 64000, 128000, 224000, 384000],
+      "buildCosts": [0, 160000, 160000, 160000, 160000]
     },
     {
-      "id": 17,
-      "name": "Maurice",
+      "id": 19,
+      "name": "Brighton",
       "type": "resort",
       "price": 200000
     },
     {
-      "id": 18,
-      "name": "La bonne étoile",
-      "type": "chance"
-    },
-    {
-      "id": 19,
+      "id": 20,
       "name": "Londres",
       "type": "city",
       "group": "g6",
       "color": "#1769DD",
       "line": 2,
-      "price": 350000,
-      "rents": [35000, 70000, 140000, 245000, 420000],
-      "buildCosts": [0, 175000, 175000, 175000, 175000]
+      "price": 340000,
+      "rents": [34000, 68000, 136000, 238000, 408000],
+      "buildCosts": [0, 170000, 170000, 170000, 170000]
     },
     {
-      "id": 20,
+      "id": 21,
       "name": "Édimbourg",
       "type": "city",
       "group": "g6",
       "color": "#1769DD",
       "line": 2,
-      "price": 375000,
-      "rents": [37500, 75000, 150000, 262500, 450000],
-      "buildCosts": [0, 187500, 187500, 187500, 187500]
+      "price": 360000,
+      "rents": [36000, 72000, 144000, 252000, 432000],
+      "buildCosts": [0, 180000, 180000, 180000, 180000]
     },
     {
-      "id": 21,
+      "id": 22,
+      "name": "Dublin",
+      "type": "city",
+      "group": "g6",
+      "color": "#1769DD",
+      "line": 2,
+      "price": 380000,
+      "rents": [38000, 76000, 152000, 266000, 456000],
+      "buildCosts": [0, 190000, 190000, 190000, 190000]
+    },
+    {
+      "id": 23,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 24,
       "name": "Tour du monde",
       "type": "travel"
     },
     {
-      "id": 22,
-      "name": "Tokyo",
+      "id": 25,
+      "name": "New York",
       "type": "city",
       "group": "g7",
       "color": "#783BDC",
@@ -224,36 +256,59 @@
       "buildCosts": [0, 200000, 200000, 200000, 200000]
     },
     {
-      "id": 23,
-      "name": "Kyoto",
+      "id": 26,
+      "name": "Chicago",
       "type": "city",
       "group": "g7",
       "color": "#783BDC",
       "line": 3,
-      "price": 425000,
-      "rents": [42500, 85000, 170000, 297500, 510000],
-      "buildCosts": [0, 212500, 212500, 212500, 212500]
+      "price": 420000,
+      "rents": [42000, 84000, 168000, 294000, 504000],
+      "buildCosts": [0, 210000, 210000, 210000, 210000]
     },
     {
-      "id": 24,
-      "name": "Santorin",
+      "id": 27,
+      "name": "Honolulu",
       "type": "resort",
       "price": 200000
     },
     {
-      "id": 25,
-      "name": "La bonne étoile",
-      "type": "chance"
+      "id": 28,
+      "name": "Tokyo",
+      "type": "city",
+      "group": "g8",
+      "color": "#D32BB1",
+      "line": 3,
+      "price": 440000,
+      "rents": [44000, 88000, 176000, 308000, 528000],
+      "buildCosts": [0, 220000, 220000, 220000, 220000]
     },
     {
-      "id": 26,
-      "name": "Taxe de séjour",
+      "id": 29,
+      "name": "Kyoto",
+      "type": "city",
+      "group": "g8",
+      "color": "#D32BB1",
+      "line": 3,
+      "price": 460000,
+      "rents": [46000, 92000, 184000, 322000, 552000],
+      "buildCosts": [0, 230000, 230000, 230000, 230000]
+    },
+    {
+      "id": 30,
+      "name": "Osaka",
+      "type": "city",
+      "group": "g8",
+      "color": "#D32BB1",
+      "line": 3,
+      "price": 480000,
+      "rents": [48000, 96000, 192000, 336000, 576000],
+      "buildCosts": [0, 240000, 240000, 240000, 240000]
+    },
+    {
+      "id": 31,
+      "name": "Contribution locale",
       "type": "tax"
-    },
-    {
-      "id": 27,
-      "name": "La bonne étoile",
-      "type": "chance"
     }
   ],
   "cards": [
@@ -312,7 +367,7 @@
       "title": "Courant contraire",
       "description": "Rejoignez directement l'Île perdue sans prime.",
       "effect": "move_to",
-      "target": 7,
+      "target": 8,
       "salary": false
     },
     {
@@ -336,7 +391,7 @@
       "title": "Invitation sportive",
       "description": "Avancez jusqu'au Championnat du monde.",
       "effect": "move_to",
-      "target": 14,
+      "target": 16,
       "salary": true
     },
     {
@@ -344,7 +399,7 @@
       "title": "Billet d'horizon",
       "description": "Avancez jusqu'au Tour du monde.",
       "effect": "move_to",
-      "target": 21,
+      "target": 24,
       "salary": true
     },
     {
@@ -358,34 +413,6 @@
       "title": "Chantier contrarié",
       "description": "Une maison adverse est retirée. Les hôtels sont protégés.",
       "effect": "downgrade"
-    },
-    {
-      "id": "chance-15",
-      "title": "Raid sur la banque",
-      "description": "Prenez jusqu’à 100 000 au rival le plus riche. Ses réserves ne peuvent pas devenir négatives.",
-      "effect": "steal",
-      "amount": 100000
-    },
-    {
-      "id": "chance-16",
-      "title": "Coup de filet",
-      "description": "Prenez jusqu’à 50 000 à chaque adversaire. Vos coéquipiers sont épargnés.",
-      "effect": "levy",
-      "amount": 50000
-    },
-    {
-      "id": "chance-17",
-      "title": "Contrôle fiscal",
-      "description": "Payez 120 000 à la banque.",
-      "effect": "cash",
-      "amount": -120000
-    },
-    {
-      "id": "chance-18",
-      "title": "Bourse de voyage",
-      "description": "Recevez 180 000.",
-      "effect": "cash",
-      "amount": 180000
     }
   ],
   "network": {
@@ -394,7 +421,5 @@
     "revealTimeoutMs": 8000,
     "reconnectTtlMs": 86400000,
     "maxRandomRetries": 3
-  },
-  "lineVictory": false,
-  "resortVictory": false
+  }
 }
