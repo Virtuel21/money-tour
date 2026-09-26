@@ -41,3 +41,19 @@ Validation finale du 26 septembre 2026 : `pnpm check` passe avec 195 tests dans 
 Le [déploiement GitHub Pages](https://github.com/Virtuel21/money-tour/actions/runs/36225452430) a réussi pour le commit `0e6b6309f228d8895fe59315666819f15e13bf0d`. Le [site public](https://virtuel21.github.io/money-tour/) a été ouvert dans Chromium : une partie express à quatre bots a atteint son classement final, sans erreur ni avertissement dans la console. L’image de partage répond en HTTP 200 avec le type `image/png` et une taille de 84 413 octets. La création d’un salon privé depuis le site publié affiche l’hôte, le code et le lien d’invitation.
 
 La [recette terrain #10](https://github.com/Virtuel21/money-tour/issues/10) demeure ouverte : quatre réseaux distincts, dont un smartphone physique en 4G. Le contrôle du salon publié ne constitue pas à lui seul une validation de ce scénario.
+
+## Révision 3D — 26 septembre 2026
+
+- Construction réservée au propriétaire de tout le groupe de couleur ; tests de groupe incomplet, changement de propriétaire et propriété d’un coéquipier. Les tests existants ont été adaptés à cette règle demandée par Julien.
+- 200 tests dans dix fichiers, dont 1 000 parties simulées. Couverture moteur : lignes 99,32 %, instructions 98,80 %, branches 95,59 %, fonctions 100 %. TypeScript, ESLint et build passent.
+- Modèles produits avec Blender 5.2.2 : fichier source `.blend` livré localement, export GLB de 1 119 072 octets. Les modèles sont chargés et affichés dans Chromium avec Three.js. Textures originales créées par le générateur d’images ChatGPT, encodées en WebP ; provenance et prompts conservés.
+- Scènes de recette déterministes, uniquement en développement : `?scenario=travel`, `?scenario=build`, `?scenario=card`. Horloge figée et sauvegarde désactivée dans ces scènes, absentes de la version de production.
+- Voyage : sélection de Nacreville via le bouton superposé à sa case, débit de 50 k, phase d’achat après le bond. Aucun menu déroulant de destination.
+- Construction : groupe Clairport/Briseciel détenu, bouton de construction disponible, animation déclenchée et coût débité. Bordures de couleur inspectées sur les deux groupes des joueurs de la scène.
+- Dés : rotation/rebond 3D avant révélation, actions indisponibles pendant la séquence. Tests de présentation : passage Départ, déplacement arrière, ordre dés/déplacement/carte, état moteur non modifié.
+- Carte : « Vent favorable » affichée au centre, illustration et texte lisibles, puis trois bonds après « C’est parti ! ». Lecture manuelle pour un humain en local, automatique pour bots/en ligne. Vue mobile 390 × 844 contrôlée, sans débordement horizontal de la carte ; pas de téléphone physique testé.
+- Accueil : « Embarquer » crée le salon privé et affiche l’hôte, son code et son lien, avec les deux boutons de copie. Jeu solo/local conservé sur un bouton distinct.
+- Musiques fournies : deux MP3 distincts pour accueil et partie ; quatre samples Kenney CC0 et synthèses complémentaires. Chargement musical à la demande, préférences persistantes. Le contrôle technique ne remplace pas une écoute humaine.
+- Assets publics : 7 622 186 octets sur un budget révisé de 12 Mo, dont environ 6,3 Mo de musiques fournies. Les SHA Git des deux MP3 et du GLB publiés correspondent aux fichiers locaux.
+
+La recette multiréseau/4G de #10 reste à effectuer. La nouvelle présentation ne constitue pas une certification de compatibilité sur tous les GPU et téléphones.

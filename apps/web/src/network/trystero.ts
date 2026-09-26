@@ -12,11 +12,11 @@ export class TrysteroTransport implements Transport {
   private dispatch: ((message: unknown, peer?: string) => void) | null = null;
   constructor(private turn: RTCIceServer[] = []) {}
   async join(code: string): Promise<void> {
-    const roomId = await hash({ domain: 'money-tour-room-v1', code });
-    const password = await hash({ domain: 'money-tour-password-v1', code });
+    const roomId = await hash({ domain: 'money-tour-room-v2', code });
+    const password = await hash({ domain: 'money-tour-password-v2', code });
     this.room = joinRoom(
       {
-        appId: 'virtuel21-money-tour-v1',
+        appId: 'virtuel21-money-tour-v2',
         password,
         ...(this.turn.length ? { turnConfig: this.turn } : {}),
       },

@@ -13,6 +13,8 @@ pnpm check
 pnpm simulate 1000
 ```
 
+Pour construire, le propriétaire doit posséder toutes les villes du même groupe de couleur (les propriétés d’un coéquipier ne complètent pas ce groupe). Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
+
 Le moteur couvre les 32 cases, les 14 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 
 - [Plan et critères de livraison](PLAN.md)
@@ -20,21 +22,21 @@ Le moteur couvre les 32 cases, les 14 cartes Chance, les constructions, la dette
 - [Direction artistique et inventaire prévu](ART_DIRECTION.md)
 - [Crédits](CREDITS.md)
 
-Architecture : monorepo pnpm, moteur TypeScript pur, React/Vite, rendu PixiJS et Trystero pour WebRTC. Le site est statique, sans serveur de jeu à maintenir. Les réseaux restrictifs peuvent nécessiter un TURN facultatif ; les relais publics de signalisation restent des dépendances externes.
+Architecture : monorepo pnpm, moteur TypeScript pur, React/Vite, scène Three.js avec modèles Blender/glTF et Trystero pour WebRTC. Le site est statique, sans serveur de jeu à maintenir. Les réseaux restrictifs peuvent nécessiter un TURN facultatif ; les relais publics de signalisation restent des dépendances externes.
 
 Le commit-reveal rend les tirages acceptés vérifiables mais n'empêche pas un participant de refuser sa révélation. La recette sur quatre réseaux distincts dont un smartphone en 4G restera explicitement séparée des tests locaux et simulés.
 
-Code sous [licence MIT](LICENSE). Illustrations et sons originaux ; aucun asset du jeu de référence. Les réglages séparent musique, effets et volume ; le silence est conservé après actualisation.
+Code sous [licence MIT](LICENSE). Modèles originaux créés dans Blender, textures générées avec ChatGPT, musiques fournies par Julien et bruitages Kenney CC0 ; détails dans CREDITS.md. Aucun asset du jeu de référence. Les réglages séparent musique, effets et volume ; le silence est conservé après actualisation.
 
 ## Déploiement et développement
 
 Le workflow `Deploy Pages` vérifie format, types, lint, tests, couverture, build et poids des assets avant de publier `apps/web/dist` sur GitHub Pages à chaque push sur `main`. Dans les réglages Pages, la source doit être « GitHub Actions ». Aucun secret applicatif n’est nécessaire. Les salons utilisent un fragment `#room=…`, compatible avec le rechargement d’un site statique.
 
-`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques pèsent environ 90 ko (limite automatisée : 5 Mo) ; le plateau et les sons sont générés par code. `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
+`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques incluent les modèles glTF, deux textures WebP et les deux musiques MP3 (limite automatisée : 12 Mo). Le modèle source est reproductible avec Blender 5.2 : `blender --background --factory-startup --python scripts/models.py`. `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
 
 ## Jouer en ligne
 
-Ouvrez « Salon en ligne », choisissez un nom et créez un salon. Partagez son lien ou son code de 32 caractères avec vos invités. L’hôte choisit la durée, les sièges et le mode 2v2 ; les places libres deviennent des bots. Au-delà de 30 secondes d’inactivité ou après une déconnexion, un bot prend le relais. « Reprendre mon siège » rend la main au propriétaire de la clé conservée dans ce navigateur.
+Sur l’accueil, choisissez votre nom et vos paramètres puis cliquez sur « Embarquer » : le salon est créé et affiche son lien et son code à copier. « Rejoindre un salon » permet de saisir un code existant. Le bouton « Jouer sur cet appareil · solo / local » conserve le jeu hors ligne. Partagez son lien ou son code de 32 caractères avec vos invités. L’hôte choisit la durée, les sièges et le mode 2v2 ; les places libres deviennent des bots. Au-delà de 30 secondes d’inactivité ou après une déconnexion, un bot prend le relais. « Reprendre mon siège » rend la main au propriétaire de la clé conservée dans ce navigateur.
 
 Le lien contient un secret aléatoire de 128 bits dans son fragment, non envoyé au serveur statique. Trystero 0.25.4 utilise Nostr pour la signalisation, WebRTC pour le jeu et un mot de passe dérivé pour le salon. Les données du jeu sont échangées entre pairs. Votre clé de reprise reste sur cet appareil (24 h), l’historique dans `sessionStorage`. L’effacement du stockage ou un autre navigateur ne permet pas de reprendre automatiquement le même siège. Ne jouez pas simultanément le même siège dans plusieurs onglets.
 

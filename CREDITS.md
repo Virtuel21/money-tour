@@ -1,27 +1,26 @@
 # Crédits de Money Tour
 
-Code : licence MIT, voir `LICENSE`.
+Code original sous licence MIT, voir LICENSE. Le projet n’est pas affilié à un autre éditeur et ne reprend aucun asset du jeu de référence.
 
-## Créations originales
+## Modèles et interface originaux
 
-Auteur : projet Money Tour, créations réalisées par code pour Julien. Licence MIT.
+Créations originales pour Julien, MIT : scripts/models.py, apps/web/public/models/money-tour.glb (plateau, tuiles, quatre personnages, dés, maisons, hôtel, îlots, palmiers), apps/web/src/board/Board3D.tsx (mise en scène), App.tsx, styles.css, favicon.svg et social-card.svg/png. Les trois artworks fournis par Julien servent de références de direction artistique ; leurs fichiers source ne sont pas redistribués dans le dépôt. Polices système Trebuchet MS/Arial, sans fichier de police redistribué.
 
-| Fichier                        | Création originale                                                                                              |
-| ------------------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `apps/web/public/favicon.svg`  | Logo voilier et favicon                                                                                         |
-| `apps/web/src/board/Board.tsx` | Plateau, archipel, 32 pictogrammes de cases, quatre pions, constructions, festivals et championnats, animations |
-| `apps/web/src/App.tsx`         | Logo, dés, avatars, cartes et interfaces de menu, jeu, tutoriel et résultats                                    |
-| `apps/web/src/styles.css`      | Mise en page, motifs, palette et animations d’interface                                                         |
+## Images générées
 
-Aucun asset graphique externe utilisé. Polices système Georgia et Trebuchet MS/Arial ; aucun fichier de police redistribué. Les pictogrammes textuels d’interface sont des caractères Unicode rendus par le système.
+Créations originales avec le générateur d’images intégré de ChatGPT : apps/web/public/textures/ocean.webp (mer), chance.webp (carte). Prompts et provenance dans docs/IMAGE_PROMPTS.md.
 
-Bibliothèques : React (MIT), PixiJS (MIT), Vite (MIT), TypeScript (Apache-2.0), Vitest (MIT). Leurs notices sont conservées dans les distributions des dépendances.
+## Audio fourni par Julien
 
-Ce projet n'est pas affilié à un autre éditeur de jeu. Il n'utilise aucun asset du jeu ayant servi de référence mécanique.
+- apps/web/public/audio/menu.mp3 : « Property Party - main menu.mp3 ».
+- apps/web/public/audio/game.mp3 : « Property Party - Party running song.mp3 ».
 
-## Compléments de livraison
+Sources : dossier local Money tour assets/songs, fourni pour intégration au jeu. Ces enregistrements sont distincts de la licence MIT du code ; aucune licence CC0 ne leur est attribuée.
 
-- `apps/web/src/network/OnlineLobby.tsx` : création originale, interface de salon et d’invitation, MIT.
-- `apps/web/src/audio/synth.ts` : création originale, huit effets, instruments synthétiques et mélodie de l’archipel, MIT. Aucun sample ni fichier musical externe.
-- `apps/web/public/social-card.svg` et `social-card.png` : création originale 1200 × 630, générée par `scripts/social-card.mjs`, MIT.
-- Trystero (MIT), Zod (MIT) : transport et validation ; Sharp (Apache-2.0) : outil de génération de l’image de partage.
+## Bruitages de bibliothèque
+
+Auteur : Kenney. Pack [Interface Sounds](https://kenney.nl/assets/interface-sounds), licence [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/), attribution non obligatoire. Fichiers redistribués : apps/web/public/audio/switch_001.ogg (dés), drop_001.ogg (pas), select_001.ogg (carte), confirmation_001.ogg (construction). Notice conservée dans audio/Kenney-LICENSE.txt. Les effets d’achat, loyer, victoire et faillite restent des synthèses originales Web Audio, MIT.
+
+## Bibliothèques
+
+React, Three.js, Vite, Vitest, Trystero et Zod : MIT. TypeScript et Sharp : Apache-2.0. Leurs notices restent dans les distributions des dépendances. Blender est l’outil de création des modèles, pas une dépendance exécutée dans le navigateur.

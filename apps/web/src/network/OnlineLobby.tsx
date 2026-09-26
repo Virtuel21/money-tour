@@ -10,24 +10,28 @@ export default function OnlineLobby({
   onSession,
   onView,
   onLeave,
+  autoCreate = false,
+  defaults,
 }: {
   open: boolean;
   onClose: () => void;
   onSession: (session: Session) => void;
   onView: (view: SessionView) => void;
   onLeave: () => void;
+  autoCreate?: boolean;
+  defaults?: { name: string; count: number; teams: boolean; minutes: number };
 }) {
   const [code, setCode] = useState(
     () => new URLSearchParams(location.hash.slice(1)).get('room') ?? '',
   );
-  const [name, setName] = useState('Voyageur');
+  const [name, setName] = useState(defaults?.name ?? 'Voyageur');
   const [view, setView] = useState<SessionView | null>(null);
   const [error, setError] = useState(''),
     [working, setWorking] = useState(false),
     [copied, setCopied] = useState(false);
-  const [count, setCount] = useState(4),
-    [teams, setTeams] = useState(false),
-    [minutes, setMinutes] = useState(20);
+  const [count, setCount] = useState(defaults?.count ?? 4),
+    [teams, setTeams] = useState(defaults?.teams ?? false),
+    [minutes, setMinutes] = useState(defaults?.minutes ?? 20);
   const [turnUrl, setTurnUrl] = useState(''),
     [turnUser, setTurnUser] = useState(''),
     [turnPassword, setTurnPassword] = useState('');
@@ -40,6 +44,13 @@ export default function OnlineLobby({
     else dialog.current?.close();
   }, [open]);
   useEffect(() => () => session.current?.close(), []);
+  const created = useRef(false);
+  useEffect(() => {
+    if (autoCreate && !created.current) {
+      created.current = true;
+      void connect(true);
+    }
+  }, [autoCreate]);
   async function connect(create: boolean) {
     if (working) return;
     setWorking(true);
@@ -196,6 +207,17 @@ export default function OnlineLobby({
               readOnly
               value={`${location.origin}${location.pathname}#room=${code}`}
             />
+            <button
+              className="secondary"
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(code)
+                  .then(() => setCopied(true))
+                  .catch(() => setError('Copiez le code affiché ci-dessus.'));
+              }}
+            >
+              Copier le code du salon
+            </button>
           </div>
           <ul className="lobby-members">
             {view.members.map((member, i) => (

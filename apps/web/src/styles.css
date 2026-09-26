@@ -149,7 +149,8 @@ p {
   display: inline-block;
 }
 .intro h1 {
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-weight: 400;
   letter-spacing: -3px;
   line-height: 1.02;
@@ -397,7 +398,8 @@ select {
   align-items: center;
 }
 .features b {
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-weight: 400;
   font-size: 31px;
   color: #839b80;
@@ -449,7 +451,8 @@ footer a {
   gap: 15px;
 }
 .game-top h1 {
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-size: 29px;
   font-weight: 400;
   letter-spacing: -0.6px;
@@ -629,7 +632,8 @@ footer a {
   letter-spacing: 1.2px;
 }
 .action-card h2 {
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-size: 26px;
   line-height: 1.15;
   font-weight: 400;
@@ -788,7 +792,8 @@ footer a {
   margin-bottom: 20px;
 }
 .modal-heading h2 {
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-size: 28px;
   letter-spacing: -0.7px;
   font-weight: 400;
@@ -820,7 +825,8 @@ footer a {
   line-height: 1.65;
 }
 .rules .lead {
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-size: 21px;
   color: #47755d;
 }
@@ -938,7 +944,8 @@ footer a {
 }
 .winner-name {
   text-align: center;
-  font-family: Georgia, serif;
+  font-family: 'Trebuchet MS', Arial, sans-serif;
+  font-weight: 800;
   font-size: 32px !important;
   color: #142d3d !important;
   margin: 12px 0 8px;
@@ -1571,4 +1578,123 @@ footer a {
     width: 32px;
     height: 32px;
   }
+}
+.board-3d {
+  aspect-ratio: 1 / 0.85;
+  background: #f7eddb;
+  box-shadow: 0 18px 45px #195b5520;
+}
+.board-demo.board-3d {
+  transform: rotate(-2deg);
+}
+.board-hit-targets {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.board-hit-targets button {
+  position: absolute;
+  width: 8.1%;
+  height: 6.8%;
+  transform: translate(-50%, -50%);
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 7px;
+  pointer-events: auto;
+  padding: 0;
+}
+.board-hit-targets button:hover,
+.board-hit-targets button:focus-visible {
+  border-color: #fff;
+  background: #ffffff33;
+  outline: 3px solid #146d76;
+}
+.board-hit-targets button.selectable {
+  border-color: #f5ba18;
+  cursor: crosshair;
+}
+.board-loading {
+  position: absolute;
+  inset: 40% 10% auto;
+  text-align: center;
+  font-weight: bold;
+  color: #16616c;
+}
+.roll-status {
+  margin: 8px auto;
+  text-align: center;
+  font-weight: bold;
+  color: #176774;
+  min-height: 24px;
+}
+.board-choice-hint {
+  padding: 15px;
+  background: #fff0b7;
+  border-radius: 12px;
+  border: 2px solid #e6b94a;
+}
+.local-launch {
+  width: 100%;
+  margin-top: 12px;
+}
+.chance-reveal {
+  text-align: center;
+  animation: card-reveal 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.chance-reveal img {
+  width: min(220px, 55vw);
+  border-radius: 30px;
+}
+.chance-reveal h2 {
+  font-family: 'Trebuchet MS', sans-serif;
+  font-weight: 900;
+  margin: 12px 0;
+  color: #704cb0;
+}
+.chance-reveal p {
+  font-size: 19px;
+  line-height: 1.6;
+  color: #25434c;
+}
+.chance-reveal button {
+  width: 100%;
+}
+@keyframes card-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(80px) rotateY(100deg) rotate(-10deg) scale(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .chance-reveal {
+    animation: none;
+  }
+}
+
+/* Cartoon surfaces: solid colors, rounded controls and tactile edges. */
+.primary {
+  background: #f5b83c;
+  color: #163d4b;
+  font-weight: 800;
+  box-shadow: 0 4px 0 #ca8820;
+}
+.primary:hover {
+  background: #ffd267;
+}
+.intro h1 em {
+  color: #148b99;
+  font-style: normal;
+}
+.setup-card,
+.action-card {
+  border: 2px solid #e3dfcf;
+  border-radius: 22px;
+}
+.board-3d {
+  box-shadow: none;
+  border-radius: 26px;
 }

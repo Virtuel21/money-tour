@@ -3,8 +3,22 @@ import { getLegalActions, getNetWorth, reduceGame } from '../src/index';
 import { game, offer, own, roll, sequence, step } from './helpers';
 
 describe('purchases and construction', () => {
+  it('requires every city in the color group and loses permission when a city changes owner', () => {
+    const state = offer(own(game(), 1), 1);
+    const before = structuredClone(state);
+    expect(reduceGame(state, { type: 'upgrade', playerId: 'p1' }, sequence()).error).toBeTruthy();
+    expect(state).toEqual(before);
+    own(state, 2);
+    expect(getLegalActions(state).some((a) => a.type === 'upgrade')).toBe(true);
+    own(state, 2, 'p2');
+    expect(getLegalActions(state).some((a) => a.type === 'upgrade')).toBe(false);
+  });
+  it('requires personal ownership even when a teammate owns the missing city', () => {
+    const state = offer(own(own(game(4, true), 1), 2, 'p3'), 1);
+    expect(getLegalActions(state).some((a) => a.type === 'upgrade')).toBe(false);
+  });
   it('buys a city at its configured price and builds one level at a time', () => {
-    let state = offer(game(), 1);
+    let state = offer(own(game(), 2), 1);
     state = step(state, 'buy');
     expect(state.properties[1]!.ownerId).toBe('p1');
     expect(state.players[0]!.cash).toBe(1_400_000);
@@ -19,15 +33,15 @@ describe('purchases and construction', () => {
     expect(denied.state).toBe(state);
   });
 
-  it('allows the third house and hotel after a complete lap without owning the group', () => {
-    let state = offer(own(game(), 1, 'p1', 2), 1);
+  it('allows the third house and hotel after a complete lap with the entire group', () => {
+    let state = offer(own(own(game(), 2), 1, 'p1', 2), 1);
     state.players[0]!.laps = 1;
     state = step(state, 'upgrade');
     expect(state.properties[1]!.level).toBe(3);
     state = step(state, 'upgrade');
     expect(state.properties[1]!.level).toBe(4);
     expect(state.players[0]!.cash).toBe(1_400_000);
-    expect(state.properties[2]!.ownerId).toBeNull();
+    expect(state.properties[2]!.ownerId).toBe('p1');
     expect(reduceGame(state, { type: 'upgrade', playerId: 'p1' }, sequence()).error).toBeTruthy();
   });
 
