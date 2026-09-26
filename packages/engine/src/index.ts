@@ -5,6 +5,7 @@ export {
   reduceGame,
   chooseBotAction,
   getLegalActions,
+  isLegalPlayerAction,
   getNetWorth,
   getPropertyValue,
   getRent,
@@ -14,3 +15,7 @@ export type * from './types.js';
 
 export { sameRules } from './layout.js';
 export { default as legacyConfig } from './legacy-v5.config.json';
+
+export { default as legacyConfigV6 } from './legacy-v6.config.json';
+
+export { duelCommitment, duelChoices, getDecisionPlayerId } from './duel.js';

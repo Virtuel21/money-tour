@@ -17,11 +17,11 @@ Pour construire, le propriétaire doit posséder toutes les villes du même grou
 
 Un Mondial coûte 50 k et double le loyer de la ville pendant quatre retours du propriétaire : les doubles ne consomment pas de durée et un nouveau Mondial renouvelle les quatre tours sans cumuler le bonus. Un trophée, un ruban et des confettis signalent la ville hôte ; le badge indique les tours restants. Fermer l’offre d’achat ne termine pas le tour : cliquez de nouveau sur votre case ou sur Acheter pour la rouvrir. « Non merci, je passe » termine la décision. Les taxes sont annoncées par une fenêtre humoristique avant l’animation du prélèvement.
 
-Les [événements aléatoires proposés](docs/EVENT_IDEAS.md) sont des idées pour une prochaine version ; ils ne sont pas activés dans les parties.
+La crise économique est active : 12 % de chances au début d’un tour de table, loyers divisés par deux jusqu’à ce que chacun ait terminé un tour. Les autres [événements proposés](docs/EVENT_IDEAS.md) restent des pistes.
 
 Après achat, le loyer actuel s’affiche en gros et en gras directement sur la case. Il est recalculé avec les constructions, festivals, Mondial et le nombre d’îles détenues.
 
-Le moteur couvre les 26 cases, les 18 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
+Le moteur couvre les 32 cases, les 24 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 
 - [Plan et critères de livraison](PLAN.md)
 - [Règles, hypothèses et limites du protocole](DECISIONS.md)
@@ -38,7 +38,7 @@ Code sous [licence MIT](LICENSE). Modèles originaux créés dans Blender, textu
 
 Le workflow `Deploy Pages` vérifie format, types, lint, tests, couverture, build et poids des assets avant de publier `apps/web/dist` sur GitHub Pages à chaque push sur `main`. Dans les réglages Pages, la source doit être « GitHub Actions ». Aucun secret applicatif n’est nécessaire. Les salons utilisent un fragment `#room=…`, compatible avec le rechargement d’un site statique.
 
-`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques incluent les modèles glTF, quatre textures WebP et les quatre musiques MP3 (limite automatisée : 16 Mo). Le rendu hybride utilise un plateau, des dés et des pièces spéciales Blender, et des sprites détaillés pour les voyageurs, bâtiments et îles ; reproduction : `blender --background --factory-startup --python scripts/build_models.py`. Voir [les scènes Blender et leurs contrôles](docs/MODELS.md). `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées et la vérification des dix racines 3D exportées. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
+`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques incluent les modèles glTF, les atlas WebP et les quatre musiques MP3 (limite automatisée : 20 Mo). Le rendu hybride utilise un plateau, des dés et des pièces spéciales Blender, et des sprites détaillés pour les voyageurs, bâtiments et îles ; reproduction : `blender --background --factory-startup --python scripts/build_models.py`. Voir [les scènes Blender et leurs contrôles](docs/MODELS.md). `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées et la vérification des seize racines 3D exportées. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
 
 ## Jouer en ligne
 
@@ -55,14 +55,18 @@ Le lien contient un secret aléatoire de 128 bits dans son fragment, non envoyé
 - Une révélation manquante annule le tirage et exclut temporairement le contributeur. Cela n’élimine pas l’abandon sélectif ni le déni de service. Avec un seul contributeur, l’interface indique explicitement « aléa local : hôte seul ».
 - Tests en mémoire et test WebRTC réel entre deux origines sur un ordinateur réalisés. **Quatre réseaux distincts, dont un smartphone physique en 4G : non vérifié.** Voir [journal de validation](docs/VALIDATION.md).
 
-## Édition Îles
+## Historique — édition Îles
 
 Sept rues de deux villes, quatre îles achetables, quatre cases cartes, deux taxes et quatre coins spéciaux. Les quatre îles réunies donnent un loyer de 500 k au lieu d’une victoire immédiate. Trois rues complètes, la faillite des adversaires ou le meilleur patrimoine au chrono permettent de gagner. Le loyer est prélevé automatiquement et le transfert est visible avec des pièces d’or. Les cartes d’attaque prennent un montant plafonné aux réserves des adversaires ; les coéquipiers sont épargnés.
 
 Vue en trois-quarts, noms seuls sur les cases, comptes à gauche et fiche de propriété/commandes à droite. Les personnages et constructions occupées peuvent devenir translucides. Avion, coupe et palmier détaillés dans Blender. Le joueur actif est annoncé et les cartes adverses restent en lecture seule. La pause reste solo/local ; revenir à l’accueil arrête les animations et sons en attente. Le réseau v4 sépare les versions et le stockage local v4 préserve l’ancienne sauvegarde de 32 cases dans son emplacement d’origine. Voir [direction artistique](ART_DIRECTION.md) et [contrôle visuel](docs/VISUAL_QA.md).
 
-## Plateau variable et réserves
+## Plateau carré, événements et réserves
 
-Chaque nouvelle partie mélange les sept rues complètes (deux villes chacune), en conservant les quatre îles, les quatre coins, trois cases Chance et une seule Taxe juste avant Départ. La disposition fait partie de l’état partagé : tous les joueurs voient le même plateau. Les sauvegardes des éditions précédentes conservent leur plateau de 28 cases.
+Chaque nouvelle partie mélange huit rues complètes (deux villes réelles chacune). Le carré comporte 32 cases, 9 par bord coins inclus. Chaque côté possède exactement quatre villes, une île et deux cases spéciales en plus du coin. Casino, Chance et Karma ne se touchent pas. La Taxe reste juste avant Départ. La disposition fait partie de l’état partagé : tous les joueurs voient le même plateau. Les sauvegardes des éditions précédentes conservent leur plateau de 26 ou 28 cases.
 
 Les tuiles rectangulaires séparent constructions et loyers. Les bâtiments prennent la couleur du propriétaire ; les plages ont une bordure d’eau. Les liasses et lingots autour du plateau suivent le compte de chaque joueur. Le temps restant figure sur les boutons de décision et dans les fenêtres ; pause et animations suspendent le décompte. Trois musiques alternent pendant la partie.
+
+Deux casinos (roulette ou machine à sous aléatoire), jackpot progressif à 10 % du solde, assurance, Karma, Squatteur, Expropriation, Cafards et Fraude fiscale complètent le jeu. Alliance partage les gains jusqu’à la fin du prochain tour du joueur ciblé ; Duel propose des mises égales acceptées et des choix secrets. Posséder toutes les villes et l’île d’un côté donne une victoire Monopole. [Règles détaillées et durées](docs/FORTUNE_RULES.md).
+
+Les dés 3D roulent dans un écrin séparé du décor. Les icônes conservent des proportions carrées sur les tuiles rectangulaires. Les nouvelles pièces sont dans models/fortune.glb, source scripts/casino_models.py. [Provenance et prompt de l’atlas](docs/FORTUNE_ART.md).

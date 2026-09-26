@@ -1,8 +1,30 @@
 export type Rng = () => number;
 export type Phase =
-  'roll' | 'island' | 'travel' | 'property' | 'championship' | 'debt' | 'end' | 'finished';
+  | 'roll'
+  | 'island'
+  | 'travel'
+  | 'property'
+  | 'championship'
+  | 'debt'
+  | 'end'
+  | 'finished'
+  | 'casino'
+  | 'attack'
+  | 'rent'
+  | 'alliance'
+  | 'duel';
 export type TileType =
-  'start' | 'city' | 'resort' | 'chance' | 'island' | 'championship' | 'travel' | 'tax';
+  | 'start'
+  | 'city'
+  | 'resort'
+  | 'chance'
+  | 'island'
+  | 'championship'
+  | 'travel'
+  | 'tax'
+  | 'casino'
+  | 'insurance'
+  | 'karma';
 export interface Tile {
   id: number;
   name: string;
@@ -18,7 +40,20 @@ export interface ChanceCard {
   id: string;
   title: string;
   description: string;
-  effect: 'cash' | 'move_to' | 'move_by' | 'escape' | 'downgrade' | 'steal' | 'levy';
+  effect:
+    | 'cash'
+    | 'move_to'
+    | 'move_by'
+    | 'escape'
+    | 'downgrade'
+    | 'steal'
+    | 'levy'
+    | 'squatter'
+    | 'expropriate'
+    | 'roaches'
+    | 'fraud'
+    | 'alliance'
+    | 'duel';
   amount?: number;
   target?: number;
   steps?: number;
@@ -27,6 +62,12 @@ export interface ChanceCard {
 export interface GameConfig {
   version: number;
   shuffleStreets?: boolean;
+  casinoBaseChance?: number;
+  casinoChanceStep?: number;
+  casinoMaxChance?: number;
+  karmaAmount?: number;
+  fraudDiscount?: number;
+  crisisChance?: number;
   lineVictory?: boolean;
   resortVictory?: boolean;
   initialCash: number;
@@ -79,6 +120,9 @@ export interface Player extends PlayerSetup {
   laps: number;
   islandTurns: number | null;
   escapeCards: string[];
+  heldCards?: string[];
+  insurance?: { tile: number | null };
+  fraudLiability?: number;
   travelPending: boolean;
   eliminated: boolean;
   abandoned: boolean;
@@ -88,6 +132,7 @@ export interface Property {
   level: number;
   championships: number;
   championshipTurns?: number;
+  roachTurns?: number;
 }
 export type DebtContinuation = 'property' | 'end';
 export interface Debt {
@@ -123,6 +168,13 @@ export interface GameState {
   extraRoll: boolean;
   dice: number[];
   lastCard: string | null;
+  pendingAttack?: string;
+  pendingRent?: { tile: number; amount: number; creditorId: string };
+  casino?: { tile: number; game: 'roulette' | 'slots'; chance: number };
+  casinoVisits?: Record<number, number>;
+  alliance?: { beneficiaryId: string; targetId: string };
+  crisis?: { remaining: string[] };
+  duel?: Duel;
   debt: Debt | null;
   winner: Winner | null;
 }
@@ -136,6 +188,16 @@ export interface GameOptions {
 type PlayerActionType =
   | 'roll'
   | 'buy'
+  | 'buy_fraud'
+  | 'use_squatter'
+  | 'pay_rent'
+  | 'casino_red'
+  | 'casino_black'
+  | 'casino_spin'
+  | 'duel_accept'
+  | 'duel_decline'
+  | 'duel_cancel'
+  | 'duel_bot'
   | 'buyout'
   | 'upgrade'
   | 'finish'
@@ -146,9 +208,28 @@ type PlayerActionType =
   | 'quit';
 export type GameAction =
   | { type: PlayerActionType; playerId: string }
-  | { type: 'sell' | 'place_championship' | 'travel'; playerId: string; tile: number }
+  | {
+      type: 'sell' | 'place_championship' | 'travel' | 'insure' | 'attack';
+      playerId: string;
+      tile: number;
+    }
   | { type: 'tick'; elapsedMs: number }
+  | { type: 'alliance'; playerId: string; targetId: string }
+  | { type: 'duel_offer'; playerId: string; targetId: string; amount: number }
+  | { type: 'duel_commit'; playerId: string; hash: string }
+  | { type: 'duel_reveal'; playerId: string; choice: DuelChoice; salt: string }
   | { type: 'set_control'; playerId: string; bot: boolean };
+export type DuelChoice = 'rock' | 'paper' | 'scissors';
+export interface Duel {
+  id: string;
+  challengerId: string;
+  targetId?: string;
+  amount: number;
+  stage: 'offer' | 'accept' | 'commit' | 'reveal';
+  commitments: Record<string, string>;
+  reveals: Record<string, { choice: DuelChoice; salt: string }>;
+  escrow: boolean;
+}
 export interface GameEvent {
   type: string;
   playerId?: string;

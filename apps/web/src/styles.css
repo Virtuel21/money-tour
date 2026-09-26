@@ -2159,15 +2159,15 @@ footer a {
 .board-watermark {
   position: absolute;
   left: 50%;
-  top: 43%;
+  top: 52%;
   transform: translate(-50%, -50%) rotate(-7deg);
   color: #075269;
-  font-size: 2.6cqw;
+  font-size: 1.65cqw;
   line-height: 0.86;
   letter-spacing: -0.05em;
   font-weight: 1000;
   text-align: center;
-  opacity: 0.88;
+  opacity: 0.65;
 }
 .board-watermark span {
   color: #ffdb5f;
@@ -2950,5 +2950,253 @@ footer a {
   }
   .purchase-cta > span:first-child {
     text-align: left;
+  }
+}
+.casino-view {
+  text-align: center;
+}
+.casino-view h3 {
+  font-size: 24px;
+  margin: 12px 0;
+}
+.casino-actions,
+.decision-actions {
+  display: grid;
+  gap: 12px;
+  margin: 18px 0;
+}
+.casino-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.casino-actions button,
+.decision-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 58px;
+}
+.casino-actions .casino_spin {
+  grid-column: 1/-1;
+}
+.casino-actions .casino_red {
+  background: #ac2440;
+  color: #fff;
+  border-color: #db5971;
+}
+.casino-actions .casino_black {
+  background: #183541;
+  color: #fff;
+  border-color: #597580;
+}
+.roulette-stage {
+  position: relative;
+  margin: 12px auto 20px;
+  width: 180px;
+  height: 180px;
+}
+.roulette-wheel {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 9px solid #d5a548;
+  background: repeating-conic-gradient(#b93145 0deg 22.5deg, #18343e 22.5deg 45deg);
+  box-shadow:
+    0 8px 0 #957132,
+    0 12px 28px #102c3a22;
+}
+.roulette-wheel:after {
+  content: '';
+  position: absolute;
+  inset: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ffe9a4 0 15%, #b98432 16% 25%, #155b4d 26% 100%);
+  border: 3px solid #e3b75e;
+}
+.roulette-pointer {
+  position: absolute;
+  top: -18px;
+  left: calc(50% - 12px);
+  font-size: 28px;
+  color: #b47720;
+  filter: drop-shadow(0 2px 0 white);
+}
+.casino-playing .roulette-wheel {
+  animation: roulette-spin 1900ms cubic-bezier(0.12, 0.63, 0.23, 1) forwards;
+}
+@keyframes roulette-spin {
+  to {
+    transform: rotate(var(--roulette-stop));
+  }
+}
+.slot-reels {
+  display: flex;
+  gap: 9px;
+  justify-content: center;
+  padding: 22px;
+  border: 7px solid #d3a64d;
+  border-radius: 24px;
+  background: #8c1835;
+  box-shadow: 0 9px 0 #5f1930;
+  margin: 15px auto 24px;
+  max-width: 310px;
+}
+.slot-reels .reel-window {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 90px;
+  border-radius: 9px;
+  background: linear-gradient(#d5c7a2, #fffaf0 40% 60%, #d5c7a2);
+  color: #a72f45;
+  font-size: 43px;
+  font-weight: 900;
+  overflow: hidden;
+  position: relative;
+}
+.slot-reels .reel-strip {
+  display: block;
+  position: absolute;
+  inset: 0 0 auto;
+  animation: reel-spin 320ms linear infinite;
+}
+.slot-reels b {
+  display: grid;
+  place-items: center;
+  height: 90px;
+}
+.reel-window:nth-child(2) .reel-strip {
+  animation-duration: 270ms;
+}
+.reel-window:nth-child(3) .reel-strip {
+  animation-duration: 230ms;
+}
+@keyframes reel-spin {
+  to {
+    transform: translateY(-360px);
+  }
+}
+.casino-result {
+  min-height: 130px;
+}
+.casino-result strong {
+  display: block;
+  color: #a96a11;
+  font-size: 32px;
+}
+.inventory-token {
+  display: inline-block;
+  font-size: 19px;
+  padding: 1px 3px;
+}
+.held-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  grid-column: 1/-1;
+  font-size: 10px;
+}
+.held-cards span {
+  background: #fff1c3;
+  color: #553d1a;
+  padding: 3px 5px;
+  border-radius: 5px;
+}
+.fraud-risk {
+  color: #9c371d;
+  font-weight: 700;
+}
+.modal > .event-notice {
+  font-size: 24px;
+  line-height: 1.5;
+  text-align: center;
+  padding: 24px 8px;
+}
+.tile-condition {
+  display: block;
+  font-size: 0.7em;
+  background: #fff8da;
+  border-radius: 5px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .casino-playing .roulette-wheel,
+  .casino-playing .slot-reels span {
+    animation: none !important;
+  }
+}
+.special-label b {
+  background: #fff5dfef;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+.board-watermark {
+  display: none;
+}
+.action-card > .secondary.reclaim-seat {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  min-height: 58px;
+  background: linear-gradient(#ffe595, #ffc746);
+  color: #153547;
+  font-size: 18px;
+  font-weight: 850;
+  border-color: #e9bd58;
+  align-self: center;
+}
+.action-card > .world-event-status {
+  grid-column: 1/-1;
+  color: #ffe7a0;
+}
+.game-sidebar .action-card {
+  scrollbar-width: thin;
+  scrollbar-color: #5a92a0 transparent;
+}
+.duel-view {
+  text-align: center;
+}
+.duel-hands {
+  font-size: 48px;
+  letter-spacing: 12px;
+  margin: 15px 0;
+}
+.duel-hands span {
+  display: inline-block;
+  transform: rotate(-12deg);
+}
+.duel-choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+.duel-choices button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 8px;
+}
+.duel-choices button > span:first-child {
+  font-size: 40px;
+}
+.duel-view input {
+  width: 100%;
+  margin-top: 8px;
+  font-size: 22px;
+  text-align: center;
+}
+@media (max-width: 999px) {
+  .action-card > .secondary.reclaim-seat {
+    grid-column: auto;
+    grid-row: auto;
+    width: 100%;
+  }
+  .duel-choices {
+    gap: 6px;
+  }
+  .duel-choices button {
+    font-size: 14px;
   }
 }

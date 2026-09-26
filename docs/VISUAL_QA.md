@@ -51,3 +51,13 @@ Le Mondial permet de sélectionner une ville possédée sur le plateau : Lisbonn
 235 tests passent ; typage, lint, couverture et build réussis. Couverture moteur : lignes 99,23 %, branches 95,22 %, fonctions 100 %. Playlist vérifiée sur trois fins de piste et retour accueil. Budget statique 14 268 028 octets / 16 Mo.
 
 Recette navigateur locale : fenêtre Madrid passée de 30 à 18 secondes, mêmes temps en en-tête et dans Acheter / Non merci. Achat réalisé : 1 500 k → 1 350 k, puis fin de décision automatique à expiration. Capture achat-minuteur.png. Les commandes désactivées ont un fond bleu et un texte clair ; l'état réseau n'a plus de rectangle crème. Suppression de l'outline HTML appliqué au polygone SVG, remplacé par un contour SVG fin avec épaisseur constante. Le rendu du plateau utilise les nouvelles couleurs, une frange d'eau sur le sable et les constructions recolorées selon leur propriétaire.
+
+## Fortune et carré équilibré — 26 septembre 2026
+
+Version en cours : carré 32 cases, huit rues de deux villes, quatre villes et une île par côté. Les tests contrôlent aussi deux cases spéciales par côté et aucune adjacency Casino/Chance/Karma. Taxe fixe 31. Les anciens plateaux sont conservés dans leurs sauvegardes.
+
+272 tests réussis sur 20 fichiers, dont 1 000 parties simulées. Couverture : lignes 97,46 %, branches 93,48 %, fonctions 100 %. Les tests vérifient les neuf résultats du duel, ses engagements SHA-256, la mise acceptée par le second siège via transport réseau simulé, les cas de fraude/assurance, la durée complète de crise et le Monopole avec île. Typage, lint, build et 16 racines Blender validés. Assets : 18 860 186 octets / 20 Mo.
+
+Contrôle interactif local : dette 100 k, compte 5 k, vente Lisbonne puis Porto → paiement 100 k et reste 17,5 k ; roulette et machine à sous → +30 k ; assurance posée sur Lisbonne. Duel Léa contre Max, mise 50 k chacun, Pierre contre Ciseaux → 1 550 k / 1 450 k. Chaque choix est caché jusqu’au verrouillage des deux joueurs. Fenêtre mobile en iframe 390 × 844 : largeur du document 390, dialogue 360, aucun débordement horizontal. Il s’agit d’un viewport de navigateur, pas d’un téléphone physique.
+
+Les dés ont une scène de premier plan dédiée ; les dioramas ne peuvent plus les masquer. Les textures spéciales gardent des proportions carrées. Le second bandeau de rue est supprimé ; liseré extérieur = propriétaire. Bouton Reprendre mon siège : grand fond or, texte sombre, position dans la zone des commandes. La recette WebRTC sur quatre réseaux physiques distincts reste ouverte (#10).

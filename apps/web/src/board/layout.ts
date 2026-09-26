@@ -1,6 +1,6 @@
 /** Portrait properties with square corners, supporting both current and saved boards. */
 export function boardShape(count: number) {
-  const short = Math.floor(count / 4),
+  const short = count === 30 ? 6 : Math.floor(count / 4),
     long = count / 2 - short;
   const step = 2.12,
     depth = 3.3;
@@ -38,8 +38,8 @@ export function tilePoint(id: number, count = 26) {
   return { x, z };
 }
 export const wealthPoints = [
-  { x: -4.4, z: 10.8 },
-  { x: -11, z: -2.5 },
-  { x: 4.4, z: -10.8 },
-  { x: 11, z: 2.5 },
+  { x: -4.4, z: 12.8 },
+  { x: -12.8, z: -4.4 },
+  { x: 4.4, z: -12.8 },
+  { x: 12.8, z: 4.4 },
 ];

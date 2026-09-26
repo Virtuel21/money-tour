@@ -1,4 +1,20 @@
+import {
+  duelActions,
+  isLegalDuelAction,
+  applyDuelAction,
+  cancelDuel,
+  validateDuel,
+  getDecisionPlayerId,
+} from './duel.js';
+import { shareGain, awardGain, endWorldTurn, maybeCrisis } from './world-events.js';
 import { shuffleStreets } from './layout.js';
+import {
+  heldCard,
+  consumeCard,
+  protectProperty,
+  clearProtection,
+  casinoPlay,
+} from './expansion.js';
 import { config as defaultConfig } from './config.js';
 import { createRng, randomInt } from './rng.js';
 import type {
@@ -57,16 +73,40 @@ export function getRent(state: GameState, tileId: number): number {
     const count = propertyTiles(state, property.ownerId).filter(
       (item) => item.type === 'resort',
     ).length;
-    return state.config.resortRents[count - 1] ?? 0;
+    return Math.floor((state.config.resortRents[count - 1] ?? 0) * (state.crisis ? 0.5 : 1));
   }
   return Math.floor(
     (tile.rents?.[property.level] ?? 0) *
       (state.festivals.includes(tileId) ? state.config.festivalMultiplier : 1) *
-      (1 + property.championships),
+      (1 + property.championships) *
+      (property.roachTurns ? 0.5 : 1) *
+      (state.crisis ? 0.5 : 1),
   );
 }
 
 function validateConfig(config: GameConfig): void {
+  if (
+    config.crisisChance !== undefined &&
+    (!Number.isSafeInteger(config.crisisChance) ||
+      config.crisisChance < 0 ||
+      config.crisisChance > 100)
+  )
+    throw new Error('Invalid crisis chance.');
+  const baseChance = config.casinoBaseChance ?? 2;
+  const maxChance = config.casinoMaxChance ?? 50;
+  const stepChance = config.casinoChanceStep ?? 2;
+  if (
+    [baseChance, maxChance, stepChance].some(
+      (value) => !Number.isSafeInteger(value) || value < 0 || value > 100,
+    ) ||
+    baseChance > maxChance ||
+    !Number.isSafeInteger(config.karmaAmount ?? 50000) ||
+    (config.karmaAmount ?? 50000) <= 0 ||
+    !Number.isFinite(config.fraudDiscount ?? 0.5) ||
+    (config.fraudDiscount ?? 0.5) <= 0 ||
+    (config.fraudDiscount ?? 0.5) > 1
+  )
+    throw new Error('Invalid casino, karma or fraud configuration.');
   const positive = [
     'initialCash',
     'startBonus',
@@ -140,8 +180,8 @@ export function createGame(
   options: GameOptions,
   rng: Rng = createRng(options.seed ?? 1),
 ): GameState {
+  validateConfig(options.config ?? defaultConfig);
   const config = clone(options.config ?? defaultConfig);
-  validateConfig(config);
   if (options.players.length < config.minPlayers || options.players.length > config.maxPlayers)
     throw new Error('A game needs two to four players.');
   if (
@@ -232,12 +272,19 @@ function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
 
 export function getLegalActions(state: GameState): GameAction[] {
   if (state.phase === 'finished' || state.winner) return [];
+  if (state.phase === 'duel') return duelActions(state);
   const player = activePlayer(state);
   if (!player || player.eliminated) return [];
   const action = (
     type:
       | 'roll'
       | 'buy'
+      | 'buy_fraud'
+      | 'use_squatter'
+      | 'pay_rent'
+      | 'casino_red'
+      | 'casino_black'
+      | 'casino_spin'
       | 'buyout'
       | 'upgrade'
       | 'finish'
@@ -271,6 +318,13 @@ export function getLegalActions(state: GameState): GameAction[] {
     const property = state.properties[tile.id];
     if (property && !property.ownerId && player.cash >= (tile.price ?? Infinity))
       result.push(action('buy'));
+    if (
+      tile.type === 'city' &&
+      !property?.ownerId &&
+      heldCard(state, player, 'fraud') &&
+      player.cash >= Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5))
+    )
+      result.push(action('buy_fraud'));
     if (canUpgrade(state, player, tile)) result.push(action('upgrade'));
     if (
       property?.ownerId &&
@@ -293,6 +347,32 @@ export function getLegalActions(state: GameState): GameAction[] {
     for (const tile of propertyTiles(state, player.id))
       result.push({ type: 'sell', playerId: player.id, tile: tile.id });
   if (state.phase === 'end') result.push(action('finish'));
+  if (state.phase === 'alliance') {
+    for (const target of state.players)
+      if (!target.eliminated && target.id !== player.id)
+        result.push({ type: 'alliance', playerId: player.id, targetId: target.id });
+    result.push(action('finish'));
+  }
+  if (state.phase === 'casino') {
+    if (state.casino?.game === 'roulette')
+      result.push(action('casino_red'), action('casino_black'));
+    else result.push(action('casino_spin'));
+    result.push(action('finish'));
+  }
+  if (state.phase === 'rent') {
+    result.push(action('pay_rent'));
+    if (heldCard(state, player, 'squatter')) result.push(action('use_squatter'));
+  }
+  if (state.phase === 'attack') {
+    for (const tile of attackTargets(state))
+      result.push({ type: 'attack', playerId: player.id, tile: tile.id });
+    result.push(action('finish'));
+  }
+  if (player.insurance && ['roll', 'property', 'end'].includes(state.phase)) {
+    for (const tile of propertyTiles(state, player.id))
+      if (tile.id !== player.insurance.tile)
+        result.push({ type: 'insure', playerId: player.id, tile: tile.id });
+  }
   result.push(action('quit'));
   return result;
 }
@@ -316,12 +396,25 @@ function credit(
     amount,
     reason,
   });
+  if (playerId && ['rent', 'attack', 'bankruptcy'].includes(reason))
+    shareGain(state, playerId, amount, events);
 }
 
 function releaseAssets(state: GameState, player: Player): void {
+  if (state.alliance && [state.alliance.targetId, state.alliance.beneficiaryId].includes(player.id))
+    delete state.alliance;
+  if (activePlayer(state).id === player.id) {
+    delete state.pendingRent;
+    delete state.pendingAttack;
+    delete state.casino;
+  }
   for (const tile of propertyTiles(state, player.id))
     state.properties[tile.id] = { ownerId: null, level: 0, championships: 0 };
   state.discard.push(...player.escapeCards);
+  state.discard.push(...(player.heldCards ?? []));
+  player.heldCards = [];
+  delete player.insurance;
+  delete player.fraudLiability;
   player.escapeCards = [];
   player.travelPending = false;
   player.islandTurns = null;
@@ -401,15 +494,19 @@ function move(state: GameState, steps: number, salary: boolean, events: GameEven
   const player = activePlayer(state);
   const size = state.config.board.length;
   const raw = player.position + steps;
+  if (steps > 0 && raw >= size) delete player.fraudLiability;
   const laps = steps > 0 && salary ? Math.floor(raw / size) : 0;
+  const sharedBonus: GameEvent[] = [];
   player.position = ((raw % size) + size) % size;
   if (laps > 0) {
     player.laps += laps;
     const bonus = state.config.startBonus * laps;
     player.cash += bonus;
     events.push({ type: 'start_bonus', playerId: player.id, amount: bonus });
+    shareGain(state, player.id, bonus, sharedBonus);
   }
   events.push({ type: 'move', playerId: player.id, tile: player.position, steps });
+  events.push(...sharedBonus);
 }
 
 function drawCard(state: GameState, rng: Rng, events: GameEvent[], depth: number): void {
@@ -433,6 +530,10 @@ function drawCard(state: GameState, rng: Rng, events: GameEvent[], depth: number
   if (card.effect === 'escape') {
     activePlayer(state).escapeCards.push(card.id);
     state.phase = 'end';
+  } else if (card.effect === 'squatter' || card.effect === 'fraud') {
+    const player = activePlayer(state);
+    player.heldCards = [...(player.heldCards ?? []), card.id];
+    state.phase = 'end';
   } else {
     state.discard.push(card.id);
     applyCard(state, card, rng, events, depth);
@@ -448,10 +549,30 @@ function applyCard(
 ): void {
   const player = activePlayer(state);
   state.phase = 'end';
+  if (card.effect === 'expropriate' || card.effect === 'roaches') {
+    state.pendingAttack = card.id;
+    if (attackTargets(state).length) state.phase = 'attack';
+    else {
+      delete state.pendingAttack;
+      events.push({ type: 'card_no_effect', playerId: player.id, cardId: card.id });
+    }
+  }
+  if (card.effect === 'alliance') state.phase = 'alliance';
+  if (card.effect === 'duel') {
+    state.duel = {
+      id: `${state.turn}:${state.seq}:${player.id}`,
+      challengerId: player.id,
+      amount: 0,
+      stage: 'offer',
+      commitments: {},
+      reveals: {},
+      escrow: false,
+    };
+    state.phase = 'duel';
+  }
   if (card.effect === 'cash') {
     if ((card.amount ?? 0) >= 0) {
-      player.cash += card.amount ?? 0;
-      events.push({ type: 'income', playerId: player.id, amount: card.amount });
+      awardGain(state, player.id, card.amount ?? 0, events);
     } else charge(state, -(card.amount ?? 0), null, card.title, 'end', events);
   }
   if (card.effect === 'move_to') {
@@ -485,6 +606,7 @@ function applyCard(
         amount,
         reason: 'attack',
       });
+      shareGain(state, player.id, amount, events);
     }
   }
   if (card.effect === 'downgrade') {
@@ -507,10 +629,26 @@ function applyCard(
       );
     const target = candidates[0];
     if (target) {
-      state.properties[target.id]!.level -= 1;
-      events.push({ type: 'downgrade', playerId: player.id, tile: target.id });
+      if (!protectProperty(state, target.id, events)) {
+        state.properties[target.id]!.level -= 1;
+        events.push({ type: 'downgrade', playerId: player.id, tile: target.id });
+      }
     } else events.push({ type: 'card_no_effect', playerId: player.id, cardId: card.id });
   }
+}
+
+function attackTargets(state: GameState): Tile[] {
+  const effect = state.config.cards.find((c) => c.id === state.pendingAttack)?.effect;
+  if (!effect) return [];
+  return state.config.board.filter((tile) => {
+    const p = state.properties[tile.id];
+    return (
+      tile.type === 'city' &&
+      p?.ownerId &&
+      !allies(state, activePlayer(state).id, p.ownerId) &&
+      (effect !== 'roaches' || p.level === state.config.hotelLevel)
+    );
+  });
 }
 
 function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0): void {
@@ -524,8 +662,16 @@ function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0)
     case 'resort': {
       const property = state.properties[tile.id]!;
       state.phase = 'property';
-      if (property.ownerId && !allies(state, player.id, property.ownerId))
-        charge(state, getRent(state, tile.id), property.ownerId, 'rent', 'property', events);
+      if (property.ownerId && !allies(state, player.id, property.ownerId)) {
+        if (heldCard(state, player, 'squatter')) {
+          state.pendingRent = {
+            tile: tile.id,
+            amount: getRent(state, tile.id),
+            creditorId: property.ownerId,
+          };
+          state.phase = 'rent';
+        } else charge(state, getRent(state, tile.id), property.ownerId, 'rent', 'property', events);
+      }
       break;
     }
     case 'island':
@@ -539,26 +685,84 @@ function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0)
       break;
     case 'tax': {
       const amount =
+        player.fraudLiability ||
         (state.config.taxBase ?? 0) +
-        Math.floor(
-          propertyTiles(state, player.id).reduce(
-            (sum, item) => sum + getPropertyValue(state, item.id),
-            0,
-          ) * state.config.taxRate,
-        );
-      events.push({ type: 'tax_notice', playerId: player.id, tile: player.position, amount });
+          Math.floor(
+            propertyTiles(state, player.id).reduce(
+              (sum, item) => sum + getPropertyValue(state, item.id),
+              0,
+            ) * state.config.taxRate,
+          );
+      events.push({
+        type: 'tax_notice',
+        playerId: player.id,
+        tile: player.position,
+        amount,
+        reason: player.fraudLiability ? 'fraud' : 'tax',
+      });
+      delete player.fraudLiability;
       charge(state, amount, null, 'tax', 'end', events);
       break;
     }
     case 'chance':
       drawCard(state, rng, events, depth);
       break;
+    case 'casino': {
+      state.casinoVisits = { ...state.casinoVisits };
+      const visits = (state.casinoVisits[tile.id] ?? 0) + 1;
+      state.casinoVisits[tile.id] = visits;
+      state.casino = {
+        tile: tile.id,
+        game: randomInt(rng, 2) ? 'slots' : 'roulette',
+        chance: Math.min(
+          state.config.casinoMaxChance ?? 50,
+          (state.config.casinoBaseChance ?? 2) +
+            (visits - 1) * (state.config.casinoChanceStep ?? 2),
+        ),
+      };
+      state.phase = 'casino';
+      break;
+    }
+    case 'insurance':
+      if (!player.insurance) player.insurance = { tile: null };
+      events.push({
+        type: 'insurance',
+        playerId: player.id,
+        message: 'Un jeton assurance maximum. Choisissez une de vos propriétés à protéger.',
+      });
+      break;
+    case 'karma': {
+      const values = state.players
+        .filter((p) => !p.eliminated)
+        .map((p) => getNetWorth(state, p.id));
+      const score = getNetWorth(state, player.id),
+        amount = state.config.karmaAmount ?? 50000;
+      if (Math.min(...values) === Math.max(...values))
+        events.push({
+          type: 'karma',
+          playerId: player.id,
+          message: 'Égalité parfaite : le Karma vous laisse tranquilles.',
+        });
+      else if (score === Math.min(...values)) {
+        awardGain(state, player.id, amount, events, 'karma');
+      } else if (score === Math.max(...values)) charge(state, amount, null, 'karma', 'end', events);
+      else
+        events.push({
+          type: 'karma',
+          playerId: player.id,
+          message: 'Ni premier ni dernier : le Karma vous épargne.',
+        });
+      break;
+    }
     case 'start':
       break;
   }
 }
 
 function beginTurn(state: GameState): void {
+  delete state.pendingRent;
+  delete state.pendingAttack;
+  delete state.casino;
   const player = activePlayer(state);
   state.phase = player.islandTurns !== null ? 'island' : player.travelPending ? 'travel' : 'roll';
   state.decisionElapsedMs = 0;
@@ -566,7 +770,7 @@ function beginTurn(state: GameState): void {
   state.dice = [];
 }
 
-function nextTurn(state: GameState, events: GameEvent[]): void {
+function nextTurn(state: GameState, events: GameEvent[], rng: Rng): void {
   if (state.extraRoll && !activePlayer(state).eliminated) {
     state.extraRoll = false;
     state.phase = 'roll';
@@ -575,6 +779,7 @@ function nextTurn(state: GameState, events: GameEvent[]): void {
   }
   state.consecutiveDoubles = 0;
   state.extraRoll = false;
+  endWorldTurn(state, activePlayer(state).id, events);
   const current = state.currentPlayer;
   for (let offset = 1; offset <= state.players.length; offset += 1) {
     const candidate = (current + offset) % state.players.length;
@@ -584,7 +789,15 @@ function nextTurn(state: GameState, events: GameEvent[]): void {
     }
   }
   state.turn += 1;
+  if (state.currentPlayer <= current) maybeCrisis(state, rng, events);
   for (const [id, property] of Object.entries(state.properties)) {
+    if (property.ownerId === activePlayer(state).id && property.roachTurns) {
+      property.roachTurns -= 1;
+      if (!property.roachTurns) {
+        delete property.roachTurns;
+        events.push({ type: 'roaches_expired', tile: Number(id), playerId: property.ownerId });
+      }
+    }
     if (property.ownerId !== activePlayer(state).id || !property.championshipTurns) continue;
     property.championshipTurns -= 1;
     if (!property.championshipTurns) {
@@ -630,6 +843,7 @@ function roll(state: GameState, rng: Rng, events: GameEvent[], fromIsland: boole
 
 function checkVictory(state: GameState, events: GameEvent[]): void {
   if (state.winner) return;
+  if (state.duel && state.elapsedMs >= state.durationMs) cancelDuel(state, events);
   const living = state.players.filter((player) => !player.eliminated);
   const collections =
     state.mode === 'teams'
@@ -650,7 +864,15 @@ function checkVictory(state: GameState, events: GameEvent[]): void {
     const reasons: string[] = [];
     if (
       state.config.lineVictory !== false &&
-      lines.some((line) => cities.filter((tile) => tile.line === line).every(owns))
+      lines.some((line) => {
+        const propertyLine =
+          state.config.version >= 7
+            ? state.config.board.filter(
+                (tile) => (tile.type === 'city' || tile.type === 'resort') && tile.line === line,
+              )
+            : cities.filter((tile) => tile.line === line);
+        return propertyLine.length > 0 && propertyLine.every(owns);
+      })
     )
       reasons.push('line');
     if (
@@ -716,6 +938,8 @@ function liquidationOrder(state: GameState): Tile[] {
 
 function timeoutAction(state: GameState): GameAction {
   const playerId = activePlayer(state).id;
+  if (state.phase === 'duel') return { type: 'duel_cancel', playerId: getDecisionPlayerId(state) };
+  if (state.phase === 'rent') return { type: 'use_squatter', playerId };
   if (state.phase === 'debt')
     return { type: 'sell', playerId, tile: liquidationOrder(state)[0]!.id };
   if (state.phase === 'island') return { type: 'attempt_escape', playerId };
@@ -726,7 +950,21 @@ function timeoutAction(state: GameState): GameAction {
 
 function applyAction(state: GameState, action: GameAction, rng: Rng, events: GameEvent[]): void {
   const player = activePlayer(state);
+  if (action.type.startsWith('duel_')) {
+    applyDuelAction(state, action, rng, events);
+    return;
+  }
   switch (action.type) {
+    case 'alliance':
+      state.alliance = { beneficiaryId: player.id, targetId: action.targetId };
+      state.phase = 'end';
+      events.push({
+        type: 'alliance',
+        playerId: player.id,
+        targetId: action.targetId,
+        message: `${player.name} reçoit 50 % des gains de ${owner(state, action.targetId)!.name} jusqu’à la fin de son prochain tour.`,
+      });
+      break;
     case 'roll':
       roll(state, rng, events, false);
       break;
@@ -772,11 +1010,71 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       events.push({ type: 'purchase', playerId: player.id, tile: tile.id, amount: tile.price });
       break;
     }
+    case 'buy_fraud': {
+      const tile = tileAt(state, player.position),
+        amount = Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5));
+      consumeCard(state, player, 'fraud');
+      player.cash -= amount;
+      player.fraudLiability = (player.fraudLiability ?? 0) + tile.price! * 2;
+      state.properties[tile.id]!.ownerId = player.id;
+      events.push({
+        type: 'purchase',
+        playerId: player.id,
+        tile: tile.id,
+        amount,
+        reason: 'fraud',
+      });
+      break;
+    }
+    case 'pay_rent': {
+      const rent = state.pendingRent!;
+      delete state.pendingRent;
+      charge(state, rent.amount, rent.creditorId, 'rent', 'property', events);
+      break;
+    }
+    case 'use_squatter':
+      consumeCard(state, player, 'squatter');
+      events.push({
+        type: 'squatter',
+        playerId: player.id,
+        tile: state.pendingRent!.tile,
+        message: 'Carte Squatteur : aucun loyer à payer pour cette visite.',
+      });
+      delete state.pendingRent;
+      state.phase = 'property';
+      break;
+    case 'casino_red':
+    case 'casino_black':
+    case 'casino_spin':
+      casinoPlay(state, action.type, rng, events);
+      break;
+    case 'insure':
+      player.insurance = { tile: action.tile };
+      events.push({ type: 'insured_tile', playerId: player.id, tile: action.tile });
+      break;
+    case 'attack': {
+      const effect = state.config.cards.find((c) => c.id === state.pendingAttack)!.effect;
+      if (effect === 'roaches') {
+        state.properties[action.tile]!.roachTurns = 2;
+        events.push({ type: 'roaches', tile: action.tile, playerId: player.id });
+      } else if (!protectProperty(state, action.tile, events)) {
+        clearProtection(state, action.tile);
+        state.properties[action.tile] = { ownerId: null, level: 0, championships: 0 };
+        events.push({ type: 'expropriate', tile: action.tile, playerId: player.id });
+      }
+      delete state.pendingAttack;
+      state.phase = 'end';
+      break;
+    }
     case 'buyout': {
       const property = state.properties[player.position]!;
       const price = Math.floor(
         getPropertyValue(state, player.position) * state.config.buyoutMultiplier,
       );
+      if (protectProperty(state, player.position, events)) {
+        state.phase = 'end';
+        break;
+      }
       player.cash -= price;
       credit(state, property.ownerId, price, events, 'buyout');
       property.ownerId = player.id;
@@ -812,6 +1110,7 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       });
       break;
     case 'sell': {
+      clearProtection(state, action.tile);
       const value = Math.floor(getPropertyValue(state, action.tile) * state.config.resaleRate);
       player.cash += value;
       state.properties[action.tile] = { ownerId: null, level: 0, championships: 0 };
@@ -820,9 +1119,13 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       break;
     }
     case 'finish':
-      nextTurn(state, events);
+      delete state.pendingAttack;
+      delete state.casino;
+      nextTurn(state, events, rng);
       break;
     case 'quit': {
+      if (state.duel && [state.duel.challengerId, state.duel.targetId].includes(action.playerId))
+        cancelDuel(state, events, action.playerId);
       const leaving = owner(state, action.playerId)!;
       if (state.debt?.playerId === leaving.id) bankrupt(state, leaving, events);
       else {
@@ -840,12 +1143,33 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       break;
     }
     case 'set_control':
+      if (
+        action.bot &&
+        state.duel &&
+        [state.duel.challengerId, state.duel.targetId].includes(action.playerId)
+      )
+        cancelDuel(state, events, action.playerId);
       owner(state, action.playerId)!.bot = action.bot;
       events.push({ type: 'control', playerId: action.playerId, bot: action.bot });
       break;
     case 'tick':
       break;
   }
+}
+
+export function isLegalPlayerAction(state: GameState, action: GameAction): boolean {
+  if (state.winner) return false;
+  if (action.type.startsWith('duel_')) return isLegalDuelAction(state, action);
+  return getLegalActions(state).some(
+    (candidate) =>
+      candidate.type === action.type &&
+      'playerId' in candidate &&
+      'playerId' in action &&
+      candidate.playerId === action.playerId &&
+      (!('tile' in candidate) || ('tile' in action && candidate.tile === action.tile)) &&
+      (!('targetId' in candidate) ||
+        ('targetId' in action && candidate.targetId === action.targetId)),
+  );
 }
 
 export function reduceGame(
@@ -864,20 +1188,21 @@ export function reduceGame(
       Boolean(owner(state, action.playerId) && !owner(state, action.playerId)!.eliminated);
   else if (action.type === 'quit')
     valid = Boolean(owner(state, action.playerId) && !owner(state, action.playerId)!.eliminated);
-  else
-    valid = getLegalActions(state).some(
-      (candidate) =>
-        candidate.type === action.type &&
-        'playerId' in candidate &&
-        'playerId' in action &&
-        candidate.playerId === action.playerId &&
-        (!('tile' in candidate) || ('tile' in action && candidate.tile === action.tile)),
-    );
+  else valid = isLegalPlayerAction(state, action);
   if (!valid) return { state, events: [], error: 'Action is not legal in the current phase.' };
   // Configuration is immutable during a game. Copy only mutable game data per action.
   const next: GameState = {
     ...state,
-    players: state.players.map((player) => ({ ...player, escapeCards: [...player.escapeCards] })),
+    ...(state.duel ? { duel: clone(state.duel) } : {}),
+    ...(state.crisis ? { crisis: clone(state.crisis) } : {}),
+    ...(state.alliance ? { alliance: { ...state.alliance } } : {}),
+    players: state.players.map((player) => ({
+      ...player,
+      escapeCards: [...player.escapeCards],
+      ...(player.heldCards ? { heldCards: [...player.heldCards] } : {}),
+      ...(player.insurance ? { insurance: { ...player.insurance } } : {}),
+    })),
+    ...(state.casinoVisits ? { casinoVisits: { ...state.casinoVisits } } : {}),
     properties: Object.fromEntries(
       Object.entries(state.properties).map(([id, property]) => [id, { ...property }]),
     ),
@@ -907,16 +1232,21 @@ export function reduceGame(
       next.decisionElapsedMs = 0;
   }
   checkVictory(next, events);
-  if (!next.winner && activePlayer(next).eliminated) nextTurn(next, events);
+  if (!next.winner && activePlayer(next).eliminated) nextTurn(next, events, rng);
   return { state: next, events };
 }
 
 export function chooseBotAction(state: GameState): GameAction {
-  const player = activePlayer(state);
+  const player = owner(state, getDecisionPlayerId(state))!;
   const legal = getLegalActions(state).filter((action) => action.type !== 'quit');
   if (!legal.length) throw new Error('No bot action is available in a finished game.');
   const find = (type: GameAction['type']): GameAction | undefined =>
     legal.find((action) => action.type === type);
+  if (state.phase === 'duel' || state.phase === 'alliance') return legal[0]!;
+  if (state.phase === 'casino') return find('casino_red') ?? find('casino_spin')!;
+  if (state.phase === 'rent') return find('use_squatter') ?? find('pay_rent')!;
+  if (state.phase === 'attack') return find('attack') ?? find('finish')!;
+  if (player.insurance?.tile === null && find('insure')) return find('insure')!;
   if (state.phase === 'debt')
     return { type: 'sell', playerId: player.id, tile: liquidationOrder(state)[0]!.id };
   if (state.phase === 'island')
@@ -929,8 +1259,7 @@ export function chooseBotAction(state: GameState): GameAction {
     );
   if (state.phase === 'travel') {
     const choices = legal.filter(
-      (action): action is Extract<GameAction, { type: 'sell' | 'place_championship' | 'travel' }> =>
-        action.type === 'travel',
+      (action): action is Extract<GameAction, { tile: number }> => action.type === 'travel',
     );
     choices.sort(
       (a, b) => opportunity(state, b.tile) - opportunity(state, a.tile) || a.tile - b.tile,
@@ -946,7 +1275,7 @@ export function chooseBotAction(state: GameState): GameAction {
   }
   if (state.phase === 'championship') {
     const choices = legal.filter(
-      (action): action is Extract<GameAction, { type: 'sell' | 'place_championship' | 'travel' }> =>
+      (action): action is Extract<GameAction, { tile: number }> =>
         action.type === 'place_championship',
     );
     choices.sort((a, b) => getRent(state, b.tile) - getRent(state, a.tile) || a.tile - b.tile);
@@ -1021,6 +1350,14 @@ export function validateState(state: GameState): string[] {
     errors.push('Duplicate player IDs.');
   for (const player of state.players) {
     if (!safe(player.cash)) errors.push(`Invalid cash for ${player.id}.`);
+    if (player.fraudLiability !== undefined && !safe(player.fraudLiability))
+      errors.push('Invalid fraud liability.');
+    if (
+      player.insurance &&
+      player.insurance.tile !== null &&
+      state.properties[player.insurance.tile]?.ownerId !== player.id
+    )
+      errors.push('Insurance must cover an owned property.');
     if (!safe(player.position) || player.position >= state.config.board.length)
       errors.push(`Invalid position for ${player.id}.`);
     if (!safe(player.laps)) errors.push(`Invalid lap count for ${player.id}.`);
@@ -1051,6 +1388,15 @@ export function validateState(state: GameState): string[] {
       errors.push(`Invalid level on ${key}.`);
     if (!safe(property.championships) || (tile.type === 'resort' && property.championships !== 0))
       errors.push(`Invalid championship count on ${key}.`);
+    if (
+      property.roachTurns !== undefined &&
+      (!safe(property.roachTurns) ||
+        property.roachTurns < 1 ||
+        property.roachTurns > 2 ||
+        !property.ownerId ||
+        property.level !== state.config.hotelLevel)
+    )
+      errors.push('Invalid roach duration.');
     if (
       property.championshipTurns !== undefined &&
       (!safe(property.championshipTurns) ||
@@ -1084,6 +1430,7 @@ export function validateState(state: GameState): string[] {
     ...state.deck,
     ...state.discard,
     ...state.players.flatMap((player) => player.escapeCards),
+    ...state.players.flatMap((player) => player.heldCards ?? []),
   ];
   if (
     cards.length !== state.config.cards.length ||
@@ -1099,6 +1446,68 @@ export function validateState(state: GameState): string[] {
     )
   )
     errors.push('A player holds a non-retainable card.');
+  if (
+    state.players.some((player) =>
+      player.heldCards?.some(
+        (id) =>
+          !['squatter', 'fraud'].includes(
+            state.config.cards.find((c) => c.id === id)?.effect ?? '',
+          ),
+      ),
+    )
+  )
+    errors.push('Invalid held chance card.');
+  errors.push(...validateDuel(state));
+  if (
+    state.alliance &&
+    (state.alliance.beneficiaryId === state.alliance.targetId ||
+      [state.alliance.beneficiaryId, state.alliance.targetId].some(
+        (id) => !state.players.some((p) => p.id === id && !p.eliminated),
+      ))
+  )
+    errors.push('Invalid alliance.');
+  if (
+    state.crisis &&
+    (!Array.isArray(state.crisis.remaining) ||
+      !state.crisis.remaining.length ||
+      new Set(state.crisis.remaining).size !== state.crisis.remaining.length ||
+      state.crisis.remaining.some((id) => !state.players.some((p) => p.id === id)))
+  )
+    errors.push('Invalid crisis duration.');
+  if (!state.winner && (state.phase === 'rent') !== Boolean(state.pendingRent))
+    errors.push('Rent decision mismatch.');
+  if (
+    state.pendingRent &&
+    (!safe(state.pendingRent.amount) ||
+      state.properties[state.pendingRent.tile]?.ownerId !== state.pendingRent.creditorId ||
+      !heldCard(state, activePlayer(state), 'squatter'))
+  )
+    errors.push('Invalid pending rent.');
+  if (!state.winner && (state.phase === 'attack') !== Boolean(state.pendingAttack))
+    errors.push('Attack decision mismatch.');
+  if (
+    state.pendingAttack &&
+    !['expropriate', 'roaches'].includes(
+      state.config.cards.find((c) => c.id === state.pendingAttack)?.effect ?? '',
+    )
+  )
+    errors.push('Invalid attack card.');
+  if (!state.winner && (state.phase === 'casino') !== Boolean(state.casino))
+    errors.push('Casino decision mismatch.');
+  if (
+    state.casino &&
+    (tileAt(state, state.casino.tile)?.type !== 'casino' ||
+      !['roulette', 'slots'].includes(state.casino.game) ||
+      !safe(state.casino.chance) ||
+      state.casino.chance > 100)
+  )
+    errors.push('Invalid casino.');
+  if (
+    Object.entries(state.casinoVisits ?? {}).some(
+      ([id, count]) => tileAt(state, Number(id))?.type !== 'casino' || !safe(count),
+    )
+  )
+    errors.push('Invalid casino visits.');
   if ((state.phase === 'debt') !== Boolean(state.debt))
     errors.push('Debt phase and debt data disagree.');
   if (

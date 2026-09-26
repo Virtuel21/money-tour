@@ -1,6 +1,7 @@
 import {
   chooseBotAction,
-  getLegalActions,
+  isLegalPlayerAction,
+  getDecisionPlayerId,
   config,
   createGame,
   createRng,
@@ -466,7 +467,7 @@ export class Session {
     if (
       this.state &&
       !['quit', 'set_control'].includes(intent.action.type) &&
-      !getLegalActions(this.state).some((a) => canonical(a) === canonical(intent.action))
+      !isLegalPlayerAction(this.state, intent.action)
     )
       return false;
     const { signature, ...unsigned } = intent;
@@ -863,7 +864,7 @@ export class Session {
       });
       return;
     }
-    const active = this.state.players[this.state.currentPlayer]!;
+    const active = this.state.players.find((p) => p.id === getDecisionPlayerId(this.state!))!;
     if (!active.bot && this.state.decisionElapsedMs >= config.actionTimeoutMs - 1000) {
       await this.propose({
         type: 'action',

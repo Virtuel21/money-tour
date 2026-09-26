@@ -2,11 +2,45 @@ import { z } from 'zod';
 const id = z.string().min(1).max(80);
 const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const actionSchema = z.union([
+  z.object({ type: z.literal('alliance'), playerId: id, targetId: id }).strict(),
+  z
+    .object({
+      type: z.literal('duel_offer'),
+      playerId: id,
+      targetId: id,
+      amount: natural.positive(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('duel_commit'),
+      playerId: id,
+      hash: z.string().regex(/^[a-f0-9]{64}$/),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('duel_reveal'),
+      playerId: id,
+      choice: z.enum(['rock', 'paper', 'scissors']),
+      salt: z.string().regex(/^[a-f0-9]{32,64}$/),
+    })
+    .strict(),
   z
     .object({
       type: z.enum([
         'roll',
         'buy',
+        'buy_fraud',
+        'use_squatter',
+        'pay_rent',
+        'casino_red',
+        'casino_black',
+        'casino_spin',
+        'duel_accept',
+        'duel_decline',
+        'duel_cancel',
+        'duel_bot',
         'buyout',
         'upgrade',
         'finish',
@@ -21,9 +55,9 @@ export const actionSchema = z.union([
     .strict(),
   z
     .object({
-      type: z.enum(['sell', 'place_championship', 'travel']),
+      type: z.enum(['sell', 'place_championship', 'travel', 'insure', 'attack']),
       playerId: id,
-      tile: z.number().int().min(0).max(27),
+      tile: z.number().int().min(0).max(31),
     })
     .strict(),
   z.object({ type: z.literal('tick'), elapsedMs: z.number().int().min(0).max(2000) }).strict(),

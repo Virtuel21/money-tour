@@ -2,14 +2,17 @@ import { describe, expect, it } from 'vitest';
 import { config } from '../src/index';
 
 describe('published board and economic data', () => {
-  it('contains exactly the 26 unique positions and requested board composition', () => {
-    expect(config.board.map((tile) => tile.id)).toEqual(Array.from({ length: 26 }, (_, i) => i));
+  it('contains exactly the 32 unique positions and requested board composition', () => {
+    expect(config.board.map((tile) => tile.id)).toEqual(Array.from({ length: 32 }, (_, i) => i));
     const count = (type: string) => config.board.filter((tile) => tile.type === type).length;
-    expect(count('city')).toBe(14);
+    expect(count('city')).toBe(16);
     expect(count('resort')).toBe(4);
     expect(count('chance')).toBe(3);
     expect(count('tax')).toBe(1);
-    expect([0, 7, 13, 20].map((i) => config.board[i]!.type)).toEqual([
+    expect(count('casino')).toBe(2);
+    expect(count('insurance')).toBe(1);
+    expect(count('karma')).toBe(1);
+    expect([0, 8, 16, 24].map((i) => config.board[i]!.type)).toEqual([
       'start',
       'island',
       'championship',
@@ -17,22 +20,22 @@ describe('published board and economic data', () => {
     ]);
   });
 
-  it('defines seven complete pairs of cities', () => {
+  it('defines eight complete pairs of cities', () => {
     const cities = config.board.filter((tile) => tile.type === 'city');
     const groups = Array.from(
-      { length: 7 },
+      { length: 8 },
       (_, i) => cities.filter((tile) => tile.group === `g${i + 1}`).length,
     );
-    expect(groups).toEqual([2, 2, 2, 2, 2, 2, 2]);
+    expect(groups).toEqual([2, 2, 2, 2, 2, 2, 2, 2]);
     expect(
       Array.from({ length: 4 }, (_, line) =>
         cities.filter((tile) => tile.line === line).map((tile) => tile.id),
       ),
     ).toEqual([
-      [1, 2, 4, 5],
-      [8, 9, 11, 12],
-      [14, 15, 17, 18],
-      [21, 22],
+      [1, 2, 5, 6],
+      [9, 10, 13, 14],
+      [17, 18, 21, 22],
+      [25, 26, 29, 30],
     ]);
   });
 
@@ -47,11 +50,11 @@ describe('published board and economic data', () => {
     }
   });
 
-  it('contains one copy of all eighteen configured chance cards', () => {
-    expect(config.cards).toHaveLength(18);
+  it('contains one copy of all twenty-four configured chance cards', () => {
+    expect(config.cards).toHaveLength(24);
     expect(config.cards.map((card) => card.id)).toEqual(
-      Array.from({ length: 18 }, (_, i) => `chance-${String(i + 1).padStart(2, '0')}`),
+      Array.from({ length: 24 }, (_, i) => `chance-${String(i + 1).padStart(2, '0')}`),
     );
-    expect(new Set(config.cards.map((card) => card.title)).size).toBe(18);
+    expect(new Set(config.cards.map((card) => card.title)).size).toBe(24);
   });
 });

@@ -23,3 +23,11 @@ L’identifiant de contenu du GLB dans son URL évite de réutiliser un ancien e
 ## Réserves bancaires — édition 26 cases
 
 Le fichier wealth.glb ajoute deux racines : banknote_bundle et gold_bar. Les unités sont exportées en Y vertical puis disposées en deux rangées de piles horizontales. Le nombre de liasses et de lingots suit le solde ; la hauteur évolue progressivement pendant les transferts. Le script source est scripts/wealth_models.py. Les deux morceaux supplémentaires portent le budget public à 16 Mo ; les assets occupent 14,27 Mo, chargés selon les besoins.
+
+## Fortune — plateau carré de 32 cases
+
+Géométrie calculée par boardShape/tileFrame : côtés identiques, coins 0, 8, 16, 24, propriétés rectangulaires. fortune.glb pèse 3 720 940 octets et contient casino_roulette, casino_slots, insurance_shield et karma_scale. Roulette à poches/bille, machine à rouleaux/levier/ampoules, bouclier biseauté/maison, balance à plateaux suspendus. Les 117 objets sont regroupés par matériau. Source : scripts/casino_models.py, scène « 06 · Casino and good fortune ».
+
+Le contrôle vérifie 16 racines dans trois GLB, leurs bornes et l’absence de scènes étrangères. Les dés utilisent la même géométrie Blender dans une scène de premier plan avec écrin ovale : aucun conflit de profondeur avec les îles. Les atlas spéciaux sont appliqués à des surfaces carrées sur fonds rectangulaires, sans étirement. Les réserves et leurs étiquettes sont écartées du bord.
+
+Budget : 18 860 186 octets / 20 Mo. PNG natif de l’atlas conservé dans les livrables locaux ; aucune copie inutile dans le bundle CSS.
