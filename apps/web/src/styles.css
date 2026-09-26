@@ -2559,3 +2559,117 @@ footer a {
     }
   }
 }
+
+/* Readable street surfaces, purchase decisions and larger coin trails. */
+.city-label {
+  transform: translate(-50%, 5%) rotate(var(--label-angle, 0deg));
+}
+.flying-coin {
+  width: 48px;
+  height: 48px;
+  font-size: 32px;
+  border-width: 4px;
+  animation-duration: 1s;
+  box-shadow:
+    0 4px 0 #ad6500,
+    0 0 17px #fff49bcc,
+    inset 0 0 0 2px #ce8d11;
+}
+.purchase-cover {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-bottom: 5px solid;
+  padding-bottom: 12px;
+}
+.purchase-cover .property-art {
+  display: block;
+  background: url('/textures/architecture-v3.webp') 0 0 / 300% 200%;
+  width: 90px;
+  height: 105px;
+  flex-shrink: 0;
+}
+.purchase-cover h3 {
+  font-size: 32px;
+  margin: 4px 0;
+}
+.purchase-cover p {
+  margin: 6px 0;
+}
+.island-offer-icon {
+  font-size: 60px;
+}
+.purchase-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+.purchase-table th,
+.purchase-table td {
+  padding: 10px 8px;
+  text-align: right;
+  border-bottom: 1px solid #173b491a;
+}
+.purchase-table th:first-child {
+  text-align: left;
+}
+.purchase-table thead {
+  color: #54717b;
+  font-size: 11px;
+}
+.purchase-offer .purchase-cta {
+  width: 100%;
+  font-size: 20px;
+  min-height: 64px;
+  margin-top: 12px;
+}
+.purchase-pass {
+  width: 100%;
+  margin-top: 10px;
+}
+.island-rents {
+  display: flex;
+  gap: 8px;
+}
+.island-rents span {
+  flex: 1;
+  background: #fff1c3;
+  border-radius: 10px;
+  padding: 8px;
+  text-align: center;
+}
+.island-rents strong {
+  display: block;
+}
+.lobby-name {
+  display: flex;
+  align-items: end;
+  gap: 10px;
+  margin: 16px 0;
+}
+.lobby-name .field {
+  flex: 1;
+  margin: 0;
+}
+@media (max-width: 600px) {
+  .flying-coin {
+    width: 40px;
+    height: 40px;
+    font-size: 28px;
+  }
+  .purchase-cover {
+    gap: 10px;
+  }
+  .purchase-cover h3 {
+    font-size: 24px;
+  }
+  .purchase-table th,
+  .purchase-table td {
+    padding: 8px 4px;
+  }
+  .lobby-name {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

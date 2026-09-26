@@ -136,7 +136,7 @@ export class Session {
   constructor(
     readonly transport: Transport,
     readonly user: Identity,
-    readonly name: string,
+    public name: string,
     readonly creator = false,
     private now = () => Date.now(),
   ) {}
@@ -240,6 +240,18 @@ export class Session {
       peer,
     );
   }
+  async rename(name: string): Promise<void> {
+    const value = name.trim().slice(0, 20);
+    if (!value || this.state || this.round) return;
+    this.name = value;
+    if (this.isHost) {
+      const member = this.members.find((m) => m.id === this.user.id);
+      if (member) member.name = value;
+      this.persist();
+    }
+    await this.hello();
+    this.emit();
+  }
   private async hello(): Promise<void> {
     await this.send({
       type: 'hello',
@@ -291,6 +303,11 @@ export class Session {
     if (body.type === 'hello') {
       if (!this.host && body.creator) this.host = from;
       if (this.isHost) {
+        const existing = this.members.find((m) => m.id === from);
+        if (existing && !this.state && !this.round) {
+          existing.name = body.name;
+          this.persist();
+        }
         if (!this.members.some((m) => m.id === from) && !this.state && this.members.length < 4) {
           this.members.push({
             id: from,

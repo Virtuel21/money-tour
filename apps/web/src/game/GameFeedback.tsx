@@ -75,13 +75,21 @@ export function MoneyFlight({
         ))}
       <div className="money-toast" role="status">
         <small>
-          {cue.reason === 'rent'
-            ? 'LOYER VERSÉ'
-            : cue.reason === 'attack'
-              ? 'ATTAQUE RÉUSSIE'
-              : recipient
-                ? 'ARGENT REÇU'
-                : 'TAXE / FRAIS PAYÉS'}
+          {cue.reason === 'purchase'
+            ? 'PROPRIÉTÉ ACHETÉE'
+            : cue.reason === 'build'
+              ? 'CONSTRUCTION'
+              : cue.reason === 'championship'
+                ? 'MONDIAL ORGANISÉ'
+                : cue.reason === 'start_bonus'
+                  ? 'PRIME DE DÉPART'
+                  : cue.reason === 'rent'
+                    ? 'LOYER VERSÉ'
+                    : cue.reason === 'attack'
+                      ? 'ATTAQUE RÉUSSIE'
+                      : recipient
+                        ? 'ARGENT REÇU'
+                        : 'TAXE / FRAIS PAYÉS'}
         </small>
         <strong>
           {recipient ? '+' : '−'}

@@ -5,7 +5,20 @@ import type { LocalSave } from './local';
 export function previewScenario(): LocalSave | null {
   if (!import.meta.env.DEV) return null;
   const name = new URLSearchParams(location.search).get('scenario');
-  if (!name || !['travel', 'build', 'card', 'crowded', 'showcase', 'rent', 'attack'].includes(name))
+  if (
+    !name ||
+    ![
+      'travel',
+      'build',
+      'card',
+      'crowded',
+      'showcase',
+      'rent',
+      'attack',
+      'purchase',
+      'mondial',
+    ].includes(name)
+  )
     return null;
   const state = createGame({
     players: [
@@ -51,6 +64,14 @@ export function previewScenario(): LocalSave | null {
     state.properties[1]!.level = 3;
     state.properties[2]!.level = 4;
     state.phase = 'property';
+  }
+  if (name === 'purchase') {
+    player.position = 5;
+    state.phase = 'property';
+  }
+  if (name === 'mondial') {
+    player.position = 14;
+    state.phase = 'championship';
   }
   if (name === 'rent') {
     state.properties[5] = { ownerId: 'p2', level: 2, championships: 0 };

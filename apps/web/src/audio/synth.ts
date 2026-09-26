@@ -149,6 +149,15 @@ export class Soundscape {
   }
   effect(type: string): void {
     if (!this.prefs.effects || !this.context || !this.master) return;
+    if (type === 'coin-in' || type === 'coin-out') {
+      const now = this.context.currentTime;
+      const notes = type === 'coin-in' ? [1568, 2093, 2637, 3136] : [2637, 2093, 1760, 1319];
+      notes.forEach((frequency, i) => {
+        this.tone(frequency, now + i * 0.115, 0.28, 0.13, 'sine', this.master!);
+        this.tone(frequency * 2.76, now + i * 0.115, 0.09, 0.035, 'sine', this.master!);
+      });
+      return;
+    }
     const sample = this.samples.get(type);
     if (sample) {
       const source = this.context.createBufferSource();

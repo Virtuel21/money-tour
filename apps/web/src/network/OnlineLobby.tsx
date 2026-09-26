@@ -99,6 +99,7 @@ export default function OnlineLobby({
         !chosenName || ['vous', 'voyageur'].includes(chosenName.toLowerCase())
           ? `Voyageur ${user.id.slice(0, 4)}`
           : chosenName;
+      setName(publicName);
       const next = new Session(transport, user, publicName, create);
       next.onChange = (value) => {
         setView(value);
@@ -226,6 +227,23 @@ export default function OnlineLobby({
               Copier le code du salon
             </button>
           </div>
+          {!view.state && (
+            <form
+              className="lobby-name"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void session.current?.rename(name);
+              }}
+            >
+              <label className="field">
+                Votre nom dans le salon
+                <input maxLength={20} value={name} onChange={(e) => setName(e.target.value)} />
+              </label>
+              <button className="secondary" disabled={!name.trim() || view.busy}>
+                Enregistrer mon nom
+              </button>
+            </form>
+          )}
           <ul className="lobby-members">
             {view.members.map((member, i) => (
               <li key={member.id}>

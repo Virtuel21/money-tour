@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
+import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
 
 export function tilePoint(id: number, count = 28) {
@@ -93,7 +94,9 @@ export default function Board({
   const update = useRef<() => void>(() => {});
   const [error, setError] = useState(''),
     [ready, setReady] = useState(false);
-  const [anchors, setAnchors] = useState<{ x: number; y: number; points: string }[]>([]);
+  const [anchors, setAnchors] = useState<{ x: number; y: number; points: string; angle: number }[]>(
+    [],
+  );
   useEffect(() => {
     const element = host.current!;
     let disposed = false;
@@ -217,12 +220,18 @@ export default function Board({
         };
         // Detailed pre-rendered dioramas: a fixed three-quarter camera lets the art retain its fine detail.
         [
-          [-3.8, 1.5],
-          [1.5, -3.8],
+          [-2.5, 1.5],
+          [1.5, -2.5],
           [-0.2, 4.9],
           [4.9, -0.2],
         ].forEach(([x, z], i) => {
-          const island = atlasSprite(architecture, i + 2, 3, 4.6, 4.6);
+          const island = atlasSprite(
+            architecture,
+            i + 2,
+            3,
+            i < 2 ? 3.45 : 3.9,
+            i < 2 ? 3.45 : 3.9,
+          );
           island.position.set(x!, 0.08, z!);
           resources.add(island);
         });
@@ -253,6 +262,14 @@ export default function Board({
           cell.position.set(p.x, 0, p.z);
           cell.scale.set(1.12, 1, 1.12);
           resources.add(cell);
+          const surface = new THREE.Mesh(
+            new THREE.PlaneGeometry(1.86, 1.86),
+            new THREE.MeshStandardMaterial({ map: streetSurface(tile), roughness: 0.95 }),
+          );
+          surface.rotation.x = -Math.PI / 2;
+          surface.position.set(p.x, 0.28, p.z);
+          surface.receiveShadow = true;
+          resources.add(surface);
           const strip = new THREE.Mesh(
             new THREE.BoxGeometry(1.55, 0.045, 0.24),
             new THREE.MeshStandardMaterial({ color: tile.color ?? '#f9c34f' }),
@@ -319,7 +336,18 @@ export default function Board({
                 return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
               })
               .join(' ');
-            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points };
+            const alongX =
+              Math.floor(t.id / (live.current.state.config.board.length / 4)) % 2 === 0;
+            const a = new THREE.Vector3(p.x, 0.3, p.z).project(camera);
+            const b = new THREE.Vector3(
+              p.x + (alongX ? 1 : 0),
+              0.3,
+              p.z + (alongX ? 0 : 1),
+            ).project(camera);
+            let angle = (Math.atan2((-(b.y - a.y) * 8.3) / 12.2, b.x - a.x) * 180) / Math.PI;
+            if (angle > 90) angle -= 180;
+            if (angle < -90) angle += 180;
+            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points, angle };
           }),
         );
         const pawns = live.current.state.players.map((_, i) => {
@@ -590,6 +618,7 @@ export default function Board({
                     {
                       left: anchors[i]?.x + '%',
                       top: anchors[i]?.y + '%',
+                      '--label-angle': (anchors[i]?.angle ?? 0) + 'deg',
                       '--street-color': t.color ?? '#e4b63c',
                     } as React.CSSProperties
                   }

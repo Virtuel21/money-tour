@@ -32,6 +32,7 @@ import {
   type LocalSave,
 } from './game/local';
 import { MoneyFlight, TurnBanner } from './game/GameFeedback';
+import { purchaseOffer, PurchaseDetails } from './game/PurchaseOffer';
 import credits from '../../../CREDITS.md?raw';
 
 function Logo() {
@@ -337,6 +338,10 @@ export default function App() {
     active.bot ||
     Boolean(current.winner) ||
     Boolean(online && (online.self !== active.id || online.busy || online.blocked));
+  const offer =
+    screen === 'game' && !interactionDisabled && !modal
+      ? purchaseOffer(current, online?.self)
+      : null;
   const available = legal.filter((a) => !['quit', 'travel', 'place_championship'].includes(a.type));
   const options = legal.filter(
     (a): a is Extract<GameAction, { type: 'sell' | 'travel' | 'place_championship' }> =>
@@ -350,7 +355,7 @@ export default function App() {
         : current.phase === 'travel'
           ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
           : current.phase === 'championship'
-            ? `Un championnat coûte ${money(config.championshipFee, true)} et augmente le loyer d’une de vos villes.`
+            ? `Choisissez une de vos villes sur le plateau pour y organiser le Mondial : ${money(current.config.championshipFee, true)}. Son multiplicateur de loyer augmente de 1 (×1 → ×2, puis ×3…).`
             : current.phase === 'property'
               ? current.properties[active.position]?.ownerId &&
                 current.properties[active.position]?.ownerId !== active.id
@@ -962,7 +967,19 @@ export default function App() {
           </button>
         </Modal>
       )}
-      {tile && (
+      {offer && (
+        <Modal
+          title={'Bienvenue à ' + offer.tile.name}
+          onClose={() => act({ type: 'finish', playerId: active.id })}
+        >
+          <PurchaseDetails
+            state={current}
+            onBuy={() => act({ type: 'buy', playerId: active.id })}
+            onPass={() => act({ type: 'finish', playerId: active.id })}
+          />
+        </Modal>
+      )}
+      {tile && !offer && (
         <Modal title={tile.name} inline={screen === 'game'} onClose={() => setSelected(null)}>
           <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
             {tile.type === 'city' ? (
@@ -1068,10 +1085,10 @@ export default function App() {
               </button>
             ) : (
               <p className="card-readonly">
-                Effet automatique pour{' '}
+                Une surprise pour{' '}
                 {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ??
                   active.name}{' '}
-                · lecture seule
+                · la partie reprend dans un instant
               </p>
             )}
           </div>

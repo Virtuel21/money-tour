@@ -69,3 +69,15 @@ Contrôle graphique desktop 1440 × 900 et mobile 390 × 844 : noms seuls sur le
 Réseau : tests des intentions signées hors tour et des noms dupliqués ajoutés. Affichage d'un hôte seul et d'un bot contrôlé. La tentative à deux origines réelles de cette édition a échoué avec avertissement de relais Trystero ; ne pas confondre avec le succès historique ci-dessus. La recette terrain #10 reste ouverte.
 
 Sauvegarde et identifiant de réseau passent en v4 pour éviter de mélanger les plateaux. Les anciennes sauvegardes restent stockées, sans migration de position. Assets publics : 8 254 728 octets, GLB : 1 080 716 octets.
+
+## Achat et lisibilité — 26 septembre 2026
+
+La fenêtre d'achat s'ouvre automatiquement après l'arrivée sur une propriété libre, uniquement pour l'humain actif (et son siège en ligne). Elle affiche prix, compte, loyers et coûts successifs de construction, puis Acheter / Non merci. Madrid acheté à 150 k : compte 1 500 k → 1 350 k, propriété attribuée. Refus testé sur mobile, fenêtre fermée et tour poursuivi. Vue 390 × 844 sans débordement ; capture achat-mobile.png livrée localement.
+
+Sols colorés et motifs originaux : pavés pour quatre rues, revêtement routier pour trois, sable pour les îles. Noms inclinés selon la projection du bord. Paris et Londres réduits de 25 % et rapprochés du centre, autres dioramas légèrement réduits. Capture plateau-sols.png, scène graphique de développement.
+
+Prime de Départ inchangée à 300 k : animation maintenant déclenchée sur le bond qui franchit Départ. Pièces de 48 px (40 sur mobile), tintements synthétisés distincts entrants/sortants ; achats, constructions, taxes et Mondial inclus. Les montants autoritaires restent ceux du moteur. Les tests vérifient le crédit unique et l'annulation sonore, pas une écoute humaine.
+
+Le Mondial permet de sélectionner une ville possédée sur le plateau : Lisbonne sélectionnée, 50 k prélevés, multiplicateur augmenté de 1. Les îles et propriétés adverses sont exclues. Les cartes automatiques indiquent simplement que la partie reprend dans un instant.
+
+223 tests passent (13 fichiers), dont contrôle de l'offre selon le siège, changement de nom des deux participants en transport simulé, prime au Départ et Mondial sur ville possédée. La recette multiréseau #10 demeure ouverte.

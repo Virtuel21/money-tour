@@ -306,3 +306,20 @@ describe('network sessions', () => {
     sessions.forEach((s) => s.close());
   });
 });
+
+it('renames host and guest before the game and freezes names after starting', async () => {
+  const { sessions, flush } = await setup(2);
+  await sessions[0]!.rename('Alice');
+  await flush();
+  await sessions[1]!.rename('Julien');
+  await flush();
+  for (const s of sessions) expect(s.members.map((m) => m.name)).toEqual(['Alice', 'Julien']);
+  await sessions[0]!.start(2, false, 60000);
+  await sessions[0]!.idle();
+  await flush();
+  await sessions[1]!.rename('Changed');
+  await flush();
+  for (const s of sessions)
+    expect(s.state!.players.map((p) => p.name)).toEqual(['Alice', 'Julien']);
+  sessions.forEach((s) => s.close());
+});
