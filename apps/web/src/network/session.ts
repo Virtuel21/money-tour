@@ -220,6 +220,7 @@ export class Session {
     this.lastTick = this.now();
     this.lastHello = this.now();
     this.status = this.isHost ? 'Salon prêt : invitez vos amis.' : 'Recherche de l’hôte…';
+    if (this.host) this.persist();
     this.emit();
     if (automatic) this.timer = setInterval(() => this.enqueue(() => this.pulse()), 250);
   }
@@ -276,7 +277,7 @@ export class Session {
     const stamp = `${peer}:${message.serial}`;
     if (this.dedup.has(stamp)) return;
     const known = this.identities.get(message.from);
-    if (!known && (await hash(message.key)) !== message.from) return;
+    if ((await hash(message.key)) !== message.from) return;
     if (!(await verify(known ?? message.key, message, signature))) return;
     this.identities.set(message.from, message.key);
     this.dedup.add(stamp);
@@ -696,6 +697,12 @@ export class Session {
     if (!(await this.permitted(frame.command))) throw new Error('Auteur de l’intention invalide');
     let seed: string | undefined;
     if (frame.proof) {
+      if (
+        live &&
+        !frame.proof.context.participants.includes(this.user.id) &&
+        !this.exclusions.has(this.user.id)
+      )
+        throw new Error('Votre contribution manque au tirage');
       const { attestations, ...attested } = frame.proof;
       for (const id of frame.proof.context.participants) {
         const contributorKey = this.identities.get(id);
@@ -742,7 +749,8 @@ export class Session {
     this.round = null;
     this.failures = 0;
     this.status =
-      frame.proof?.context.participants.length === 1
+      frame.proof?.context.participants.length === 1 ||
+      this.connected().filter((id) => !this.exclusions.has(id)).length < 2
         ? 'Aléa local : hôte seul.'
         : 'État vérifié et synchronisé.';
   }
@@ -797,7 +805,9 @@ export class Session {
         config.network.commitTimeoutMs + config.network.revealTimeoutMs
       ) {
         const c = this.round.ceremony;
-        const missing = c.context.participants.filter((id) => !this.round?.attestations[id]);
+        const missing = c.context.participants.filter(
+          (id) => !c.secrets[id] || !this.round?.attestations[id],
+        );
         await this.send({ type: 'abort', nonce: c.context.nonce, missing });
         for (const id of missing) if (id !== this.user.id) this.exclusions.add(id);
         this.round = null;

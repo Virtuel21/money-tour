@@ -9,7 +9,8 @@
   },
   "scripts": {
     "dev": "pnpm --filter @money-tour/web dev",
-    "build": "pnpm -r build",
+    "build": "pnpm -r build && node scripts/check-assets.mjs",
+    "assets:generate": "node scripts/social-card.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -26,6 +27,7 @@
     "eslint": "10.11.0",
     "globals": "^16.5.0",
     "prettier": "^3.7.4",
+    "sharp": "^0.34.5",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1",

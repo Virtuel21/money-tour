@@ -88,6 +88,37 @@ async function setup(count = 3) {
   };
 }
 describe('network sessions', () => {
+  it('lets the former host return after a completed migration', async () => {
+    const { network, sessions, flush, advance } = await setup(2);
+    const host = sessions[0]!,
+      next = sessions[1]!;
+    let saved: SavedSession | undefined;
+    host.onPersist = (value) => {
+      saved = structuredClone(value);
+    };
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    host.close();
+    advance(15001);
+    await next.pulse();
+    await flush();
+    await next.pulse();
+    await flush();
+    const returned = new Session(
+      new MemoryTransport('old-host-return', network),
+      host.user,
+      host.name,
+      false,
+    );
+    sessions.push(returned);
+    await returned.join('test-code', saved, false);
+    await flush();
+    expect(returned.host).toBe(next.user.id);
+    expect(returned.epoch).toBe(1);
+    expect(returned.head).toBe(next.head);
+    sessions.forEach((s) => s.close());
+  });
   it('refuses incomplete rounds and retries without accepting the missing contribution', async () => {
     const { network, sessions, flush, advance } = await setup(2);
     const host = sessions[0]!;

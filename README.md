@@ -2,7 +2,7 @@
 
 Un jeu de plateau original dans un archipel ensoleillé : acheter des villes, construire, réunir des collections et faire fortune. Objectif : 2 à 4 joueurs, solo contre bots, hot-seat et salons WebRTC, avec mode 2v2.
 
-**État : client local et salons WebRTC jouables, solo/bots, hot-seat et équipes 2v2. Déploiement en cours. La recette sur quatre réseaux différents reste ouverte.**
+**[Jouer à Money Tour](https://virtuel21.github.io/money-tour/)** — version bêta, solo/bots, hot-seat et salons WebRTC, équipes 2v2. La recette sur quatre réseaux différents reste ouverte.
 
 Prérequis : Node.js 22.12 ou supérieur et pnpm 10.32.1.
 
@@ -20,11 +20,17 @@ Le moteur couvre les 32 cases, les 14 cartes Chance, les constructions, la dette
 - [Direction artistique et inventaire prévu](ART_DIRECTION.md)
 - [Crédits](CREDITS.md)
 
-Architecture prévue : monorepo pnpm, moteur TypeScript pur, React/Vite, rendu PixiJS et Trystero pour WebRTC. Le livrable sera statique, sans serveur de jeu à maintenir. Les réseaux restrictifs peuvent nécessiter un TURN facultatif ; les relais publics de signalisation restent des dépendances externes.
+Architecture : monorepo pnpm, moteur TypeScript pur, React/Vite, rendu PixiJS et Trystero pour WebRTC. Le site est statique, sans serveur de jeu à maintenir. Les réseaux restrictifs peuvent nécessiter un TURN facultatif ; les relais publics de signalisation restent des dépendances externes.
 
 Le commit-reveal rend les tirages acceptés vérifiables mais n'empêche pas un participant de refuser sa révélation. La recette sur quatre réseaux distincts dont un smartphone en 4G restera explicitement séparée des tests locaux et simulés.
 
-Code sous [licence MIT](LICENSE). Illustrations et sons originaux prévus ; aucun asset du jeu de référence.
+Code sous [licence MIT](LICENSE). Illustrations et sons originaux ; aucun asset du jeu de référence. Les réglages séparent musique, effets et volume ; le silence est conservé après actualisation.
+
+## Déploiement et développement
+
+Le workflow `Deploy Pages` vérifie format, types, lint, tests, couverture, build et poids des assets avant de publier `apps/web/dist` sur GitHub Pages à chaque push sur `main`. Dans les réglages Pages, la source doit être « GitHub Actions ». Aucun secret applicatif n’est nécessaire. Les salons utilisent un fragment `#room=…`, compatible avec le rechargement d’un site statique.
+
+`pnpm assets:generate` régénère la carte de partage depuis sa composition SVG originale. Les assets statiques pèsent environ 90 ko (limite automatisée : 5 Mo) ; le plateau et les sons sont générés par code. `pnpm check` exécute les contrôles complets, y compris 1 000 parties simulées. Le réseau est chargé dans un module distinct pour alléger le démarrage du client local.
 
 ## Jouer en ligne
 
