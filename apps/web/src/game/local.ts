@@ -15,7 +15,7 @@ export interface LocalSave {
   seed: string;
   state: GameState;
 }
-const key = 'money-tour.local.v1';
+const key = 'money-tour.local.v4'; // Keep the original 32-cell save untouched.
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
   return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
@@ -32,17 +32,6 @@ export function loadLocal(): LocalSave | null {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const save = JSON.parse(raw) as LocalSave;
-    // Cosmetic atlas update: retain positions, money, ownership and the RNG sequence.
-    if (save.state?.config?.version === 2) {
-      const gameplay = (value: typeof config) =>
-        JSON.stringify({
-          ...value,
-          version: 0,
-          board: value.board.map(({ name: _name, color: _color, ...tile }) => tile),
-        });
-      if (gameplay(save.state.config) === gameplay(config))
-        save.state.config = structuredClone(config);
-    }
     if (
       save.version !== 1 ||
       typeof save.seed !== 'string' ||

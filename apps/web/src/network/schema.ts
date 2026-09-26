@@ -23,7 +23,7 @@ export const actionSchema = z.union([
     .object({
       type: z.enum(['sell', 'place_championship', 'travel']),
       playerId: id,
-      tile: z.number().int().min(0).max(31),
+      tile: z.number().int().min(0).max(27),
     })
     .strict(),
   z.object({ type: z.literal('tick'), elapsedMs: z.number().int().min(0).max(2000) }).strict(),

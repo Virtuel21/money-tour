@@ -301,7 +301,14 @@ function credit(
     const player = owner(state, playerId);
     if (player && !player.eliminated) player.cash += amount;
   }
-  events.push({ type: 'payment', playerId: playerId ?? undefined, amount, reason });
+  events.push({
+    type: 'payment',
+    playerId: playerId ?? undefined,
+    payerId: activePlayer(state).id,
+    tile: activePlayer(state).position,
+    amount,
+    reason,
+  });
 }
 
 function releaseAssets(state: GameState, player: Player): void {
@@ -455,6 +462,24 @@ function applyCard(
     move(state, card.steps ?? 0, card.salary ?? true, events);
     resolveTile(state, rng, events, depth + 1);
   }
+  if (card.effect === 'steal' || card.effect === 'levy') {
+    const rivals = state.players
+      .filter((p) => !p.eliminated && !allies(state, player.id, p.id))
+      .sort((a, b) => b.cash - a.cash || a.id.localeCompare(b.id));
+    const targets = card.effect === 'steal' ? rivals.slice(0, 1) : rivals;
+    for (const rival of targets) {
+      const amount = Math.min(rival.cash, card.amount ?? 0);
+      rival.cash -= amount;
+      player.cash += amount;
+      events.push({
+        type: 'payment',
+        playerId: player.id,
+        payerId: rival.id,
+        amount,
+        reason: 'attack',
+      });
+    }
+  }
   if (card.effect === 'downgrade') {
     const candidates = state.config.board
       .filter((tile) => {
@@ -508,12 +533,13 @@ function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0)
     case 'tax':
       charge(
         state,
-        Math.floor(
-          propertyTiles(state, player.id).reduce(
-            (sum, item) => sum + getPropertyValue(state, item.id),
-            0,
-          ) * state.config.taxRate,
-        ),
+        (state.config.taxBase ?? 0) +
+          Math.floor(
+            propertyTiles(state, player.id).reduce(
+              (sum, item) => sum + getPropertyValue(state, item.id),
+              0,
+            ) * state.config.taxRate,
+          ),
         null,
         'tax',
         'end',
@@ -609,14 +635,18 @@ function checkVictory(state: GameState, events: GameEvent[]): void {
     const groups = [...new Set(cities.map((tile) => tile.group))];
     const resorts = state.config.board.filter((tile) => tile.type === 'resort');
     const reasons: string[] = [];
-    if (lines.some((line) => cities.filter((tile) => tile.line === line).every(owns)))
+    if (
+      state.config.lineVictory !== false &&
+      lines.some((line) => cities.filter((tile) => tile.line === line).every(owns))
+    )
       reasons.push('line');
     if (
       groups.filter((group) => cities.filter((tile) => tile.group === group).every(owns)).length >=
       state.config.groupsToWin
     )
       reasons.push('triple_monopoly');
-    if (resorts.length > 0 && resorts.every(owns)) reasons.push('resort_monopoly');
+    if (state.config.resortVictory !== false && resorts.length > 0 && resorts.every(owns))
+      reasons.push('resort_monopoly');
     if (collections.length === 1) reasons.push('bankruptcy');
     if (reasons.length)
       winners.push({

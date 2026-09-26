@@ -24,7 +24,9 @@ export default function OnlineLobby({
   const [code, setCode] = useState(
     () => new URLSearchParams(location.hash.slice(1)).get('room') ?? '',
   );
-  const [name, setName] = useState(defaults?.name ?? 'Voyageur');
+  const [name, setName] = useState(
+    defaults?.name && defaults.name !== 'Vous' ? defaults.name : 'Voyageur',
+  );
   const [view, setView] = useState<SessionView | null>(null);
   const [error, setError] = useState(''),
     [working, setWorking] = useState(false),
@@ -92,7 +94,12 @@ export default function OnlineLobby({
       const transport = new TrysteroTransport(
         turnUrl ? [{ urls: turnUrl, username: turnUser, credential: turnPassword }] : [],
       );
-      const next = new Session(transport, user, name.trim().slice(0, 20) || 'Voyageur', create);
+      const chosenName = name.trim().slice(0, 20);
+      const publicName =
+        !chosenName || ['vous', 'voyageur'].includes(chosenName.toLowerCase())
+          ? `Voyageur ${user.id.slice(0, 4)}`
+          : chosenName;
+      const next = new Session(transport, user, publicName, create);
       next.onChange = (value) => {
         setView(value);
         callbacks.current.onView(value);

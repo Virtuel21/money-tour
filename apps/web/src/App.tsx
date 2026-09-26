@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   chooseBotAction,
   config,
@@ -30,6 +31,7 @@ import {
   victoryText,
   type LocalSave,
 } from './game/local';
+import { MoneyFlight, TurnBanner } from './game/GameFeedback';
 import credits from '../../../CREDITS.md?raw';
 
 function Logo() {
@@ -51,22 +53,50 @@ function Modal({
   title,
   children,
   onClose,
+  inline = false,
 }: {
   title: string;
   children: React.ReactNode;
-  onClose: () => void;
+  onClose?: () => void;
+  inline?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    ref.current?.showModal();
+    if (!inline) ref.current?.showModal();
   }, []);
+  if (inline) {
+    const target = document.getElementById('property-inspector');
+    return target
+      ? createPortal(
+          <section className="property-inspector">
+            <div className="modal-heading">
+              <h2>{title}</h2>
+              <button className="icon-button" aria-label="Fermer la propriété" onClick={onClose}>
+                ×
+              </button>
+            </div>
+            {children}
+          </section>,
+          target,
+        )
+      : null;
+  }
   return (
-    <dialog ref={ref} onCancel={onClose} className="modal">
+    <dialog
+      ref={ref}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose?.();
+      }}
+      className="modal"
+    >
       <div className="modal-heading">
         <h2>{title}</h2>
-        <button aria-label="Fermer" className="icon-button" onClick={onClose}>
-          ×
-        </button>
+        {onClose && (
+          <button aria-label="Fermer" className="icon-button" onClick={onClose}>
+            ×
+          </button>
+        )}
       </div>
       {children}
     </dialog>
@@ -87,7 +117,7 @@ function eventText(event: GameEvent, state: GameState): string {
     case 'card':
       return `${name} : ${event.message}`;
     case 'payment':
-      return `${event.reason === 'rent' ? 'Loyer' : 'Versement'} : ${money(event.amount ?? 0, true)} ${event.playerId ? `pour ${name}` : 'à la banque'}.`;
+      return `${event.reason === 'rent' ? 'Loyer payé' : event.reason === 'attack' ? 'Attaque' : 'Versement'} : ${state.players.find((p) => p.id === event.payerId)?.name ?? 'Banque'} → ${event.playerId ? name : 'Banque'} · ${money(event.amount ?? 0, true)}.`;
     case 'start_bonus':
       return `${name} passe Départ : +${money(event.amount ?? 0, true)}.`;
     case 'bankruptcy':
@@ -122,15 +152,15 @@ const demo = createGame({
   seed: 'menu',
 });
 demo.players.forEach((player, i) => {
-  player.position = [6, 12, 22, 29][i]!;
+  player.position = [5, 12, 19, 23][i]!;
 });
 for (const [id, ownerId, level] of [
   [1, 'p1', 2],
   [5, 'p1', 1],
-  [9, 'p2', 3],
-  [14, 'p2', 1],
-  [18, 'p3', 2],
-  [26, 'p4', 4],
+  [8, 'p2', 3],
+  [13, 'p2', 1],
+  [16, 'p3', 2],
+  [23, 'p4', 4],
 ] as const)
   demo.properties[id] = { ownerId, level, championships: 0 };
 
@@ -179,7 +209,8 @@ export default function App() {
     if (screen !== 'game' || paused) return;
     const kind = cinema.frame.cue.kind;
     if (cinema.frame.cue.sound) sound.current?.effect(cinema.frame.cue.sound);
-    else if (kind !== 'settle') sound.current?.effect(kind === 'hop' ? 'move' : kind);
+    else if (kind !== 'settle' && kind !== 'money' && kind !== 'turn')
+      sound.current?.effect(kind === 'hop' ? 'move' : kind);
   }, [cinema.frame, screen, paused]);
   const goHome = () => {
     sound.current?.stopEffects();
@@ -201,6 +232,8 @@ export default function App() {
   const act = (action: GameAction) => {
     if (screen !== 'game' || (paused && action.type !== 'quit')) return;
     if (onlineSession.current) {
+      if (!('playerId' in action) || action.playerId !== online?.self) return;
+      if (rolling && !['quit', 'set_control'].includes(action.type)) return;
       void onlineSession.current.intent(action);
       return;
     }
@@ -319,7 +352,10 @@ export default function App() {
           : current.phase === 'championship'
             ? `Un championnat coûte ${money(config.championshipFee, true)} et augmente le loyer d’une de vos villes.`
             : current.phase === 'property'
-              ? `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
+              ? current.properties[active.position]?.ownerId &&
+                current.properties[active.position]?.ownerId !== active.id
+                ? `${current.config.board[active.position]!.name} · le loyer adverse est prélevé automatiquement. Vous pouvez poursuivre ou proposer un rachat.`
+                : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
               : 'Deux dés. Une destination. Une nouvelle opportunité.';
 
   return (
@@ -489,7 +525,7 @@ export default function App() {
           </section>
           <section className="hero-map" aria-label="Aperçu du plateau">
             <span className="map-stamp">
-              32 ESCALES
+              28 ESCALES
               <br />
               <b>∞ POSSIBILITÉS</b>
             </span>
@@ -505,7 +541,7 @@ export default function App() {
             <div>
               <b>01</b>
               <span>
-                <strong>Tracez votre route</strong>Achetez des villes et des stations.
+                <strong>Tracez votre route</strong>Achetez des villes et des îles privées.
               </span>
             </div>
             <div>
@@ -524,6 +560,18 @@ export default function App() {
         </main>
       ) : (
         <main className="game-layout">
+          {!paused && (
+            <TurnBanner
+              key={`${current.turn}-${active.id}`}
+              player={active}
+              self={online?.self}
+              local={!online}
+              color={colors[current.currentPlayer]!}
+            />
+          )}
+          {!paused && cinema.frame.cue.kind === 'money' && (
+            <MoneyFlight cue={cinema.frame.cue} state={current} reduced={reduced} />
+          )}
           <div className="game-top">
             <div>
               <span className="eyebrow">
@@ -573,19 +621,22 @@ export default function App() {
             {current.players.map((p, i) => (
               <article
                 key={p.id}
+                data-bank={p.id}
                 className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''}`}
                 style={{ '--player-color': colors[i] } as React.CSSProperties}
               >
                 <span className={`avatar portrait portrait-${i}`} aria-label={pawnNames[i]} />
                 <div>
                   <span className="player-name">
-                    {p.name}{' '}
+                    {p.name === 'Vous' && online ? `Joueur ${i + 1}` : p.name}{' '}
                     <small>
-                      {p.bot
-                        ? 'BOT'
-                        : current.mode === 'teams'
-                          ? `ÉQ. ${p.team === 0 ? 'A' : 'B'}`
-                          : pawnNames[i]}
+                      {online?.self === p.id
+                        ? 'VOUS'
+                        : p.bot
+                          ? 'BOT'
+                          : current.mode === 'teams'
+                            ? `ÉQ. ${p.team === 0 ? 'A' : 'B'}`
+                            : pawnNames[i]}
                     </small>
                   </span>
                   <strong>{p.eliminated ? 'Faillite' : money(p.cash, true)}</strong>
@@ -625,7 +676,7 @@ export default function App() {
                       ' · ' +
                       display.dice.reduce((a, b) => a + b, 0) +
                       ' cases'
-                    : 'À vous de lancer les dés'}
+                    : `Au tour de ${active.name}`}
             </div>
             <div className="board-controls">
               <button onClick={() => setModal('tiles')}>Explorer les cases</button>
@@ -633,6 +684,7 @@ export default function App() {
             </div>
           </section>
           <aside className="game-sidebar">
+            <div id="property-inspector" />
             <section className="action-card">
               <span className="eyebrow">
                 {paused
@@ -643,8 +695,20 @@ export default function App() {
                       ? `TOUR DE ${active.name.toUpperCase()}`
                       : `À VOUS, ${active.name.toUpperCase()}`}
               </span>
-              <h2>{paused ? 'Une petite escale ?' : phaseText[current.phase]}</h2>
-              <p>{paused ? 'Le chrono et les bots vous attendent.' : actionDescription}</p>
+              <h2>
+                {paused
+                  ? 'Une petite escale ?'
+                  : active.bot || (online && online.self !== active.id)
+                    ? `${active.name} joue`
+                    : phaseText[current.phase]}
+              </h2>
+              <p>
+                {paused
+                  ? 'Le chrono et les bots vous attendent.'
+                  : active.bot || (online && online.self !== active.id)
+                    ? 'Suivez son déplacement. Vos commandes seront disponibles à votre tour.'
+                    : actionDescription}
+              </p>
               <div className="decision-time">
                 <span
                   style={{
@@ -661,24 +725,28 @@ export default function App() {
                   <p>{current.config.cards.find((c) => c.id === current.lastCard)?.description}</p>
                 </div>
               )}
-              {options.length > 0 && (
+              {options.length > 0 && !interactionDisabled && (
                 <p className="board-choice-hint">
                   Cliquez directement sur une case dorée du plateau pour{' '}
                   {current.phase === 'travel' ? 'vous y déplacer' : 'y placer le championnat'}.
                 </p>
               )}
               <div className="actions">
-                {available.map((a, i) => (
-                  <button
-                    key={`${a.type}-${'tile' in a ? a.tile : ''}`}
-                    className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
-                    disabled={interactionDisabled}
-                    onClick={() => act(a)}
-                  >
-                    {actionLabel(a)}
-                    {a.type === 'roll' && <span>⚄</span>}
-                  </button>
-                ))}
+                {!active.bot &&
+                  (!online || online.self === active.id) &&
+                  available.map((a, i) => (
+                    <button
+                      key={`${a.type}-${'tile' in a ? a.tile : ''}`}
+                      className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
+                      disabled={interactionDisabled}
+                      onClick={() => {
+                        if (!interactionDisabled) act(a);
+                      }}
+                    >
+                      {actionLabel(a)}
+                      {a.type === 'roll' && <span>⚄</span>}
+                    </button>
+                  ))}
               </div>
               {online && (
                 <>
@@ -722,7 +790,7 @@ export default function App() {
             </section>
             <div className="tip">
               <b>Le saviez-vous ?</b>
-              <p>Posséder les cinq villes d’un côté du plateau suffit à gagner la partie.</p>
+              <p>Les quatre îles réunies rapportent 500 k de loyer à chaque visite adverse.</p>
             </div>
           </aside>
         </main>
@@ -763,11 +831,16 @@ export default function App() {
             </p>
             <h3>3. Plusieurs façons de gagner</h3>
             <p>
-              Possédez les cinq villes d’un côté, trois groupes complets ou les quatre stations.
-              Vous gagnez aussi si tous vos adversaires font faillite. À la fin du chrono, le plus
-              grand patrimoine gagne ; une égalité se partage.
+              Complétez trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k,
+              sans terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
+              fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
             </p>
             <h3>4. Des escales qui changent tout</h3>
+            <p>
+              28 cases : 7 rues de deux villes, 4 îles privées, 4 cases cartes, 2 taxes et 4 coins
+              spéciaux. Les loyers sont payés automatiquement par le visiteur. Les cartes se
+              résolvent pour leur destinataire uniquement.
+            </p>
             <p>
               Trois festivals doublent les loyers. Le championnat augmente encore le multiplicateur.
               L’île vous retient jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au
@@ -844,7 +917,7 @@ export default function App() {
         </Modal>
       )}
       {modal === 'tiles' && (
-        <Modal title="Les 32 escales" onClose={() => setModal(null)}>
+        <Modal title="Les 28 escales" onClose={() => setModal(null)}>
           <div className="tile-list">
             {current.config.board.map((t) => (
               <button
@@ -890,7 +963,7 @@ export default function App() {
         </Modal>
       )}
       {tile && (
-        <Modal title={tile.name} onClose={() => setSelected(null)}>
+        <Modal title={tile.name} inline={screen === 'game'} onClose={() => setSelected(null)}>
           <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
             {tile.type === 'city' ? (
               <span
@@ -931,6 +1004,9 @@ export default function App() {
                   </strong>
                 </div>
               </div>
+              {tile.type === 'resort' && (
+                <p>Collection d’îles : 1 → 50 k · 2 → 100 k · 3 → 200 k · 4 → 500 k de loyer.</p>
+              )}
               {tile.rents && (
                 <div className="rent-table">
                   {tile.rents.map((rent, level) => (
@@ -962,8 +1038,8 @@ export default function App() {
                     : tile.type === 'travel'
                       ? 'Au prochain tour, voyagez pour 50 k vers une case libre ou alliée.'
                       : tile.type === 'tax'
-                        ? 'Vous payez 10 % de la valeur foncière de vos propriétés.'
-                        : 'Une des quatorze cartes peut transformer votre voyage.'}
+                        ? 'Vous payez 50 k plus 10 % de la valeur foncière de vos propriétés.'
+                        : 'Une des dix-huit cartes peut transformer votre voyage, y compris des attaques contre vos adversaires.'}
             </p>
           )}
           <button className="secondary" onClick={() => setSelected(null)}>
@@ -972,7 +1048,13 @@ export default function App() {
         </Modal>
       )}
       {screen === 'game' && cinema.frame.cue.kind === 'card' && (
-        <Modal title="La bonne étoile" onClose={cinema.advance}>
+        <Modal
+          title={
+            'Carte de ' +
+            (current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ?? active.name)
+          }
+          onClose={!online && !active.bot ? cinema.advance : undefined}
+        >
           <div className="chance-reveal">
             <img
               src={import.meta.env.BASE_URL + 'textures/chance.webp'}
@@ -980,9 +1062,18 @@ export default function App() {
             />
             <h2>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.title}</h2>
             <p>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description}</p>
-            <button className="primary" onClick={cinema.advance}>
-              C’est parti !
-            </button>
+            {!online && !active.bot ? (
+              <button className="primary" onClick={cinema.advance}>
+                J’ai lu · continuer
+              </button>
+            ) : (
+              <p className="card-readonly">
+                Effet automatique pour{' '}
+                {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ??
+                  active.name}{' '}
+                · lecture seule
+              </p>
+            )}
           </div>
         </Modal>
       )}

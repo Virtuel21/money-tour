@@ -18,7 +18,7 @@ export interface ChanceCard {
   id: string;
   title: string;
   description: string;
-  effect: 'cash' | 'move_to' | 'move_by' | 'escape' | 'downgrade';
+  effect: 'cash' | 'move_to' | 'move_by' | 'escape' | 'downgrade' | 'steal' | 'levy';
   amount?: number;
   target?: number;
   steps?: number;
@@ -26,6 +26,8 @@ export interface ChanceCard {
 }
 export interface GameConfig {
   version: number;
+  lineVictory?: boolean;
+  resortVictory?: boolean;
   initialCash: number;
   startBonus: number;
   durationMs: number;
@@ -47,6 +49,7 @@ export interface GameConfig {
   buyoutMultiplier: number;
   resaleRate: number;
   taxRate: number;
+  taxBase?: number;
   resortRents: number[];
   maxResolutionDepth: number;
   simulationActionLimit: number;

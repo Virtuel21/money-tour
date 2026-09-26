@@ -1,5 +1,6 @@
 import {
   chooseBotAction,
+  getLegalActions,
   config,
   createGame,
   createRng,
@@ -445,6 +446,12 @@ export class Session {
     )
       return false;
     if (intent.action.type === 'set_control' && intent.action.bot) return false;
+    if (
+      this.state &&
+      !['quit', 'set_control'].includes(intent.action.type) &&
+      !getLegalActions(this.state).some((a) => canonical(a) === canonical(intent.action))
+    )
+      return false;
     const { signature, ...unsigned } = intent;
     return verify(this.identities.get(from)!, { room: this.room, ...unsigned }, signature);
   }
@@ -476,7 +483,12 @@ export class Session {
       if (teams) count = 4;
       const players = this.members.map((m, i) => ({
         id: m.id,
-        name: m.name,
+        name:
+          m.name === 'Vous'
+            ? `Joueur ${i + 1}`
+            : this.members.filter((other) => other.name === m.name).length > 1
+              ? `${m.name.slice(0, 16)} ${i + 1}`
+              : m.name,
         bot: false,
         ...(teams ? { team: i % 2 } : {}),
       }));

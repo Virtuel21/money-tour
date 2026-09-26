@@ -2,16 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { getRent, type GameState } from '@money-tour/engine';
+import { type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
-import { colors, money } from '../game/local';
+import { colors } from '../game/local';
 
-export function tilePoint(id: number) {
-  const step = 1.8;
-  if (id <= 8) return { x: (4 - id) * step, z: 4 * step };
-  if (id <= 16) return { x: -4 * step, z: (12 - id) * step };
-  if (id <= 24) return { x: (id - 20) * step, z: -4 * step };
-  return { x: 4 * step, z: (id - 28) * step };
+export function tilePoint(id: number, count = 28) {
+  const side = count / 4;
+  const step = 14.4 / side;
+  if (id <= side) return { x: 7.2 - id * step, z: 7.2 };
+  if (id <= side * 2) return { x: -7.2, z: 7.2 - (id - side) * step };
+  if (id <= side * 3) return { x: -7.2 + (id - side * 2) * step, z: -7.2 };
+  return { x: 7.2, z: -7.2 + (id - side * 3) * step };
 }
 const up = new THREE.Vector3(0, 1, 0);
 // Blender Z up -> glTF Y up. Opposite faces sum to seven.
@@ -247,9 +248,10 @@ export default function Board({
           borders: THREE.Mesh[] = [],
           flags: THREE.Sprite[] = [];
         for (const tile of live.current.state.config.board) {
-          const p = tilePoint(tile.id),
+          const p = tilePoint(tile.id, live.current.state.config.board.length),
             cell = clone('tile');
           cell.position.set(p.x, 0, p.z);
+          cell.scale.set(1.12, 1, 1.12);
           resources.add(cell);
           const strip = new THREE.Mesh(
             new THREE.BoxGeometry(1.55, 0.045, 0.24),
@@ -258,18 +260,19 @@ export default function Board({
           strip.position.set(0, 0.27, -0.72);
           cell.add(strip);
           const trim = new THREE.Mesh(
-            new THREE.BoxGeometry(1.78, 0.25, 0.23),
+            new THREE.BoxGeometry(1.99, 0.25, 0.23),
             new THREE.MeshStandardMaterial({ color: 0xffffff }),
           );
           trim.position.set(p.x, 0.18, p.z);
-          if (tile.id <= 8) trim.position.z += 0.91;
-          else if (tile.id <= 16) {
+          if (tile.id <= live.current.state.config.board.length / 4) trim.position.z += 1.02;
+          else if (tile.id <= live.current.state.config.board.length / 2) {
             trim.rotation.y = Math.PI / 2;
-            trim.position.x -= 0.91;
-          } else if (tile.id <= 24) trim.position.z -= 0.91;
+            trim.position.x -= 1.02;
+          } else if (tile.id <= (live.current.state.config.board.length * 3) / 4)
+            trim.position.z -= 1.02;
           else {
             trim.rotation.y = Math.PI / 2;
-            trim.position.x += 0.91;
+            trim.position.x += 1.02;
           }
           resources.add(trim);
           trims.push(trim);
@@ -303,13 +306,13 @@ export default function Board({
         }
         setAnchors(
           live.current.state.config.board.map((t) => {
-            const p = tilePoint(t.id);
+            const p = tilePoint(t.id, live.current.state.config.board.length);
             const v = new THREE.Vector3(p.x + 0.48, 0.3, p.z + 0.48).project(camera);
             const points = [
-              [-0.87, -0.87],
-              [-0.87, 0.87],
-              [0.87, 0.87],
-              [0.87, -0.87],
+              [-0.98, -0.98],
+              [-0.98, 0.98],
+              [0.98, 0.98],
+              [0.98, -0.98],
             ]
               .map(([x, z]) => {
                 const corner = new THREE.Vector3(p.x + x!, 0.27, p.z + z!).project(camera);
@@ -568,9 +571,6 @@ export default function Board({
               TOUR <span>✦</span>
             </div>
             {state.config.board.map((t, i) => {
-              const owner = state.players.findIndex(
-                (p) => p.id === state.properties[t.id]?.ownerId,
-              );
               const short =
                 t.type === 'chance'
                   ? 'CHANCE'
@@ -584,6 +584,7 @@ export default function Board({
               return (
                 <div
                   key={t.id}
+                  data-tile-label={t.id}
                   className="city-label"
                   style={
                     {
@@ -594,11 +595,6 @@ export default function Board({
                   }
                 >
                   <b>{short}</b>
-                  <span>
-                    {t.price ? money(owner >= 0 ? getRent(state, t.id) : t.price, true) : '✦'}{' '}
-                    {t.group && <i>G{t.group.slice(1)}</i>}
-                  </span>
-                  {owner >= 0 && <em style={{ background: colors[owner] }}>J{owner + 1}</em>}
                 </div>
               );
             })}

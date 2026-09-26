@@ -1,21 +1,21 @@
-# Contrôle visuel — édition Voyage, 26 septembre 2026
+# Contrôle visuel — édition Îles, 26 septembre 2026
 
-Références : artworks de Julien et sa capture Business Tour ; pages officielles Business Tour/Steam et MONOPOLY/Marmalade. Rendu testé dans le navigateur intégré, sur un ordinateur portable simulé à 1280 × 800, téléphone à 390 × 844 et sur le grand écran natif.
+Références : artworks et capture Business Tour fournis par Julien, pages officielles Business Tour/Steam et MONOPOLY/Marmalade. Contrôle dans Chromium intégré, 1440 × 900 et 390 × 844.
 
-## Vérifications effectuées
+## Vérifications de cette édition
 
-- Vue en trois-quarts, plateau complet visible à 1280 × 800 avec les commandes principales. Noms et montants en HTML, sans agrandissement de textures de texte. Les bandes de groupe et liserés du propriétaire ont des couleurs saturées ; G1–G8 et J1–J4 doublent les indications de couleur.
-- Scène crowded : quatre voyageurs sur Lisbonne, trois maisons, hôtel adjacent. Le personnage actif reste opaque, ses compagnons et les constructions occupées s’atténuent. Le seuil alpha est proportionnel à l’opacité pour ne pas faire disparaître les sprites lors de cette atténuation.
-- Mobile : pas de débordement horizontal de page (largeur document = largeur écran = 390). Le mode agrandi utilise sa propre zone défilante ; le clic sur Rome ouvre la bonne fiche. La vue d’ensemble est forcément miniature sur 390 pixels ; utiliser Agrandir ou Explorer les cases pour lire tous les détails.
-- Voyage : sélection de Paris sur la case projetée, déplacement puis phase propriété à Paris. Le solde passe de 1500 k à 1750 k : coût du voyage de 50 k et passage Départ de 300 k selon le moteur.
-- Construction : Lisbonne, groupe complet, 1500 k → 1450 k ; une maison et loyer de 20 k confirmés dans la fiche. Les illustrations apparaissent dans le monde et dans les fiches.
-- Dés : deux vrais objets 3D visibles en rotation/rebond, ombres au sol, résultat textuel différé. Carte Vent favorable affichée au centre, texte lisible et bouton pour continuer.
-- Pause : clic vérifié à 1280 × 800, bouton Reprendre et actions désactivées. Dans une vraie partie à quatre bots, le tour et le chrono restent au tour 10 / 19:49 durant la pause.
-- Retour à l’accueil : vraie partie à quatre bots, progression conservée au tour 10 / 19:49 après attente ; reprise au même point. Le test audio vérifie l’annulation de toutes les sources programmées et la possibilité de rejouer des sons ensuite.
-- Sauvegarde : migration cosmétique v2 → v3 testée, y compris continuité du tirage aléatoire ; toute modification de règles reste rejetée.
+- Plateau de 28 cases : sept rues de deux villes réelles, quatre îles privées, quatre cases Chance, deux Taxes et quatre coins spéciaux. Les sept groupes ont des couleurs distinctes ; les propriétaires conservent leurs liserés saturés.
+- Vue en trois-quarts complète sur ordinateur. Les comptes occupent le côté gauche ; actions, journal et fiche de propriété le côté droit. Les étiquettes du plateau affichent seulement les noms, sans les anciennes cartes blanches de prix. Le clic sur Porto ouvre sa fiche latérale, avec prix de 125 k et loyer hôtel de 150 k dans la scène de contrôle.
+- Scène showcase : quatre voyageurs, constructions et propriétés de chaque couleur. Capture desktop enregistrée. Cette scène préparée sert au contrôle graphique, pas à démontrer une partie réelle.
+- Scène rent jouée : dés 4 + 5, passage Départ puis arrivée à Madrid appartenant à Max. Léa passe de 1 500 k à 1 800 k puis 1 740 k ; Max de 1 500 k à 1 560 k. Les pièces dorées et le message « Loyer versé +60 k · Léa → Max » sont visibles. Le loyer était déjà calculé automatiquement par le moteur ; cette édition rend le transfert explicite à l'écran.
+- Avion, coupe et palmier reconstruits dans Blender : hublots, turbines et ailes ; coupe creuse, anses et gravure ; tronc courbe, noix de coco et palmes pleines. Inspection dans Blender puis dans le jeu. Export GLB : 1 080 716 octets, dix racines attendues.
+- Vue mobile 390 × 844 : comptes en grille, commandes sous le plateau, aucun débordement horizontal. La vue d'ensemble reste miniature ; Agrandir et Explorer les cases donnent accès aux détails. Aucun téléphone physique testé.
+- En ligne avec un hôte seul et un bot : nom public « Voyageur 0361 », badge VOUS seulement sur son siège, badge BOT sur Lou, pause désactivée. Les commandes normales disparaissent pendant le tour d'un bot. Les cartes réseau sont en lecture seule ; leur effet est automatique. Les intentions signées hors tour et les dettes du mauvais joueur sont couvertes par les tests.
 
-203 tests passent, couverture moteur 99,32 % des lignes et 95,59 % des branches, dont 1000 simulations. Typage, lint, build, budget public (7 489 572 octets sur 12 Mo) et dix racines Blender vérifiés.
+## Validation et limites
 
-Les scénarios travel, build, card, crowded et showcase sont des fixtures de développement, exclues du build public. Showcase sert uniquement à comparer les illustrations et couleurs dans une scène possédée par les quatre joueurs. Les tests du chrono et du retour à l’accueil ont été effectués séparément dans une partie normale.
+217 tests dans douze fichiers, typage, lint, couverture et build passent. Couverture moteur : lignes 99,34 %, branches 95,55 %, fonctions 100 %. Simulation distincte de 1 000 parties : 250 994 décisions, zéro violation d'invariant. Budget public : 8 254 728 octets sur 12 Mo.
 
-La qualité reste celle d’un rendu hybride à caméra fixe : personnages, bâtiments et dioramas sont des illustrations détourées, pas des personnages squelettiques tournant librement. La validation navigateur mobile n’est pas un essai sur un téléphone physique. Les limitations réseau documentées ailleurs restent applicables.
+La tentative de connexion réelle entre deux origines sur cet ordinateur a échoué cette fois : avertissement du relais Trystero `wss://strfry.shock.network/`, puis aucun hôte trouvé côté invité. La réussite WebRTC décrite dans l'historique de validation concerne une édition antérieure ; elle ne valide pas cette nouvelle tentative. La recette sur quatre réseaux et smartphone 4G reste ouverte dans l'issue #10.
+
+Le rendu demeure hybride à caméra fixe : voyageurs, bâtiments et dioramas illustrés, plateau et accessoires en 3D. Les scènes de contrôle sont exclues du build public. Le plateau ayant changé, la sauvegarde v4 est séparée ; les anciennes sauvegardes sont conservées mais ne sont pas converties vers les nouvelles cases.
