@@ -7,10 +7,11 @@ import type { Cue } from '../game/presentation';
 import { colors, money } from '../game/local';
 
 export function tilePoint(id: number) {
-  if (id <= 8) return { x: 4 - id, z: 4 };
-  if (id <= 16) return { x: -4, z: 12 - id };
-  if (id <= 24) return { x: id - 20, z: -4 };
-  return { x: 4, z: id - 28 };
+  const step = 1.8;
+  if (id <= 8) return { x: (4 - id) * step, z: 4 * step };
+  if (id <= 16) return { x: -4 * step, z: (12 - id) * step };
+  if (id <= 24) return { x: (id - 20) * step, z: -4 * step };
+  return { x: 4 * step, z: (id - 28) * step };
 }
 const up = new THREE.Vector3(0, 1, 0);
 // Blender Z up -> glTF Y up. Opposite faces sum to seven.
@@ -29,6 +30,9 @@ function compact(source: THREE.Object3D) {
   source.traverse((node) => {
     if (!(node instanceof THREE.Mesh) || Array.isArray(node.material)) return;
     const geometry = node.geometry.clone().applyMatrix4(inverse.clone().multiply(node.matrixWorld));
+    // These Blender assets use solid materials. Primitive UVs must not prevent
+    // merging with the hand-built roof, arch and facial meshes, which have no UVs.
+    geometry.deleteAttribute('uv');
     const list = batches.get(node.material) ?? [];
     list.push(geometry);
     batches.set(node.material, list);
@@ -106,17 +110,17 @@ export default function Board({
     const initialize = async () => {
       try {
         renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 1.7));
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1;
+        renderer.toneMapping = THREE.NeutralToneMapping;
+        renderer.toneMappingExposure = 0.9;
         element.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         scene.add(resources);
-        const camera = new THREE.OrthographicCamera(-5.25, 5.25, 4.4625, -4.4625, 0.1, 60);
-        camera.position.set(0, 12, 9);
+        const camera = new THREE.OrthographicCamera(-9, 9, 7.65, -7.65, 0.1, 80);
+        camera.position.set(0, 18, 18);
         camera.lookAt(0, 0, 0);
         camera.updateMatrixWorld();
         const resize = () => {
@@ -126,16 +130,17 @@ export default function Board({
         observer = new ResizeObserver(resize);
         observer.observe(element);
         resize();
-        scene.add(new THREE.HemisphereLight(0xe5fcff, 0xb59872, 1.8));
-        const light = new THREE.DirectionalLight(0xfff3ce, 2.5);
-        light.position.set(-4, 12, 6);
+        scene.add(new THREE.HemisphereLight(0xf4fcff, 0xa8a388, 1.8));
+        const light = new THREE.DirectionalLight(0xfff4df, 2.4);
+        light.position.set(-8, 20, 10);
         light.castShadow = true;
-        light.shadow.mapSize.set(1024, 1024);
-        light.shadow.camera.left = -6;
-        light.shadow.camera.right = 6;
-        light.shadow.camera.top = 6;
-        light.shadow.camera.bottom = -6;
-        light.shadow.normalBias = 0.035;
+        light.shadow.mapSize.set(2048, 2048);
+        light.shadow.camera.left = -12;
+        light.shadow.camera.right = 12;
+        light.shadow.camera.top = 12;
+        light.shadow.camera.bottom = -12;
+        light.shadow.normalBias = 0.025;
+        light.shadow.radius = 3;
         scene.add(light);
         const ground = new THREE.Mesh(
           new THREE.PlaneGeometry(200, 200),
@@ -164,6 +169,12 @@ export default function Board({
           'die',
           'islands',
           'palm',
+          'chance',
+          'championship',
+          'tax',
+          'travel',
+          'start',
+          'plot',
         ]) {
           const original = gltf.scene.getObjectByName(name);
           if (!original) throw new Error(`Modèle absent : ${name}`);
@@ -171,20 +182,9 @@ export default function Board({
         }
         const clone = (name: string) => templates.get(name)!.clone(true);
         resources.add(clone('board'), clone('islands'));
-        const water = new THREE.TextureLoader().load(
-          `${import.meta.env.BASE_URL}textures/ocean.webp`,
-        );
-        water.colorSpace = THREE.SRGBColorSpace;
-        const sea = new THREE.Mesh(
-          new THREE.PlaneGeometry(7.05, 7.05),
-          new THREE.MeshStandardMaterial({ map: water, roughness: 0.75 }),
-        );
-        sea.rotation.x = -Math.PI / 2;
-        sea.position.y = 0.06;
-        sea.receiveShadow = true;
-        resources.add(sea);
-        const title = caption('MONEY TOUR', 3.6, 0.7);
-        title.position.set(0, 0.1, 0.1);
+        // The water and its graphic ripples are authored in Blender with the islands.
+        const title = caption('MONEY TOUR', 3.5, 0.67);
+        title.position.set(0, 0.22, -0.3);
         resources.add(title);
         const buildings: THREE.Group[] = [],
           trims: THREE.Mesh[] = [],
@@ -196,69 +196,59 @@ export default function Board({
           cell.position.set(p.x, 0, p.z);
           resources.add(cell);
           const strip = new THREE.Mesh(
-            new THREE.BoxGeometry(0.82, 0.025, 0.09),
+            new THREE.BoxGeometry(1.48, 0.035, 0.13),
             new THREE.MeshStandardMaterial({ color: tile.color ?? '#f9c34f' }),
           );
-          strip.position.set(0, 0.2, -0.37);
+          strip.position.set(0, 0.27, -0.72);
           cell.add(strip);
           const trim = new THREE.Mesh(
-            new THREE.BoxGeometry(0.95, 0.09, 0.14),
+            new THREE.BoxGeometry(1.75, 0.15, 0.16),
             new THREE.MeshStandardMaterial({ color: 0xffffff }),
           );
-          trim.position.set(p.x, 0.1, p.z);
-          if (tile.id <= 8) trim.position.z += 0.51;
+          trim.position.set(p.x, 0.18, p.z);
+          if (tile.id <= 8) trim.position.z += 0.91;
           else if (tile.id <= 16) {
             trim.rotation.y = Math.PI / 2;
-            trim.position.x -= 0.51;
-          } else if (tile.id <= 24) trim.position.z -= 0.51;
+            trim.position.x -= 0.91;
+          } else if (tile.id <= 24) trim.position.z -= 0.91;
           else {
             trim.rotation.y = Math.PI / 2;
-            trim.position.x += 0.51;
+            trim.position.x += 0.91;
           }
           resources.add(trim);
           trims.push(trim);
           const outline = new THREE.Mesh(
-            new THREE.BoxGeometry(0.97, 0.025, 0.97),
+            new THREE.BoxGeometry(1.74, 0.025, 1.74),
             new THREE.MeshStandardMaterial({ color: 0xffdf55, transparent: true, opacity: 0.7 }),
           );
-          outline.position.set(p.x, 0.19, p.z);
+          outline.position.set(p.x, 0.27, p.z);
           outline.visible = false;
           resources.add(outline);
           borders.push(outline);
           const city = new THREE.Group();
-          city.position.set(p.x, 0.18, p.z - 0.1);
+          city.position.set(p.x, 0.26, p.z - 0.44);
           resources.add(city);
           buildings.push(city);
           if (tile.type === 'resort' || tile.type === 'island') {
             const palm = clone('palm');
-            palm.scale.setScalar(0.65);
-            palm.position.set(p.x, 0.19, p.z - 0.1);
+            palm.scale.setScalar(0.9);
+            palm.position.set(p.x, 0.26, p.z - 0.3);
             resources.add(palm);
           }
           if (!['city', 'resort', 'island'].includes(tile.type)) {
-            const icon = caption(
-              (
-                { start: '⚑', chance: '✉', tax: '¤', travel: '✈', championship: '★' } as Record<
-                  string,
-                  string
-                >
-              )[tile.type] ?? '★',
-              0.6,
-              0.52,
-              tile.type === 'chance' ? '#8c5abe' : '#ab7820',
-            );
-            icon.position.set(p.x, 0.35, p.z - 0.13);
+            const icon = clone(tile.type);
+            icon.position.set(p.x, 0.27, p.z - 0.3);
             resources.add(icon);
           }
           const text = caption(
             `${tile.name.toUpperCase()}${tile.price ? '\n' + money(tile.price, true) : ''}`,
-            0.92,
-            0.25,
+            1.57,
+            0.32,
           );
-          text.position.set(p.x, 0.24, p.z + 0.3);
+          text.position.set(p.x, 0.3, p.z + 0.73);
           resources.add(text);
           const flag = caption('⚑ ×2', 0.38, 0.22, '#b55b20');
-          flag.position.set(p.x - 0.26, 0.46, p.z - 0.26);
+          flag.position.set(p.x - 0.58, 0.7, p.z - 0.5);
           resources.add(flag);
           flags.push(flag);
         }
@@ -271,10 +261,10 @@ export default function Board({
         );
         const pawns = live.current.state.players.map((_, i) => {
           const pawn = clone('pawn_' + i);
-          pawn.scale.setScalar(0.76);
+          pawn.scale.setScalar(0.7);
           resources.add(pawn);
-          const badge = caption(String(i + 1), 0.25, 0.25, colors[i]);
-          badge.position.set(0, 1.32, 0);
+          const badge = caption(String(i + 1), 0.3, 0.3, colors[i]);
+          badge.position.set(0, 2.28, 0);
           pawn.add(badge);
           return pawn;
         });
@@ -308,18 +298,15 @@ export default function Board({
             if (tile.type !== 'city') return;
             const level = prop?.level ?? 0;
             if (!level) {
-              const parcel = new THREE.Mesh(
-                new THREE.BoxGeometry(0.43, 0.025, 0.34),
-                new THREE.MeshStandardMaterial({ color: owner < 0 ? '#90c66a' : colors[owner] }),
-              );
-              group.add(parcel);
+              group.add(clone('plot'));
               return;
             }
             const n = level === 4 ? 1 : level;
             for (let j = 0; j < n; j++) {
               const building = clone(level === 4 ? 'hotel' : 'house');
-              building.scale.setScalar(level === 4 ? 0.6 : n === 1 ? 0.67 : 0.48);
-              building.position.x = (j - (n - 1) / 2) * 0.26;
+              building.scale.setScalar(level === 4 ? 0.61 : n === 1 ? 0.66 : 0.44);
+              building.position.x = (j - (n - 1) / 2) * 0.55;
+              building.position.z = level === 4 ? -0.1 : 0;
               group.add(building);
             }
           });
@@ -345,7 +332,7 @@ export default function Board({
             }
             pawn.visible = !player.eliminated;
             let point = tilePoint(player.position),
-              height = 0.2;
+              height = 0.27;
             if (activeCue?.kind === 'hop' && activeCue.playerId === player.id && !reduced) {
               const from = tilePoint(activeCue.from!),
                 to = tilePoint(activeCue.to!);
@@ -353,18 +340,28 @@ export default function Board({
                 x: THREE.MathUtils.lerp(from.x, to.x, progress),
                 z: THREE.MathUtils.lerp(from.z, to.z, progress),
               };
-              height += Math.sin(progress * Math.PI) * 0.5;
+              height += Math.sin(progress * Math.PI) * 0.65;
               pawn.rotation.z = Math.sin(progress * Math.PI * 2) * 0.07;
             } else pawn.rotation.z = 0;
             const peers = game.players.filter(
                 (p) => !p.eliminated && p.position === player.position,
               ),
               slot = peers.findIndex((p) => p.id === player.id);
-            pawn.position.set(
-              point.x + (peers.length > 1 ? (slot - (peers.length - 1) / 2) * 0.19 : 0),
-              height,
-              point.z + 0.02,
-            );
+            // Separate the rear building plot from the front walking lane.
+            // Four co-located travelers use two rows, never a stack of models.
+            pawn.scale.setScalar(peers.length > 2 ? 0.46 : peers.length === 2 ? 0.58 : 0.7);
+            const offsetX =
+              peers.length > 2
+                ? slot % 2
+                  ? 0.38
+                  : -0.38
+                : peers.length === 2
+                  ? slot
+                    ? 0.37
+                    : -0.37
+                  : 0;
+            const offsetZ = peers.length > 2 ? (slot < 2 ? 0.15 : 0.6) : 0.35;
+            pawn.position.set(point.x + offsetX, height, point.z + offsetZ);
           });
           dice.forEach((die, i) => {
             const value = (activeCue?.kind === 'dice' ? activeCue.dice?.[i] : game.dice[i]) ?? 1;

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter @money-tour/web dev",
-    "build": "pnpm -r build && node scripts/check-assets.mjs",
+    "build": "pnpm -r build && node scripts/check-assets.mjs && node scripts/check-models.mjs",
     "assets:generate": "node scripts/social-card.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

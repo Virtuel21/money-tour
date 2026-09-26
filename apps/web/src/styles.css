@@ -1698,3 +1698,27 @@ footer a {
   box-shadow: none;
   border-radius: 26px;
 }
+
+/* Give the physical board the room its enlarged tiles and miniature models need. */
+.app:has(.game-layout) {
+  max-width: 2100px;
+  padding-inline: 2.5%;
+}
+.game-layout .board-area {
+  max-width: none;
+}
+.board-hit-targets button {
+  width: 9.2%;
+  height: 8.5%;
+}
+@media (min-width: 1000px) {
+  .game-layout {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 18px;
+  }
+  .game-sidebar {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+  }
+}
