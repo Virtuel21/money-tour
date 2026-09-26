@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 7,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -488,6 +488,5 @@
   "casinoMaxChance": 50,
   "karmaAmount": 50000,
   "fraudDiscount": 0.5,
-  "crisisChance": 12,
-  "adventures": true
+  "crisisChance": 12
 }

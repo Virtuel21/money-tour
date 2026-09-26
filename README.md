@@ -70,3 +70,9 @@ Les tuiles rectangulaires séparent constructions et loyers. Les bâtiments pren
 Deux casinos (roulette ou machine à sous aléatoire), jackpot progressif à 10 % du solde, assurance, Karma, Squatteur, Expropriation, Cafards et Fraude fiscale complètent le jeu. Alliance partage les gains jusqu’à la fin du prochain tour du joueur ciblé ; Duel propose des mises égales acceptées et des choix secrets. Posséder toutes les villes et l’île d’un côté donne une victoire Monopole. [Règles détaillées et durées](docs/FORTUNE_RULES.md).
 
 Les dés 3D roulent dans un écrin séparé du décor. Les icônes conservent des proportions carrées sur les tuiles rectangulaires. Les nouvelles pièces sont dans models/fortune.glb, source scripts/casino_models.py. [Provenance et prompt de l’atlas](docs/FORTUNE_ART.md).
+
+## Édition 8 — des parties différentes
+
+Une règle tirée au sort par partie (villes jumelles, festivals, héritage, marché flottant ou capitale cachée), un objectif personnel à 100 k et un appel d’offres à enveloppes scellées. Le HUD affiche la règle, les propriétés miniatures et les bonus. Le Mondial éclaire les villes éligibles et offre un sélecteur latéral ; les annonces durent cinq secondes de plus.
+
+[Règles détaillées et limites de confidentialité](docs/ADVENTURE_RULES.md). Les sauvegardes des anciennes éditions conservent leurs règles ; commencer une nouvelle partie pour activer ces mécaniques. Les offres et objectifs sont masqués dans l’interface ; l’état et les révélations vérifiables restent inspectables dans le protocole pair-à-pair. Les soldes publics permettent de déduire l’offre gagnante.

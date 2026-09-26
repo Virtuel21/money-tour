@@ -19,3 +19,6 @@ export { default as legacyConfig } from './legacy-v5.config.json';
 export { default as legacyConfigV6 } from './legacy-v6.config.json';
 
 export { duelCommitment, duelChoices, getDecisionPlayerId } from './duel.js';
+
+export { default as legacyConfigV7 } from './legacy-v7.config.json';
+export { adventureText, questRules, auctionCommitment, reservedCity } from './adventure.js';

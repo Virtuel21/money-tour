@@ -68,6 +68,10 @@ export function presentation(
         sound: 'dice',
       });
     const notice: Record<string, string> = {
+      auction_started: String(event.message),
+      auction_result: String(event.message),
+      quest_completed: String(event.message),
+      capital_revealed: String(event.message),
       alliance: String(event.message),
       alliance_expired: String(event.message),
       crisis: String(event.message),
@@ -102,7 +106,7 @@ export function presentation(
       add({
         kind: 'notice',
         reason: event.type,
-        duration: reduced ? 800 : 2600,
+        duration: (reduced ? 800 : 2600) + 5000,
         playerId: event.playerId,
         tile: event.tile,
         message: notice[event.type],
@@ -200,6 +204,10 @@ export function presentationMs(events: GameEvent[]): number {
         : e.type === 'casino_result'
           ? 3600
           : [
+                'auction_started',
+                'auction_result',
+                'quest_completed',
+                'capital_revealed',
                 'alliance',
                 'alliance_expired',
                 'crisis',
@@ -216,7 +224,7 @@ export function presentationMs(events: GameEvent[]): number {
                 'roaches_expired',
                 'karma',
               ].includes(e.type)
-            ? 2600
+            ? 7600
             : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) && (e.amount ?? 0) > 0
               ? 1500
               : ['turn', 'extra_roll'].includes(e.type)

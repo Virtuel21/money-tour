@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { chooseBotAction, legacyConfig, legacyConfigV6, type GameConfig } from '@money-tour/engine';
+import {
+  chooseBotAction,
+  legacyConfig,
+  legacyConfigV6,
+  legacyConfigV7,
+  type GameConfig,
+} from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
 
 describe('local session', () => {
@@ -12,6 +18,18 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('preserves v7 saves without retroactively adding quests or a new party rule', () => {
+    const save = newLocal({
+      config: legacyConfigV7 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v7', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+    expect(loadLocal()!.state.adventure).toBeUndefined();
+  });
   it('preserves the shuffled 26-cell edition and resumes it unchanged', () => {
     const save = newLocal({
       config: legacyConfigV6 as GameConfig,

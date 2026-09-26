@@ -1,3 +1,5 @@
+import { AuctionView } from './game/AuctionView';
+import { AdventureBanner, PrivateQuest, PlayerInventory } from './game/AdventureHUD';
 import { ActionClock, GameClockContext } from './game/ActionClock';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -10,6 +12,8 @@ import {
   getNetWorth,
   getPropertyValue,
   getRent,
+  adventureText,
+  reservedCity,
   type GameAction,
   type GameEvent,
   type GameState,
@@ -118,6 +122,10 @@ function eventText(event: GameEvent, state: GameState): string {
     case 'alliance_expired':
     case 'crisis':
     case 'crisis_expired':
+    case 'auction_started':
+    case 'auction_result':
+    case 'quest_completed':
+    case 'capital_revealed':
     case 'duel_result':
     case 'duel_forfeit':
     case 'duel_cancelled':
@@ -325,7 +333,7 @@ export default function App() {
     });
     cinema.reset(next.state);
     setSave(next);
-    setHistory(['Bon voyage ! Trois villes accueillent un festival : leurs loyers sont doublés.']);
+    setHistory(['Bon voyage ! ' + adventureText(next.state)]);
     setNotice('');
     setPaused(false);
     setScreen('game');
@@ -370,6 +378,7 @@ export default function App() {
       case 'upgrade':
         return `Construire · ${money(tile.buildCosts?.[(current.properties[tile.id]?.level ?? 0) + 1] ?? 0, true)}`;
       case 'finish':
+        if (current.phase === 'championship') return 'Ne pas organiser le Mondial';
         return current.extraRoll
           ? 'Continuer · double !'
           : current.phase === 'property'
@@ -404,6 +413,7 @@ export default function App() {
   const chooseTile = (id: number) => {
     const action = options.find((a) => a.tile === id);
     if (action && !interactionDisabled) act(action);
+    else if (current.phase === 'championship') return;
     else if (eligibleOffer?.tile.id === id) {
       setSelected(null);
       setDismissedOffer('');
@@ -411,6 +421,7 @@ export default function App() {
   };
   const available = legal.filter(
     (a) =>
+      !a.type.startsWith('auction_') &&
       !a.type.startsWith('duel_') &&
       !['alliance', 'quit', 'travel', 'place_championship', 'insure', 'attack'].includes(a.type),
   );
@@ -418,30 +429,33 @@ export default function App() {
     ['travel', 'place_championship', 'insure', 'attack', 'sell'].includes(a.type),
   );
   const actionDescription =
-    current.phase === 'duel'
-      ? 'La fenêtre de duel indique qui doit miser, choisir ou révéler sa main.'
-      : current.phase === 'alliance'
-        ? 'Choisissez le joueur avec qui partager les prochains gains.'
-        : current.phase === 'casino'
-          ? 'Roulette ou machine à sous : tentez le jackpot dans la fenêtre du casino.'
-          : current.phase === 'attack'
-            ? 'Choisissez une ville adverse en surbrillance sur le plateau. Une assurance bloque l’expropriation, mais pas les cafards.'
-            : active.insurance?.tile === null
-              ? 'Votre jeton assurance est disponible : cliquez sur une de vos propriétés en surbrillance pour la protéger.'
-              : current.phase === 'debt'
-                ? `Il vous manque ${money(Math.max(0, (current.debt?.amount ?? 0) - active.cash))}. Vendez un bien pour régler votre dette.`
-                : current.phase === 'island'
-                  ? 'Payez le voyage de retour, utilisez un billet ou tentez un double. Vous sortirez au plus tard à la troisième tentative.'
-                  : current.phase === 'travel'
-                    ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
-                    : current.phase === 'championship'
-                      ? `Choisissez une de vos villes sur le plateau pour y organiser le Mondial : ${money(current.config.championshipFee, true)}. Loyer ×2 pendant quatre de vos tours, sans cumul. Cliquez sur une de vos villes en surbrillance.`
-                      : current.phase === 'property'
-                        ? current.properties[active.position]?.ownerId &&
-                          current.properties[active.position]?.ownerId !== active.id
-                          ? `${current.config.board[active.position]!.name} · le loyer adverse est prélevé automatiquement. Vous pouvez poursuivre ou proposer un rachat.`
-                          : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
-                        : 'Deux dés. Une destination. Une nouvelle opportunité.';
+    current.phase === 'auction'
+      ? 'Une ville neutre attend vos offres secrètes. Suivez la fenêtre d’enchère.'
+      : current.phase === 'duel'
+        ? 'La fenêtre de duel indique qui doit miser, choisir ou révéler sa main.'
+        : current.phase === 'alliance'
+          ? 'Choisissez le joueur avec qui partager les prochains gains.'
+          : current.phase === 'casino'
+            ? 'Roulette ou machine à sous : tentez le jackpot dans la fenêtre du casino.'
+            : current.phase === 'attack'
+              ? 'Choisissez une ville adverse en surbrillance sur le plateau. Une assurance bloque l’expropriation, mais pas les cafards.'
+              : active.insurance?.tile === null &&
+                  ['roll', 'end', 'property'].includes(current.phase)
+                ? 'Votre jeton assurance est disponible : cliquez sur une de vos propriétés en surbrillance pour la protéger.'
+                : current.phase === 'debt'
+                  ? `Il vous manque ${money(Math.max(0, (current.debt?.amount ?? 0) - active.cash))}. Vendez un bien pour régler votre dette.`
+                  : current.phase === 'island'
+                    ? 'Payez le voyage de retour, utilisez un billet ou tentez un double. Vous sortirez au plus tard à la troisième tentative.'
+                    : current.phase === 'travel'
+                      ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
+                      : current.phase === 'championship'
+                        ? `Choisissez une ville éclairée : ${money(current.config.championshipFee, true)}, loyer ×2 pendant quatre de vos tours.`
+                        : current.phase === 'property'
+                          ? current.properties[active.position]?.ownerId &&
+                            current.properties[active.position]?.ownerId !== active.id
+                            ? `${current.config.board[active.position]!.name} · le loyer adverse est prélevé automatiquement. Vous pouvez poursuivre ou proposer un rachat.`
+                            : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
+                          : 'Deux dés. Une destination. Une nouvelle opportunité.';
 
   return (
     <GameClockContext.Provider
@@ -744,31 +758,33 @@ export default function App() {
                   <span className="property-count" title="Propriétés">
                     ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}
                   </span>
-                  {!!p.heldCards?.length && (
-                    <span className="held-cards">
-                      {p.heldCards.map((id) => (
-                        <span
-                          key={id}
-                          title={current.config.cards.find((c) => c.id === id)?.description}
-                        >
-                          {current.config.cards.find((c) => c.id === id)?.title}
-                        </span>
-                      ))}
-                    </span>
-                  )}
                   {!!p.fraudLiability && (
                     <small className="fraud-risk" title="Jusqu’au prochain passage par Départ">
                       ⚠ Taxe : {money(p.fraudLiability, true)}
                     </small>
                   )}
+                  <PlayerInventory state={current} player={p} onTile={chooseTile} />
+                  {p.id === (online?.self ?? active.id) && (
+                    <PrivateQuest
+                      key={p.id + current.turn}
+                      state={current}
+                      player={p}
+                      self={online?.self}
+                    />
+                  )}
                 </article>
               ))}
             </div>
             <section className={`board-area ${zoom ? 'zoomed' : ''}`}>
+              <AdventureBanner state={current} />
               <div className="board-viewport">
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
                     state={display}
+                    selecting={
+                      !interactionDisabled &&
+                      ['championship', 'attack', 'travel'].includes(current.phase)
+                    }
                     cue={cinema.frame.cue}
                     choices={interactionDisabled ? [] : options.map((a) => a.tile)}
                     onTile={chooseTile}
@@ -798,6 +814,37 @@ export default function App() {
             </section>
             <aside className="game-sidebar">
               <div id="property-inspector" />
+              {current.phase === 'championship' && !interactionDisabled && (
+                <section className="mondial-picker" aria-label="Choisir la ville du Mondial">
+                  <strong>🏆 Où accueillir le Mondial ?</strong>
+                  {options.length ? (
+                    <>
+                      <p>
+                        Vos villes sont éclairées. Cliquez sur une case ou une carte ci-dessous.
+                      </p>
+                      <div>
+                        {options.map((a) => (
+                          <button className="primary" key={a.tile} onClick={() => act(a)}>
+                            {current.config.board[a.tile]!.name} ·{' '}
+                            {money(current.config.championshipFee, true)} <ActionClock />
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <p>
+                      {current.config.board.some(
+                        (t) => t.type === 'city' && current.properties[t.id]?.ownerId === active.id,
+                      )
+                        ? 'Il vous faut ' +
+                          money(current.config.championshipFee, true) +
+                          ' pour organiser le Mondial.'
+                        : 'Achetez d’abord une ville : les îles ne peuvent pas accueillir le Mondial.'}
+                    </p>
+                  )}
+                </section>
+              )}
+
               <section className="action-card">
                 <span className="eyebrow">
                   {paused
@@ -840,7 +887,7 @@ export default function App() {
                     </p>
                   </div>
                 )}
-                {options.length > 0 && !interactionDisabled && (
+                {options.length > 0 && current.phase !== 'championship' && !interactionDisabled && (
                   <p className="board-choice-hint">
                     Cliquez directement sur une case dorée du plateau pour{' '}
                     {current.phase === 'travel'
@@ -849,9 +896,7 @@ export default function App() {
                         ? 'choisir votre cible'
                         : current.phase === 'debt'
                           ? 'la vendre et régler votre dette'
-                          : current.phase === 'championship'
-                            ? 'y placer le championnat'
-                            : 'l’assurer'}
+                          : 'l’assurer'}
                     .
                   </p>
                 )}
@@ -916,7 +961,7 @@ export default function App() {
                   </p>
                 )}
                 <small className="action-help">
-                  Les villes avec fanions ont un festival : loyer ×2.
+                  La règle spéciale de cette partie est affichée au-dessus du plateau.
                 </small>
               </section>
               <section className="journal">
@@ -984,10 +1029,10 @@ export default function App() {
                 le visiteur. Les cartes se résolvent pour leur destinataire uniquement.
               </p>
               <p>
-                Trois festivals doublent les loyers. Le championnat augmente encore le
-                multiplicateur. L’île vous retient jusqu’à trois tours. Le Tour du monde ouvre un
-                voyage payant au prochain tour. Si votre cash manque, vendez des biens à la banque à
-                moitié de leur valeur.
+                Selon la règle tirée, trois festivals peuvent doubler les loyers. Le championnat
+                augmente encore le multiplicateur. L’île vous retient jusqu’à trois tours. Le Tour
+                du monde ouvre un voyage payant au prochain tour. Si votre cash manque, vendez des
+                biens à la banque à moitié de leur valeur.
               </p>
               <h3>5. Tentez votre chance, protégez vos biens</h3>
               <p>
@@ -1191,6 +1236,26 @@ export default function App() {
             </button>
           </Modal>
         )}
+        {screen === 'game' &&
+          !rolling &&
+          !paused &&
+          !modal &&
+          current.phase === 'auction' &&
+          current.auction && (
+            <Modal
+              title={
+                current.auction.kind === 'market' ? 'Le marché flottant' : 'Les appels d’offres'
+              }
+            >
+              <AuctionView
+                key={current.auction.id}
+                state={current}
+                self={online?.self}
+                act={act}
+                disabled={interactionDisabled}
+              />
+            </Modal>
+          )}
         {screen === 'game' && !interactionDisabled && !modal && current.phase === 'casino' && (
           <Modal title="Bienvenue au casino">
             <CasinoView state={current} act={act} />
@@ -1209,13 +1274,21 @@ export default function App() {
         {screen === 'game' && !paused && cinema.frame.cue.kind === 'notice' && (
           <Modal
             title={
-              cinema.frame.cue.reason === 'duel_result'
-                ? 'Le duel est joué !'
-                : cinema.frame.cue.reason === 'crisis'
-                  ? 'Crise économique'
-                  : cinema.frame.cue.reason === 'alliance'
-                    ? 'Une alliance est née'
-                    : 'Votre aventure continue'
+              cinema.frame.cue.reason === 'quest_completed'
+                ? 'Palier Mystère accompli !'
+                : cinema.frame.cue.reason === 'capital_revealed'
+                  ? 'La Capitale est révélée !'
+                  : cinema.frame.cue.reason === 'auction_started'
+                    ? 'Préparez vos enveloppes !'
+                    : cinema.frame.cue.reason === 'auction_result'
+                      ? 'Le résultat des enchères'
+                      : cinema.frame.cue.reason === 'duel_result'
+                        ? 'Le duel est joué !'
+                        : cinema.frame.cue.reason === 'crisis'
+                          ? 'Crise économique'
+                          : cinema.frame.cue.reason === 'alliance'
+                            ? 'Une alliance est née'
+                            : 'Votre aventure continue'
             }
           >
             <p className="event-notice">{cinema.frame.cue.message}</p>
@@ -1352,6 +1425,9 @@ export default function App() {
                   </div>
                 )}
                 <p>
+                  {reservedCity(current, tile.id)
+                    ? 'Ville réservée au Marché flottant du tour de table 10. '
+                    : ''}
                   {current.festivals.includes(tile.id) ? '✦ Festival permanent : loyers ×2. ' : ''}
                   {property?.championships
                     ? `Mondial : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`

@@ -8,6 +8,8 @@ export function previewScenario(): LocalSave | null {
   if (
     !name ||
     ![
+      'auction',
+      'quest',
       'travel',
       'build',
       'card',
@@ -43,6 +45,21 @@ export function previewScenario(): LocalSave | null {
     ],
     seed: 'visual-review',
   });
+  if (name === 'auction') {
+    state.phase = 'auction';
+    state.auction = {
+      id: 'preview-auction',
+      tile: 5,
+      kind: 'tender',
+      resume: 'roll',
+      participants: state.players.map((p) => p.id),
+      stage: 'commit',
+      commitments: {},
+      bids: {},
+      passed: [],
+    };
+    return { version: 1, seed: 'visual-review', state };
+  }
   const player = state.players[0]!;
   player.position = name === 'travel' ? 24 : name === 'build' ? 1 : 4;
   state.phase = name === 'travel' ? 'travel' : name === 'build' ? 'property' : 'roll';

@@ -1,3 +1,4 @@
+import { auctionActor } from './adventure.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { randomInt } from './rng.js';
 import { shareGain } from './world-events.js';
@@ -20,6 +21,7 @@ export function duelParticipants(state: GameState): string[] {
   return state.duel?.targetId ? [state.duel.challengerId, state.duel.targetId] : [];
 }
 export function getDecisionPlayerId(state: GameState): string {
+  if (state.auction) return auctionActor(state) ?? state.players[state.currentPlayer]!.id;
   const d = state.duel;
   if (!d) return state.players[state.currentPlayer]!.id;
   if (d.stage === 'accept') return d.targetId!;
