@@ -5,7 +5,8 @@ def export_library():
     library.hide_viewport=False;library.hide_render=False
     bpy.context.window.scene=next(s for s in bpy.data.scenes if library.name in s.collection.children)
     for o in bpy.context.scene.objects:o.select_set(False)
-    for r in roots.values():
+    runtime_names=['board','tile','die','palm','chance','championship','tax','travel','start','plot']
+    for r in [roots[n] for n in runtime_names]:
         r.location=(0,0,0);r.select_set(True)
         for child in r.children:child.select_set(True)
     bpy.context.view_layer.update()
