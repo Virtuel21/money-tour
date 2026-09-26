@@ -84,7 +84,9 @@ export function persistLocal(save: LocalSave): boolean {
 }
 
 export const money = (value: number, compact = false): string =>
-  compact ? `${Math.round(value / 1000)} k` : `${new Intl.NumberFormat('fr-FR').format(value)} ¤`;
+  compact
+    ? `${Math.round(value / 1000)} k 💵`
+    : `${new Intl.NumberFormat('fr-FR').format(value)} 💵`;
 export const duration = (ms: number): string =>
   `${Math.floor(ms / 60000)
     .toString()

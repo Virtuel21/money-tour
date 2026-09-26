@@ -1,3 +1,6 @@
+import { MobileTiles } from './game/MobileTiles';
+import { useMobile } from './game/useMobile';
+import { MobilePocket } from './game/MobilePocket';
 import { AuctionView } from './game/AuctionView';
 import { AdventureBanner, PrivateQuest, PlayerInventory } from './game/AdventureHUD';
 import { ActionClock, GameClockContext } from './game/ActionClock';
@@ -205,12 +208,15 @@ for (const [id, ownerId, level] of [
   demo.properties[id] = { ownerId, level, championships: 0 };
 
 export default function App() {
+  const mobile = useMobile();
+  const [overview, setOverview] = useState(false);
+  const [inspectedOwner, setInspectedOwner] = useState<string | null>(null);
   const [save, setSave] = useState<LocalSave | null>(() => previewScenario() ?? loadLocal());
   const [screen, setScreen] = useState<'menu' | 'game'>(() =>
     previewScenario() ? 'game' : 'menu',
   );
   const [modal, setModal] = useState<
-    'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | null
+    'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | 'pocket' | null
   >(location.hash.includes('room=') ? 'online' : null);
   const [createSalon, setCreateSalon] = useState(false);
   const [online, setOnline] = useState<SessionView | null>(null);
@@ -242,6 +248,11 @@ export default function App() {
   const dispatchRef = useRef<(action: GameAction) => void>(() => {});
   const cinema = usePresentation(save?.state ?? demo, reduced, !!online);
   const rolling = cinema.busy;
+  const turnKey = (online?.state ?? save?.state)?.turn;
+  useEffect(() => {
+    setOverview(false);
+    setInspectedOwner(null);
+  }, [turnKey]);
   const display = cinema.frame.state;
   useEffect(() => {
     sound.current?.setScene(screen);
@@ -273,6 +284,8 @@ export default function App() {
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
     if (screen !== 'game' || (paused && action.type !== 'quit')) return;
+    if (action.type !== 'tick') setInspectedOwner(null);
+    if (['roll', 'attempt_escape', 'travel'].includes(action.type)) setOverview(false);
     if (onlineSession.current) {
       if (!('playerId' in action) || action.playerId !== online?.self) return;
       if (rolling && !['quit', 'set_control'].includes(action.type)) return;
@@ -411,10 +424,11 @@ export default function App() {
   const offerKey = [save?.seed, active.id, current.turn, active.position].join(':');
   const offer = eligibleOffer && dismissedOffer !== offerKey ? eligibleOffer : null;
   const chooseTile = (id: number) => {
+    setInspectedOwner(null);
     const action = options.find((a) => a.tile === id);
     if (action && !interactionDisabled) act(action);
     else if (current.phase === 'championship') return;
-    else if (eligibleOffer?.tile.id === id) {
+    else if (purchaseOffer(current, online?.self)?.tile.id === id) {
       setSelected(null);
       setDismissedOffer('');
     } else if (!rolling) setSelected(id);
@@ -727,6 +741,12 @@ export default function App() {
                   className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''}`}
                   style={{ '--player-color': colors[i] } as React.CSSProperties}
                 >
+                  <button
+                    className="player-profile"
+                    aria-label={`Voir les propriétés de ${p.name}`}
+                    aria-pressed={inspectedOwner === p.id}
+                    onClick={() => setInspectedOwner(inspectedOwner === p.id ? null : p.id)}
+                  />
                   <span className={`avatar portrait portrait-${i}`} aria-label={pawnNames[i]} />
                   <div>
                     <span className="player-name">
@@ -781,9 +801,15 @@ export default function App() {
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
                     state={display}
+                    mobile={mobile}
+                    overview={overview || paused || Boolean(inspectedOwner)}
+                    inspectedOwner={inspectedOwner}
+                    self={online?.self}
                     selecting={
                       !interactionDisabled &&
-                      ['championship', 'attack', 'travel'].includes(current.phase)
+                      ['championship', 'attack', 'travel', 'insurance', 'debt'].includes(
+                        current.phase,
+                      )
                     }
                     cue={cinema.frame.cue}
                     choices={interactionDisabled ? [] : options.map((a) => a.tile)}
@@ -793,23 +819,56 @@ export default function App() {
                 </Suspense>
               </div>
               <div className="roll-status" role="status">
-                {cinema.frame.cue.kind === 'dice'
-                  ? 'Les dés roulent…'
-                  : rolling
-                    ? cinema.frame.cue.kind === 'hop'
-                      ? 'En route…'
-                      : 'Votre aventure continue…'
-                    : display.dice.length
-                      ? 'Dés : ' +
-                        display.dice.join(' + ') +
-                        ' · ' +
-                        display.dice.reduce((a, b) => a + b, 0) +
-                        ' cases'
-                      : `Au tour de ${active.name}`}
+                {inspectedOwner
+                  ? `${current.players.find((p) => p.id === inspectedOwner)?.name} · ${Object.values(current.properties).filter((p) => p.ownerId === inspectedOwner).length} propriété(s)`
+                  : cinema.frame.cue.kind === 'dice'
+                    ? 'Les dés roulent…'
+                    : rolling
+                      ? cinema.frame.cue.kind === 'hop'
+                        ? 'En route…'
+                        : 'Votre aventure continue…'
+                      : mobile && options.length && !interactionDisabled
+                        ? current.phase === 'championship'
+                          ? 'Touchez une ville éclairée · Mondial 50 k'
+                          : 'Touchez une case éclairée pour la choisir'
+                        : display.dice.length
+                          ? 'Dés : ' +
+                            display.dice.join(' + ') +
+                            ' · ' +
+                            display.dice.reduce((a, b) => a + b, 0) +
+                            ' cases'
+                          : `Au tour de ${active.name}`}
+                {inspectedOwner && (
+                  <button className="clear-owner" onClick={() => setInspectedOwner(null)}>
+                    Tout afficher
+                  </button>
+                )}
               </div>
               <div className="board-controls">
-                <button onClick={() => setModal('tiles')}>Explorer les cases</button>
-                <button onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
+                <button onClick={() => setModal('tiles')}>
+                  {mobile && options.length && !interactionDisabled
+                    ? 'Choisir une case'
+                    : 'Explorer les cases'}
+                </button>
+                {mobile ? (
+                  <>
+                    <button
+                      aria-pressed={overview}
+                      onClick={() =>
+                        inspectedOwner ? setInspectedOwner(null) : setOverview(!overview)
+                      }
+                    >
+                      {inspectedOwner
+                        ? 'Tout afficher'
+                        : overview
+                          ? 'Suivre mon pion'
+                          : 'Vue globale'}
+                    </button>
+                    <button onClick={() => setModal('pocket')}>Mon carnet</button>
+                  </>
+                ) : (
+                  <button onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
+                )}
               </div>
             </section>
             <aside className="game-sidebar">
@@ -903,27 +962,32 @@ export default function App() {
                 <div className="actions">
                   {!active.bot &&
                     (!online || online.self === active.id) &&
-                    available.map((a, i) => (
-                      <button
-                        key={`${a.type}-${'tile' in a ? a.tile : ''}`}
-                        className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
-                        disabled={interactionDisabled}
-                        onClick={() => {
-                          if (!interactionDisabled) {
-                            if (a.type === 'buy' && eligibleOffer) setDismissedOffer('');
-                            else act(a);
-                          }
-                        }}
-                      >
-                        <span>{actionLabel(a)}</span>
-                        <ActionClock />
-                        {a.type === 'roll' && <span>⚄</span>}
-                      </button>
-                    ))}
+                    available
+                      .filter((a) => !mobile || a.type !== 'sell')
+                      .map((a, i) => (
+                        <button
+                          key={`${a.type}-${'tile' in a ? a.tile : ''}`}
+                          className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
+                          disabled={interactionDisabled}
+                          onClick={() => {
+                            if (!interactionDisabled) {
+                              if (a.type === 'buy' && eligibleOffer) setDismissedOffer('');
+                              else act(a);
+                            }
+                          }}
+                        >
+                          <span>{actionLabel(a)}</span>
+                          <ActionClock />
+                          {a.type === 'roll' && <span>⚄</span>}
+                        </button>
+                      ))}
                 </div>
                 {online && (
                   <>
-                    <p className="network-status" role="status">
+                    <p
+                      className={`network-status ${online.blocked ? 'connection-blocked' : ''}`}
+                      role="status"
+                    >
                       {online.status}
                     </p>
                     {online.state?.players.find((p) => p.id === online.self)?.bot &&
@@ -997,6 +1061,19 @@ export default function App() {
               ×
             </button>
           </div>
+        )}
+        {modal === 'pocket' && (
+          <Modal title="Mon carnet de voyage" onClose={() => setModal(null)}>
+            <MobilePocket
+              key={current.turn}
+              state={current}
+              self={online?.self}
+              onTile={(id) => {
+                setModal(null);
+                chooseTile(id);
+              }}
+            />
+          </Modal>
         )}
         {modal === 'rules' && (
           <Modal title="Votre première escale" onClose={() => setModal(null)}>
@@ -1136,21 +1213,32 @@ export default function App() {
             title={`Les ${current.config.board.length} escales`}
             onClose={() => setModal(null)}
           >
-            <div className="tile-list">
-              {current.config.board.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => {
-                    setSelected(t.id);
-                    setModal(null);
-                  }}
-                >
-                  <i style={{ background: t.color ?? '#e6b94a' }} />
-                  {t.name}
-                  <small>{t.price ? money(t.price, true) : 'Escale spéciale'}</small>
-                </button>
-              ))}
-            </div>
+            {mobile ? (
+              <MobileTiles
+                state={current}
+                choices={interactionDisabled ? [] : options.map((a) => a.tile)}
+                onTile={(id) => {
+                  setModal(null);
+                  chooseTile(id);
+                }}
+              />
+            ) : (
+              <div className="tile-list">
+                {current.config.board.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setSelected(t.id);
+                      setModal(null);
+                    }}
+                  >
+                    <i style={{ background: t.color ?? '#e6b94a' }} />
+                    {t.name}
+                    <small>{t.price ? money(t.price, true) : 'Escale spéciale'}</small>
+                  </button>
+                ))}
+              </div>
+            )}
           </Modal>
         )}
         {modal === 'leave' && (
@@ -1346,24 +1434,36 @@ export default function App() {
               </strong>
               .
             </p>
-            <div className="decision-actions">
-              {available
-                .filter((a) => a.type === 'sell')
-                .map((a) => (
-                  <button
-                    className="secondary"
-                    key={'tile' in a ? a.tile : a.type}
-                    onClick={() => act(a)}
-                  >
-                    {actionLabel(a)}
-                    <ActionClock />
-                  </button>
-                ))}
-            </div>
+            {mobile ? (
+              <MobileTiles
+                state={current}
+                choices={options.map((a) => a.tile)}
+                onTile={chooseTile}
+              />
+            ) : (
+              <div className="decision-actions">
+                {available
+                  .filter((a) => a.type === 'sell')
+                  .map((a) => (
+                    <button
+                      className="secondary"
+                      key={'tile' in a ? a.tile : a.type}
+                      onClick={() => act(a)}
+                    >
+                      {actionLabel(a)}
+                      <ActionClock />
+                    </button>
+                  ))}
+              </div>
+            )}
           </Modal>
         )}
         {tile && !offer && (
-          <Modal title={tile.name} inline={screen === 'game'} onClose={() => setSelected(null)}>
+          <Modal
+            title={tile.name}
+            inline={screen === 'game' && !mobile}
+            onClose={() => setSelected(null)}
+          >
             <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
               {tile.type === 'city' ? (
                 <span

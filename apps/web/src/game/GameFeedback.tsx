@@ -70,7 +70,7 @@ export function MoneyFlight({
               { '--delay': `${i * 65}ms`, '--scatter': `${((i % 3) - 1) * 24}px` } as CSSProperties
             }
           >
-            ¤
+            🪙
           </span>
         ))}
       <div className="money-toast" role="status">

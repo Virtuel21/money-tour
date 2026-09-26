@@ -18,6 +18,7 @@ export function previewScenario(): LocalSave | null {
       'rent',
       'attack',
       'purchase',
+      'resort-purchase',
       'mondial',
       'tax',
       'celebration',
@@ -99,6 +100,10 @@ export function previewScenario(): LocalSave | null {
     });
     state.properties[1]!.level = 3;
     state.properties[2]!.level = 4;
+    state.phase = 'property';
+  }
+  if (name === 'resort-purchase') {
+    player.position = 4;
     state.phase = 'property';
   }
   if (name === 'purchase') {
