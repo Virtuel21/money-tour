@@ -2,6 +2,8 @@
 
 ## Mise à jour Mondial, taxes et commandes centrales
 
+Ajout suivant : le loyer actuel des propriétés achetées est imprimé en gros et en gras sous leur nom, dans l’angle de la case. Le montant vient directement de getRent : constructions, festivals, Mondial et collection d’îles inclus, sans arrondir un loyer de 12 500 en 13 k. Aucun prix de loyer sur les propriétés libres. Scène showcase enrichie de quatre îles détenues pour contrôler le loyer de 500 k sur chaque côté.
+
 Contrôle dans le navigateur intégré, 1440 × 900 et 390 × 844. L’action principale est maintenant un grand bouton doré dans un bandeau bleu sous le plateau sur ordinateur ; le mobile garde ses commandes sous le plateau, avec une cible de 57 px. Aucun débordement horizontal sur la vue mobile testée. Les noms de villes sont ancrés au centre géométrique de leur case et conservent l’angle de leur côté du plateau. Les cases Chance violettes et Taxe corail utilisent le nouvel atlas original.
 
 Scénario d’achat : fermeture de l’offre Madrid, même joueur et compte 1 500 k ; clic sur Madrid, réouverture ; achat à 150 k, troisième propriété puis compte 1 350 k. Scénario Taxe : après les dés et les bonds, fenêtre humoristique indiquant 72 500 (50 k + 10 % des deux terrains possédés). Après « Aïe, j’ai compris », animation des pièces et compte affiché 1 428 k arrondi. Le bouton acquitte la lecture ; le prélèvement vient uniquement du moteur.
