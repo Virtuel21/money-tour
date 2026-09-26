@@ -1,3 +1,4 @@
+import { shuffleStreets } from './layout.js';
 import { config as defaultConfig } from './config.js';
 import { createRng, randomInt } from './rng.js';
 import type {
@@ -179,6 +180,7 @@ export function createGame(
   const durationMs = options.durationMs ?? config.durationMs;
   if (!Number.isSafeInteger(durationMs) || durationMs <= 0)
     throw new Error('Duration must be a positive integer.');
+  if (config.shuffleStreets) shuffleStreets(config, rng);
   const candidates = config.board.filter((tile) => tile.type === 'city').map((tile) => tile.id);
   const festivals: number[] = [];
   for (let index = 0; index < config.festivalCount; index += 1)

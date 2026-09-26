@@ -48,6 +48,15 @@ export class Soundscape {
   }
   private track: HTMLAudioElement | null = null;
   private scene: 'menu' | 'game' = 'menu';
+  private gameTrack = 0;
+  private gameTracks = ['game.mp3', 'game-2.mp3', 'game-3.mp3'];
+  private trackUrl() {
+    return (
+      import.meta.env.BASE_URL +
+      'audio/' +
+      (this.scene === 'menu' ? 'menu.mp3' : this.gameTracks[this.gameTrack])
+    );
+  }
   private unlocked = false;
   private samples = new Map<string, AudioBuffer>();
   private context: AudioContext | null = null;
@@ -104,15 +113,23 @@ export class Soundscape {
     this.stopEffects();
     if (this.track) {
       this.track.pause();
-      this.track.src = `${import.meta.env.BASE_URL}audio/${scene}.mp3`;
+      if (scene === 'game') this.gameTrack = Math.floor(Math.random() * this.gameTracks.length);
+      this.track.src = this.trackUrl();
+      this.track.loop = scene === 'menu';
     }
     this.syncMusic();
   }
   private syncMusic(): void {
     if (!this.unlocked) return;
     if (!this.track) {
-      this.track = new Audio(`${import.meta.env.BASE_URL}audio/${this.scene}.mp3`);
-      this.track.loop = true;
+      this.track = new Audio(this.trackUrl());
+      this.track.loop = this.scene === 'menu';
+      this.track.onended = () => {
+        if (this.scene !== 'game' || !this.track) return;
+        this.gameTrack = (this.gameTrack + 1) % this.gameTracks.length;
+        this.track.src = this.trackUrl();
+        this.syncMusic();
+      };
       this.track.preload = 'none';
     }
     this.track.volume = this.prefs.volume * 0.45;
@@ -194,6 +211,7 @@ export class Soundscape {
   close(): void {
     this.stopEffects();
     this.track?.pause();
+    if (this.track) this.track.onended = null;
     this.track = null;
     void this.context?.close();
     this.context = null;

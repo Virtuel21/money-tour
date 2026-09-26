@@ -1,3 +1,4 @@
+import { ActionClock } from './ActionClock';
 import { getLegalActions, type GameState } from '@money-tour/engine';
 import { money } from './local';
 
@@ -100,10 +101,14 @@ export function PurchaseDetails({
         </p>
       )}
       <button className="primary purchase-cta" disabled={!canBuy} onClick={onBuy}>
-        Acheter {tile.name} · {money(tile.price!, true)}
+        <span>
+          Acheter {tile.name} · {money(tile.price!, true)}
+        </span>
+        <ActionClock />
       </button>
       <button className="secondary purchase-pass" onClick={onPass}>
-        Non merci, je passe
+        <span>Non merci, je passe</span>
+        <ActionClock />
       </button>
     </div>
   );

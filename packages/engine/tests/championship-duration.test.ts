@@ -1,9 +1,12 @@
+import legacyConfig from '../src/legacy-v5.config.json';
+import type { GameConfig } from '../src/index';
 import { expect, it } from 'vitest';
 import { createGame, getRent, reduceGame, validateState } from '../src/index';
 import { sequence } from './helpers';
 
 const host = () => {
   const state = createGame({
+    config: legacyConfig as GameConfig,
     players: [
       { id: 'a', name: 'A' },
       { id: 'b', name: 'B' },
@@ -68,6 +71,7 @@ it('rejects missing, excessive or stray remaining-turn data', () => {
 it('announces tax before the money transfer, including an insolvent payer', () => {
   for (const cash of [1500000, 1000]) {
     const state = createGame({
+      config: legacyConfig as GameConfig,
       players: [
         { id: 'a', name: 'A' },
         { id: 'b', name: 'B' },

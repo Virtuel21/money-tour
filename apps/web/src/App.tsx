@@ -1,3 +1,4 @@
+import { ActionClock, GameClockContext } from './game/ActionClock';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -91,6 +92,9 @@ function Modal({
       }}
       className="modal"
     >
+      <div className="modal-countdown">
+        <ActionClock full />
+      </div>
       <div className="modal-heading">
         <h2>{title}</h2>
         {onClose && (
@@ -146,6 +150,7 @@ function eventText(event: GameEvent, state: GameState): string {
   }
 }
 const demo = createGame({
+  config: { ...config, shuffleStreets: false },
   players: [
     { id: 'p1', name: 'Vous' },
     { id: 'p2', name: 'Sacha' },
@@ -159,11 +164,11 @@ demo.players.forEach((player, i) => {
 });
 for (const [id, ownerId, level] of [
   [1, 'p1', 2],
-  [5, 'p1', 1],
+  [2, 'p1', 1],
   [8, 'p2', 3],
-  [13, 'p2', 1],
-  [16, 'p3', 2],
-  [23, 'p4', 4],
+  [9, 'p2', 1],
+  [14, 'p3', 2],
+  [21, 'p4', 4],
 ] as const)
   demo.properties[id] = { ownerId, level, championships: 0 };
 
@@ -258,7 +263,14 @@ export default function App() {
       setNotice('Le navigateur ne permet pas la sauvegarde locale. Gardez cet onglet ouvert.');
   }, [save]);
   useEffect(() => {
-    if (previewScenario() || online || screen !== 'game' || paused || rolling || current.winner)
+    if (
+      (previewScenario() && new URLSearchParams(location.search).get('clock') !== '1') ||
+      online ||
+      screen !== 'game' ||
+      paused ||
+      rolling ||
+      current.winner
+    )
       return;
     let last = performance.now();
     const timer = setInterval(() => {
@@ -377,841 +389,863 @@ export default function App() {
               : 'Deux dés. Une destination. Une nouvelle opportunité.';
 
   return (
-    <div
-      className="app"
-      onPointerDownCapture={() => void sound.current?.unlock()}
-      onKeyDownCapture={() => void sound.current?.unlock()}
+    <GameClockContext.Provider
+      value={{ state: screen === 'game' ? current : null, held: paused || rolling }}
     >
-      <header className="topbar">
-        <button className="brand-button" aria-label="Money Tour, accueil" onClick={goHome}>
-          <Logo />
-        </button>
-        <nav>
-          <button
-            onClick={() => {
-              setCreateSalon(false);
-              setModal('online');
-            }}
-          >
-            Rejoindre un salon
+      <div
+        className="app"
+        onPointerDownCapture={() => void sound.current?.unlock()}
+        onKeyDownCapture={() => void sound.current?.unlock()}
+      >
+        <header className="topbar">
+          <button className="brand-button" aria-label="Money Tour, accueil" onClick={goHome}>
+            <Logo />
           </button>
-          <button onClick={() => setModal('rules')}>
-            Comment jouer <span>↗</span>
-          </button>
-          <button
-            className="icon-button"
-            aria-label="Réglages"
-            onClick={() => setModal('settings')}
-          >
-            ⚙
-          </button>
-        </nav>
-      </header>
-      {screen === 'menu' ? (
-        <main className="landing">
-          <section className="intro">
-            <div className="eyebrow">
-              <i /> LE GRAND TOUR DES BONNES AFFAIRES
-            </div>
-            <h1>
-              Un archipel.
-              <br />
-              Mille <em>fortunes.</em>
-            </h1>
-            <p className="intro-copy">
-              Des villes à conquérir, des amis à défier.
-              <br />
-              Prenez les dés, votre prochaine aventure commence ici.
-            </p>
-            <div className="setup">
-              <div className="setup-heading">
-                <h2>Votre billet pour l’aventure</h2>
-                <span>01 / DÉPART</span>
+          <nav>
+            <button
+              onClick={() => {
+                setCreateSalon(false);
+                setModal('online');
+              }}
+            >
+              Rejoindre un salon
+            </button>
+            <button onClick={() => setModal('rules')}>
+              Comment jouer <span>↗</span>
+            </button>
+            <button
+              className="icon-button"
+              aria-label="Réglages"
+              onClick={() => setModal('settings')}
+            >
+              ⚙
+            </button>
+          </nav>
+        </header>
+        {screen === 'menu' ? (
+          <main className="landing">
+            <section className="intro">
+              <div className="eyebrow">
+                <i /> LE GRAND TOUR DES BONNES AFFAIRES
               </div>
-              <div className="mode-tabs" role="group" aria-label="Mode de jeu">
-                {(
-                  [
-                    ['solo', 'Solo & bots'],
-                    ['local', 'Entre amis'],
-                    ['teams', 'Équipes 2v2'],
-                  ] as const
-                ).map(([value, label]) => (
-                  <button
-                    key={value}
-                    aria-pressed={mode === value}
-                    onClick={() => chooseMode(value)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div className="setup-options">
-                <label>
-                  Voyageurs
-                  <select
-                    value={count}
-                    disabled={mode === 'teams'}
-                    onChange={(e) => setCount(Number(e.target.value))}
-                  >
-                    {[2, 3, 4].map((n) => (
-                      <option key={n} value={n}>
-                        {n} joueurs
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Durée
-                  <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-                    {[1, 5, 10, 20, 30].map((n) => (
-                      <option key={n} value={n}>
-                        {n} min{n === 20 ? ' · classique' : n === 1 ? ' · express' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              <div className="seat-list">
-                {Array.from({ length: count }, (_, i) => (
-                  <div className="seat" key={i}>
-                    <span className="seat-number" style={{ background: colors[i] }}>
-                      {i + 1}
-                    </span>
-                    <input
-                      aria-label={`Nom du joueur ${i + 1}`}
-                      maxLength={20}
-                      value={names[i]}
-                      onChange={(e) =>
-                        setNames((old) => old.map((n, j) => (j === i ? e.target.value : n)))
-                      }
-                    />
-                    <select
-                      aria-label={`Type du joueur ${i + 1}`}
-                      value={bots[i] ? 'bot' : 'human'}
-                      onChange={(e) =>
-                        setBots((old) =>
-                          old.map((b, j) => (j === i ? e.target.value === 'bot' : b)),
-                        )
-                      }
-                    >
-                      <option value="human">Humain</option>
-                      <option value="bot">Bot</option>
-                    </select>
-                    {mode === 'teams' && <span className="team-tag">{i % 2 ? 'B' : 'A'}</span>}
-                  </div>
-                ))}
-              </div>
-              <button
-                className="primary launch"
-                onClick={() => {
-                  setCreateSalon(true);
-                  setModal('online');
-                }}
-                disabled={!!online}
-              >
-                Embarquer <span>→</span>
-              </button>
-              <button className="secondary local-launch" onClick={start} disabled={!!online}>
-                Jouer sur cet appareil · solo / local
-              </button>
-              {save && (
-                <>
-                  <button
-                    className="resume"
-                    disabled={!!online}
-                    onClick={() => {
-                      cinema.reset(save.state);
-                      setScreen('game');
-                      setPaused(false);
-                    }}
-                  >
-                    ↻ {save.state.winner ? 'Revoir le dernier résultat' : 'Reprendre ma partie'}
-                  </button>
-                  <p className="saved-progress">
-                    Partie conservée · tour {save.state.turn} ·{' '}
-                    {duration(save.state.durationMs - save.state.elapsedMs)} restantes
-                  </p>
-                </>
-              )}
-              <p className="setup-note">
-                {mode === 'local'
-                  ? 'Passez l’écran au joueur suivant.'
-                  : 'Changez les sièges en bots pour observer une partie.'}{' '}
-                Sauvegarde sur cet appareil.
+              <h1>
+                Un archipel.
+                <br />
+                Mille <em>fortunes.</em>
+              </h1>
+              <p className="intro-copy">
+                Des villes à conquérir, des amis à défier.
+                <br />
+                Prenez les dés, votre prochaine aventure commence ici.
               </p>
-            </div>
-          </section>
-          <section className="hero-map" aria-label="Aperçu du plateau">
-            <span className="map-stamp">
-              28 ESCALES
-              <br />
-              <b>∞ POSSIBILITÉS</b>
-            </span>
-            <Suspense fallback={<div className="board-shell">Préparation de l’archipel…</div>}>
-              <Board state={demo} onTile={setSelected} reducedMotion demo />
-            </Suspense>
-            <div className="map-caption">
-              <span>✦ Créé pour les bons moments</span>
-              <span>2–4 voyageurs · dès maintenant</span>
-            </div>
-          </section>
-          <div className="features">
-            <div>
-              <b>01</b>
-              <span>
-                <strong>Tracez votre route</strong>Achetez des villes et des îles privées.
-              </span>
-            </div>
-            <div>
-              <b>02</b>
-              <span>
-                <strong>Voyez plus grand</strong>Maisons, hôtels et championnats.
-              </span>
-            </div>
-            <div>
-              <b>03</b>
-              <span>
-                <strong>Changez la donne</strong>Une collection complète peut tout gagner.
-              </span>
-            </div>
-          </div>
-        </main>
-      ) : (
-        <main className="game-layout">
-          {!paused && (
-            <TurnBanner
-              key={`${current.turn}-${active.id}`}
-              player={active}
-              self={online?.self}
-              local={!online}
-              color={colors[current.currentPlayer]!}
-            />
-          )}
-          {!paused && cinema.frame.cue.kind === 'money' && (
-            <MoneyFlight cue={cinema.frame.cue} state={current} reduced={reduced} />
-          )}
-          <div className="game-top">
-            <div>
-              <span className="eyebrow">
-                {current.mode === 'teams'
-                  ? 'EXPÉDITION EN ÉQUIPE'
-                  : online
-                    ? 'SALON EN LIGNE'
-                    : 'PARTIE LOCALE'}{' '}
-                · TOUR {current.turn}
-              </span>
-              <h1>Le tour de la fortune</h1>
-            </div>
-            <div className="game-tools">
-              <button
-                className="icon-button"
-                aria-label="Réglages de la partie"
-                onClick={() => setModal('settings')}
-              >
-                ⚙
-              </button>
-              <span className="clock" aria-label="Temps restant">
-                ◷ {duration(current.durationMs - current.elapsedMs)}
-              </span>
-              <button
-                className="subtle"
-                onClick={togglePause}
-                aria-pressed={paused}
-                title={
-                  online
-                    ? 'La pause est réservée au solo et au jeu local'
-                    : 'Suspendre le chrono et les bots'
-                }
-                disabled={!!current.winner || !!online}
-              >
-                {paused ? 'Reprendre' : 'Pause'}
-              </button>
-              <button
-                className="icon-button"
-                aria-label="Quitter la partie"
-                onClick={() => setModal('leave')}
-              >
-                ↪
-              </button>
-            </div>
-          </div>
-          <div className="players">
-            {current.players.map((p, i) => (
-              <article
-                key={p.id}
-                data-bank={p.id}
-                className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''}`}
-                style={{ '--player-color': colors[i] } as React.CSSProperties}
-              >
-                <span className={`avatar portrait portrait-${i}`} aria-label={pawnNames[i]} />
-                <div>
-                  <span className="player-name">
-                    {p.name === 'Vous' && online ? `Joueur ${i + 1}` : p.name}{' '}
-                    <small>
-                      {online?.self === p.id
-                        ? 'VOUS'
-                        : p.bot
-                          ? 'BOT'
-                          : current.mode === 'teams'
-                            ? `ÉQ. ${p.team === 0 ? 'A' : 'B'}`
-                            : pawnNames[i]}
-                    </small>
-                  </span>
-                  <strong>{p.eliminated ? 'Faillite' : money(p.cash, true)}</strong>
+              <div className="setup">
+                <div className="setup-heading">
+                  <h2>Votre billet pour l’aventure</h2>
+                  <span>01 / DÉPART</span>
                 </div>
-                <span className="property-count" title="Propriétés">
-                  ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}
-                </span>
-              </article>
-            ))}
-          </div>
-          <section className={`board-area ${zoom ? 'zoomed' : ''}`}>
-            <div className="board-viewport">
-              <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
-                <Board
-                  state={display}
-                  cue={cinema.frame.cue}
-                  choices={interactionDisabled ? [] : options.map((a) => a.tile)}
-                  onTile={chooseTile}
-                  reducedMotion={reduced || paused}
-                />
-              </Suspense>
-            </div>
-            <div className="roll-status" role="status">
-              {cinema.frame.cue.kind === 'dice'
-                ? 'Les dés roulent…'
-                : rolling
-                  ? cinema.frame.cue.kind === 'hop'
-                    ? 'En route…'
-                    : 'Votre aventure continue…'
-                  : display.dice.length
-                    ? 'Dés : ' +
-                      display.dice.join(' + ') +
-                      ' · ' +
-                      display.dice.reduce((a, b) => a + b, 0) +
-                      ' cases'
-                    : `Au tour de ${active.name}`}
-            </div>
-            <div className="board-controls">
-              <button onClick={() => setModal('tiles')}>Explorer les cases</button>
-              <button onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
-            </div>
-          </section>
-          <aside className="game-sidebar">
-            <div id="property-inspector" />
-            <section className="action-card">
-              <span className="eyebrow">
-                {paused
-                  ? 'PARTIE EN PAUSE'
-                  : active.bot
-                    ? 'UN BOT RÉFLÉCHIT…'
-                    : online && online.self !== active.id
-                      ? `TOUR DE ${active.name.toUpperCase()}`
-                      : `À VOUS, ${active.name.toUpperCase()}`}
-              </span>
-              <h2>
-                {paused
-                  ? 'Une petite escale ?'
-                  : active.bot || (online && online.self !== active.id)
-                    ? `${active.name} joue`
-                    : phaseText[current.phase]}
-              </h2>
-              <p>
-                {paused
-                  ? 'Le chrono et les bots vous attendent.'
-                  : active.bot || (online && online.self !== active.id)
-                    ? 'Suivez son déplacement. Vos commandes seront disponibles à votre tour.'
-                    : actionDescription}
-              </p>
-              <div className="decision-time">
-                <span
-                  style={{
-                    width: `${Math.max(0, 100 - (current.decisionElapsedMs / config.actionTimeoutMs) * 100)}%`,
-                  }}
-                />
-              </div>
-              {current.lastCard && !rolling && (
-                <div className="chance-card">
-                  <small>✦ LA BONNE ÉTOILE</small>
-                  <strong>
-                    {current.config.cards.find((c) => c.id === current.lastCard)?.title}
-                  </strong>
-                  <p>{current.config.cards.find((c) => c.id === current.lastCard)?.description}</p>
-                </div>
-              )}
-              {options.length > 0 && !interactionDisabled && (
-                <p className="board-choice-hint">
-                  Cliquez directement sur une case dorée du plateau pour{' '}
-                  {current.phase === 'travel' ? 'vous y déplacer' : 'y placer le championnat'}.
-                </p>
-              )}
-              <div className="actions">
-                {!active.bot &&
-                  (!online || online.self === active.id) &&
-                  available.map((a, i) => (
+                <div className="mode-tabs" role="group" aria-label="Mode de jeu">
+                  {(
+                    [
+                      ['solo', 'Solo & bots'],
+                      ['local', 'Entre amis'],
+                      ['teams', 'Équipes 2v2'],
+                    ] as const
+                  ).map(([value, label]) => (
                     <button
-                      key={`${a.type}-${'tile' in a ? a.tile : ''}`}
-                      className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
-                      disabled={interactionDisabled}
-                      onClick={() => {
-                        if (!interactionDisabled) {
-                          if (a.type === 'buy' && eligibleOffer) setDismissedOffer('');
-                          else act(a);
-                        }
-                      }}
+                      key={value}
+                      aria-pressed={mode === value}
+                      onClick={() => chooseMode(value)}
                     >
-                      {actionLabel(a)}
-                      {a.type === 'roll' && <span>⚄</span>}
+                      {label}
                     </button>
                   ))}
-              </div>
-              {online && (
-                <>
-                  <p className="network-status" role="status">
-                    {online.status}
-                  </p>
-                  {online.state?.players.find((p) => p.id === online.self)?.bot &&
-                    !current.winner && (
-                      <button
-                        className="secondary"
-                        onClick={() =>
-                          act({ type: 'set_control', playerId: online.self, bot: false })
+                </div>
+                <div className="setup-options">
+                  <label>
+                    Voyageurs
+                    <select
+                      value={count}
+                      disabled={mode === 'teams'}
+                      onChange={(e) => setCount(Number(e.target.value))}
+                    >
+                      {[2, 3, 4].map((n) => (
+                        <option key={n} value={n}>
+                          {n} joueurs
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Durée
+                    <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
+                      {[1, 5, 10, 20, 30].map((n) => (
+                        <option key={n} value={n}>
+                          {n} min{n === 20 ? ' · classique' : n === 1 ? ' · express' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="seat-list">
+                  {Array.from({ length: count }, (_, i) => (
+                    <div className="seat" key={i}>
+                      <span className="seat-number" style={{ background: colors[i] }}>
+                        {i + 1}
+                      </span>
+                      <input
+                        aria-label={`Nom du joueur ${i + 1}`}
+                        maxLength={20}
+                        value={names[i]}
+                        onChange={(e) =>
+                          setNames((old) => old.map((n, j) => (j === i ? e.target.value : n)))
+                        }
+                      />
+                      <select
+                        aria-label={`Type du joueur ${i + 1}`}
+                        value={bots[i] ? 'bot' : 'human'}
+                        onChange={(e) =>
+                          setBots((old) =>
+                            old.map((b, j) => (j === i ? e.target.value === 'bot' : b)),
+                          )
                         }
                       >
-                        Reprendre mon siège
-                      </button>
-                    )}
-                </>
-              )}
-              {active.bot && !current.winner && !online && (
-                <button
-                  className="text-button"
-                  onClick={() => act({ type: 'set_control', playerId: active.id, bot: false })}
-                >
-                  Prendre la main sur ce bot
-                </button>
-              )}
-              <small className="action-help">
-                Les villes avec fanions ont un festival : loyer ×2.
-              </small>
-            </section>
-            <section className="journal">
-              <h3>
-                Carnet de voyage <span>EN DIRECT</span>
-              </h3>
-              <ol aria-live="polite">
-                {(rolling ? [] : history.slice(0, 7)).map((entry, i) => (
-                  <li key={`${current.seq}-${i}`}>{entry}</li>
-                ))}
-              </ol>
-            </section>
-            <div className="tip">
-              <b>Le saviez-vous ?</b>
-              <p>Les quatre îles réunies rapportent 500 k de loyer à chaque visite adverse.</p>
-            </div>
-          </aside>
-        </main>
-      )}
-      <footer>
-        <span>© Money Tour · Un jeu original, de bonnes histoires.</span>
-        <div>
-          <button onClick={() => setModal('credits')}>Crédits</button>
-          <a href="https://github.com/Virtuel21/money-tour" target="_blank" rel="noreferrer">
-            Le projet ↗
-          </a>
-        </div>
-      </footer>
-      {notice && (
-        <div className="notice" role="status">
-          {notice}
-          <button aria-label="Fermer le message" onClick={() => setNotice('')}>
-            ×
-          </button>
-        </div>
-      )}
-      {modal === 'rules' && (
-        <Modal title="Votre première escale" onClose={() => setModal(null)}>
-          <div className="rules">
-            <p className="lead">Un tour de plateau, beaucoup de possibilités.</p>
-            <h3>1. Lancez, voyagez, investissez</h3>
-            <p>
-              Lancez deux dés. Achetez une ville libre, améliorez une de vos villes ou payez le
-              loyer à votre arrivée chez un adversaire. Un double permet de rejouer ; trois doubles
-              vous envoient sur l’île.
-            </p>
-            <h3>2. Construisez votre fortune</h3>
-            <p>
-              Possédez d’abord toutes les villes du groupe de couleur, puis construisez sur votre
-              ville. Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux maisons avant
-              le premier passage Départ. Chaque passage rapporte 300 k. Après le loyer, une ville
-              adverse sans hôtel peut être rachetée au double de sa valeur foncière.
-            </p>
-            <h3>3. Plusieurs façons de gagner</h3>
-            <p>
-              Complétez trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k,
-              sans terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
-              fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
-            </p>
-            <h3>4. Des escales qui changent tout</h3>
-            <p>
-              28 cases : 7 rues de deux villes, 4 îles privées, 4 cases cartes, 2 taxes et 4 coins
-              spéciaux. Les loyers sont payés automatiquement par le visiteur. Les cartes se
-              résolvent pour leur destinataire uniquement.
-            </p>
-            <p>
-              Trois festivals doublent les loyers. Le championnat augmente encore le multiplicateur.
-              L’île vous retient jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au
-              prochain tour. Si votre cash manque, vendez des biens à la banque à moitié de leur
-              valeur.
-            </p>
-            <h3>À quatre, jouez en équipe</h3>
-            <p>
-              Les sièges 1 et 3 affrontent les sièges 2 et 4. Pas de loyer entre alliés ; les
-              collections se partagent pour la victoire. Le cash reste individuel.
-            </p>
-          </div>
-          <button className="primary" onClick={() => setModal(null)}>
-            C’est parti !
-          </button>
-        </Modal>
-      )}
-      {modal === 'credits' && (
-        <Modal title="Le carnet des créateurs" onClose={() => setModal(null)}>
-          <pre className="credits-text">{credits}</pre>
-        </Modal>
-      )}
-      {modal === 'settings' && (
-        <Modal title="Votre confort de voyage" onClose={() => setModal(null)}>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={audioPrefs.effects}
-              onChange={(e) => setAudioPrefs((old) => ({ ...old, effects: e.target.checked }))}
-            />{' '}
-            Effets sonores
-          </label>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={audioPrefs.music}
-              onChange={(e) => setAudioPrefs((old) => ({ ...old, music: e.target.checked }))}
-            />{' '}
-            Musique de l’archipel
-          </label>
-          <label className="field">
-            Volume
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={audioPrefs.volume}
-              onChange={(e) => setAudioPrefs((old) => ({ ...old, volume: Number(e.target.value) }))}
-            />
-          </label>
-          <button
-            className="secondary"
-            onClick={() => {
-              void sound.current?.unlock().then(() => sound.current?.effect('victory'));
-            }}
-          >
-            Écouter un aperçu
-          </button>
-          <label className="toggle">
-            <input
-              type="checkbox"
-              checked={reduced}
-              onChange={(e) => setReduced(e.target.checked)}
-            />{' '}
-            Réduire les animations
-          </label>
-          <p>
-            La partie locale se sauvegarde dans ce navigateur. Revenir à l’accueil la met en pause.
-          </p>
-          <button className="primary" onClick={() => setModal(null)}>
-            Enregistrer
-          </button>
-        </Modal>
-      )}
-      {modal === 'tiles' && (
-        <Modal title="Les 28 escales" onClose={() => setModal(null)}>
-          <div className="tile-list">
-            {current.config.board.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setSelected(t.id);
-                  setModal(null);
-                }}
-              >
-                <i style={{ background: t.color ?? '#e6b94a' }} />
-                {t.name}
-                <small>{t.price ? money(t.price, true) : 'Escale spéciale'}</small>
-              </button>
-            ))}
-          </div>
-        </Modal>
-      )}
-      {modal === 'leave' && (
-        <Modal title="Faire une pause ou quitter ?" onClose={() => setModal(null)}>
-          <p>
-            {online
-              ? 'La partie en ligne continue lorsque vous revenez à l’accueil. Abandonner élimine votre joueur.'
-              : 'Revenir à l’accueil conserve votre partie. Abandonner élimine le joueur actif de cette partie.'}
-          </p>
-          <button
-            className="primary"
-            onClick={() => {
-              goHome();
-              setModal(null);
-            }}
-          >
-            Accueil et sauvegarde
-          </button>
-          <button
-            className="secondary"
-            onClick={() => {
-              act({ type: 'quit', playerId: online?.self ?? active.id });
-              setModal(null);
-            }}
-          >
-            {online ? 'Abandonner ma partie' : `Abandonner pour ${active.name}`}
-          </button>
-        </Modal>
-      )}
-      {offer && (
-        <Modal title={'Bienvenue à ' + offer.tile.name} onClose={() => setDismissedOffer(offerKey)}>
-          <PurchaseDetails
-            state={current}
-            onBuy={() => act({ type: 'buy', playerId: active.id })}
-            onPass={() => act({ type: 'finish', playerId: active.id })}
-          />
-        </Modal>
-      )}
-      {tile && !offer && (
-        <Modal title={tile.name} inline={screen === 'game'} onClose={() => setSelected(null)}>
-          <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
-            {tile.type === 'city' ? (
-              <span
-                className={`property-art ${property?.level === 4 ? 'hotel-art' : ''}`}
-                aria-hidden="true"
-              />
-            ) : (
-              <span>{tile.type === 'resort' ? '☀' : '✦'}</span>
-            )}
-            <p>
-              {property?.ownerId
-                ? `Propriété de ${current.players.find((p) => p.id === property.ownerId)?.name}`
-                : tile.price
-                  ? 'Cette escale attend son propriétaire.'
-                  : 'Une escale spéciale de votre voyage.'}
-            </p>
-          </div>
-          {tile.group && (
-            <p className="group-detail">
-              Groupe {tile.group.slice(1)} ·{' '}
-              {current.config.board
-                .filter((t) => t.group === tile.group)
-                .map((t) => t.name)
-                .join(' · ')}
-            </p>
-          )}
-          {tile.price ? (
-            <>
-              <div className="property-stats">
-                <div>
-                  <small>Terrain</small>
-                  <strong>{money(tile.price)}</strong>
-                </div>
-                <div>
-                  <small>Loyer actuel</small>
-                  <strong>
-                    {money(getRent(current, tile.id) || tile.rents?.[0] || config.resortRents[0]!)}
-                  </strong>
-                </div>
-              </div>
-              {tile.type === 'resort' && (
-                <p>Collection d’îles : 1 → 50 k · 2 → 100 k · 3 → 200 k · 4 → 500 k de loyer.</p>
-              )}
-              {tile.rents && (
-                <div className="rent-table">
-                  {tile.rents.map((rent, level) => (
-                    <div
-                      key={level}
-                      className={property?.ownerId && property.level === level ? 'selected' : ''}
-                    >
-                      <span>{['Terrain', 'Maison 1', 'Maison 2', 'Maison 3', 'Hôtel'][level]}</span>
-                      <b>{money(rent, true)}</b>
+                        <option value="human">Humain</option>
+                        <option value="bot">Bot</option>
+                      </select>
+                      {mode === 'teams' && <span className="team-tag">{i % 2 ? 'B' : 'A'}</span>}
                     </div>
                   ))}
                 </div>
+                <button
+                  className="primary launch"
+                  onClick={() => {
+                    setCreateSalon(true);
+                    setModal('online');
+                  }}
+                  disabled={!!online}
+                >
+                  Embarquer <span>→</span>
+                </button>
+                <button className="secondary local-launch" onClick={start} disabled={!!online}>
+                  Jouer sur cet appareil · solo / local
+                </button>
+                {save && (
+                  <>
+                    <button
+                      className="resume"
+                      disabled={!!online}
+                      onClick={() => {
+                        cinema.reset(save.state);
+                        setScreen('game');
+                        setPaused(false);
+                      }}
+                    >
+                      ↻ {save.state.winner ? 'Revoir le dernier résultat' : 'Reprendre ma partie'}
+                    </button>
+                    <p className="saved-progress">
+                      Partie conservée · tour {save.state.turn} ·{' '}
+                      {duration(save.state.durationMs - save.state.elapsedMs)} restantes
+                    </p>
+                  </>
+                )}
+                <p className="setup-note">
+                  {mode === 'local'
+                    ? 'Passez l’écran au joueur suivant.'
+                    : 'Changez les sièges en bots pour observer une partie.'}{' '}
+                  Sauvegarde sur cet appareil.
+                </p>
+              </div>
+            </section>
+            <section className="hero-map" aria-label="Aperçu du plateau">
+              <span className="map-stamp">
+                26 ESCALES
+                <br />
+                <b>∞ POSSIBILITÉS</b>
+              </span>
+              <Suspense fallback={<div className="board-shell">Préparation de l’archipel…</div>}>
+                <Board state={demo} onTile={setSelected} reducedMotion demo />
+              </Suspense>
+              <div className="map-caption">
+                <span>✦ Créé pour les bons moments</span>
+                <span>2–4 voyageurs · dès maintenant</span>
+              </div>
+            </section>
+            <div className="features">
+              <div>
+                <b>01</b>
+                <span>
+                  <strong>Tracez votre route</strong>Achetez des villes et des îles privées.
+                </span>
+              </div>
+              <div>
+                <b>02</b>
+                <span>
+                  <strong>Voyez plus grand</strong>Maisons, hôtels et championnats.
+                </span>
+              </div>
+              <div>
+                <b>03</b>
+                <span>
+                  <strong>Changez la donne</strong>Une collection complète peut tout gagner.
+                </span>
+              </div>
+            </div>
+          </main>
+        ) : (
+          <main className="game-layout">
+            {!paused && (
+              <TurnBanner
+                key={`${current.turn}-${active.id}`}
+                player={active}
+                self={online?.self}
+                local={!online}
+                color={colors[current.currentPlayer]!}
+              />
+            )}
+            {!paused && cinema.frame.cue.kind === 'money' && (
+              <MoneyFlight cue={cinema.frame.cue} state={current} reduced={reduced} />
+            )}
+            <div className="game-top">
+              <div>
+                <span className="eyebrow">
+                  {current.mode === 'teams'
+                    ? 'EXPÉDITION EN ÉQUIPE'
+                    : online
+                      ? 'SALON EN LIGNE'
+                      : 'PARTIE LOCALE'}{' '}
+                  · TOUR {current.turn}
+                </span>
+                <h1>Le tour de la fortune</h1>
+              </div>
+              <div className="game-tools">
+                <button
+                  className="icon-button"
+                  aria-label="Réglages de la partie"
+                  onClick={() => setModal('settings')}
+                >
+                  ⚙
+                </button>
+                <span className="clock" aria-label="Temps restant">
+                  ◷ {duration(current.durationMs - current.elapsedMs)}
+                </span>
+                <button
+                  className="subtle"
+                  onClick={togglePause}
+                  aria-pressed={paused}
+                  title={
+                    online
+                      ? 'La pause est réservée au solo et au jeu local'
+                      : 'Suspendre le chrono et les bots'
+                  }
+                  disabled={!!current.winner || !!online}
+                >
+                  {paused ? 'Reprendre' : 'Pause'}
+                </button>
+                <button
+                  className="icon-button"
+                  aria-label="Quitter la partie"
+                  onClick={() => setModal('leave')}
+                >
+                  ↪
+                </button>
+              </div>
+            </div>
+            <div className="players">
+              {current.players.map((p, i) => (
+                <article
+                  key={p.id}
+                  data-bank={p.id}
+                  className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''}`}
+                  style={{ '--player-color': colors[i] } as React.CSSProperties}
+                >
+                  <span className={`avatar portrait portrait-${i}`} aria-label={pawnNames[i]} />
+                  <div>
+                    <span className="player-name">
+                      {p.name === 'Vous' && online ? `Joueur ${i + 1}` : p.name}{' '}
+                      <small>
+                        {online?.self === p.id
+                          ? 'VOUS'
+                          : p.bot
+                            ? 'BOT'
+                            : current.mode === 'teams'
+                              ? `ÉQ. ${p.team === 0 ? 'A' : 'B'}`
+                              : pawnNames[i]}
+                      </small>
+                    </span>
+                    <strong>{p.eliminated ? 'Faillite' : money(p.cash, true)}</strong>
+                  </div>
+                  <span className="property-count" title="Propriétés">
+                    ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}
+                  </span>
+                </article>
+              ))}
+            </div>
+            <section className={`board-area ${zoom ? 'zoomed' : ''}`}>
+              <div className="board-viewport">
+                <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
+                  <Board
+                    state={display}
+                    cue={cinema.frame.cue}
+                    choices={interactionDisabled ? [] : options.map((a) => a.tile)}
+                    onTile={chooseTile}
+                    reducedMotion={reduced || paused}
+                  />
+                </Suspense>
+              </div>
+              <div className="roll-status" role="status">
+                {cinema.frame.cue.kind === 'dice'
+                  ? 'Les dés roulent…'
+                  : rolling
+                    ? cinema.frame.cue.kind === 'hop'
+                      ? 'En route…'
+                      : 'Votre aventure continue…'
+                    : display.dice.length
+                      ? 'Dés : ' +
+                        display.dice.join(' + ') +
+                        ' · ' +
+                        display.dice.reduce((a, b) => a + b, 0) +
+                        ' cases'
+                      : `Au tour de ${active.name}`}
+              </div>
+              <div className="board-controls">
+                <button onClick={() => setModal('tiles')}>Explorer les cases</button>
+                <button onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
+              </div>
+            </section>
+            <aside className="game-sidebar">
+              <div id="property-inspector" />
+              <section className="action-card">
+                <span className="eyebrow">
+                  {paused
+                    ? 'PARTIE EN PAUSE'
+                    : active.bot
+                      ? 'UN BOT RÉFLÉCHIT…'
+                      : online && online.self !== active.id
+                        ? `TOUR DE ${active.name.toUpperCase()}`
+                        : `À VOUS, ${active.name.toUpperCase()}`}
+                </span>
+                <h2>
+                  {paused
+                    ? 'Une petite escale ?'
+                    : active.bot || (online && online.self !== active.id)
+                      ? `${active.name} joue`
+                      : phaseText[current.phase]}
+                </h2>
+                <p>
+                  {paused
+                    ? 'Le chrono et les bots vous attendent.'
+                    : active.bot || (online && online.self !== active.id)
+                      ? 'Suivez son déplacement. Vos commandes seront disponibles à votre tour.'
+                      : actionDescription}
+                </p>
+                <div className="decision-time">
+                  <span
+                    style={{
+                      width: `${Math.max(0, 100 - (current.decisionElapsedMs / config.actionTimeoutMs) * 100)}%`,
+                    }}
+                  />
+                </div>
+                {current.lastCard && !rolling && (
+                  <div className="chance-card">
+                    <small>✦ LA BONNE ÉTOILE</small>
+                    <strong>
+                      {current.config.cards.find((c) => c.id === current.lastCard)?.title}
+                    </strong>
+                    <p>
+                      {current.config.cards.find((c) => c.id === current.lastCard)?.description}
+                    </p>
+                  </div>
+                )}
+                {options.length > 0 && !interactionDisabled && (
+                  <p className="board-choice-hint">
+                    Cliquez directement sur une case dorée du plateau pour{' '}
+                    {current.phase === 'travel' ? 'vous y déplacer' : 'y placer le championnat'}.
+                  </p>
+                )}
+                <div className="actions">
+                  {!active.bot &&
+                    (!online || online.self === active.id) &&
+                    available.map((a, i) => (
+                      <button
+                        key={`${a.type}-${'tile' in a ? a.tile : ''}`}
+                        className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
+                        disabled={interactionDisabled}
+                        onClick={() => {
+                          if (!interactionDisabled) {
+                            if (a.type === 'buy' && eligibleOffer) setDismissedOffer('');
+                            else act(a);
+                          }
+                        }}
+                      >
+                        <span>{actionLabel(a)}</span>
+                        <ActionClock />
+                        {a.type === 'roll' && <span>⚄</span>}
+                      </button>
+                    ))}
+                </div>
+                {online && (
+                  <>
+                    <p className="network-status" role="status">
+                      {online.status}
+                    </p>
+                    {online.state?.players.find((p) => p.id === online.self)?.bot &&
+                      !current.winner && (
+                        <button
+                          className="secondary"
+                          onClick={() =>
+                            act({ type: 'set_control', playerId: online.self, bot: false })
+                          }
+                        >
+                          Reprendre mon siège
+                        </button>
+                      )}
+                  </>
+                )}
+                {active.bot && !current.winner && !online && (
+                  <button
+                    className="text-button"
+                    onClick={() => act({ type: 'set_control', playerId: active.id, bot: false })}
+                  >
+                    Prendre la main sur ce bot
+                  </button>
+                )}
+                <small className="action-help">
+                  Les villes avec fanions ont un festival : loyer ×2.
+                </small>
+              </section>
+              <section className="journal">
+                <h3>
+                  Carnet de voyage <span>EN DIRECT</span>
+                </h3>
+                <ol aria-live="polite">
+                  {(rolling ? [] : history.slice(0, 7)).map((entry, i) => (
+                    <li key={`${current.seq}-${i}`}>{entry}</li>
+                  ))}
+                </ol>
+              </section>
+              <div className="tip">
+                <b>Le saviez-vous ?</b>
+                <p>Les quatre îles réunies rapportent 500 k de loyer à chaque visite adverse.</p>
+              </div>
+            </aside>
+          </main>
+        )}
+        <footer>
+          <span>© Money Tour · Un jeu original, de bonnes histoires.</span>
+          <div>
+            <button onClick={() => setModal('credits')}>Crédits</button>
+            <a href="https://github.com/Virtuel21/money-tour" target="_blank" rel="noreferrer">
+              Le projet ↗
+            </a>
+          </div>
+        </footer>
+        {notice && (
+          <div className="notice" role="status">
+            {notice}
+            <button aria-label="Fermer le message" onClick={() => setNotice('')}>
+              ×
+            </button>
+          </div>
+        )}
+        {modal === 'rules' && (
+          <Modal title="Votre première escale" onClose={() => setModal(null)}>
+            <div className="rules">
+              <p className="lead">Un tour de plateau, beaucoup de possibilités.</p>
+              <h3>1. Lancez, voyagez, investissez</h3>
+              <p>
+                Lancez deux dés. Achetez une ville libre, améliorez une de vos villes ou payez le
+                loyer à votre arrivée chez un adversaire. Un double permet de rejouer ; trois
+                doubles vous envoient sur l’île.
+              </p>
+              <h3>2. Construisez votre fortune</h3>
+              <p>
+                Possédez d’abord toutes les villes du groupe de couleur, puis construisez sur votre
+                ville. Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux maisons
+                avant le premier passage Départ. Chaque passage rapporte 300 k. Après le loyer, une
+                ville adverse sans hôtel peut être rachetée au double de sa valeur foncière.
+              </p>
+              <h3>3. Plusieurs façons de gagner</h3>
+              <p>
+                Complétez trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k,
+                sans terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À
+                la fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
+              </p>
+              <h3>4. Des escales qui changent tout</h3>
+              <p>
+                26 cases : 7 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe et 4 coins
+                spéciaux. Les loyers sont payés automatiquement par le visiteur. Les cartes se
+                résolvent pour leur destinataire uniquement.
+              </p>
+              <p>
+                Trois festivals doublent les loyers. Le championnat augmente encore le
+                multiplicateur. L’île vous retient jusqu’à trois tours. Le Tour du monde ouvre un
+                voyage payant au prochain tour. Si votre cash manque, vendez des biens à la banque à
+                moitié de leur valeur.
+              </p>
+              <h3>À quatre, jouez en équipe</h3>
+              <p>
+                Les sièges 1 et 3 affrontent les sièges 2 et 4. Pas de loyer entre alliés ; les
+                collections se partagent pour la victoire. Le cash reste individuel.
+              </p>
+            </div>
+            <button className="primary" onClick={() => setModal(null)}>
+              C’est parti !
+            </button>
+          </Modal>
+        )}
+        {modal === 'credits' && (
+          <Modal title="Le carnet des créateurs" onClose={() => setModal(null)}>
+            <pre className="credits-text">{credits}</pre>
+          </Modal>
+        )}
+        {modal === 'settings' && (
+          <Modal title="Votre confort de voyage" onClose={() => setModal(null)}>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={audioPrefs.effects}
+                onChange={(e) => setAudioPrefs((old) => ({ ...old, effects: e.target.checked }))}
+              />{' '}
+              Effets sonores
+            </label>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={audioPrefs.music}
+                onChange={(e) => setAudioPrefs((old) => ({ ...old, music: e.target.checked }))}
+              />{' '}
+              Musique de l’archipel
+            </label>
+            <label className="field">
+              Volume
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={audioPrefs.volume}
+                onChange={(e) =>
+                  setAudioPrefs((old) => ({ ...old, volume: Number(e.target.value) }))
+                }
+              />
+            </label>
+            <button
+              className="secondary"
+              onClick={() => {
+                void sound.current?.unlock().then(() => sound.current?.effect('victory'));
+              }}
+            >
+              Écouter un aperçu
+            </button>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={reduced}
+                onChange={(e) => setReduced(e.target.checked)}
+              />{' '}
+              Réduire les animations
+            </label>
+            <p>
+              La partie locale se sauvegarde dans ce navigateur. Revenir à l’accueil la met en
+              pause.
+            </p>
+            <button className="primary" onClick={() => setModal(null)}>
+              Enregistrer
+            </button>
+          </Modal>
+        )}
+        {modal === 'tiles' && (
+          <Modal
+            title={`Les ${current.config.board.length} escales`}
+            onClose={() => setModal(null)}
+          >
+            <div className="tile-list">
+              {current.config.board.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setSelected(t.id);
+                    setModal(null);
+                  }}
+                >
+                  <i style={{ background: t.color ?? '#e6b94a' }} />
+                  {t.name}
+                  <small>{t.price ? money(t.price, true) : 'Escale spéciale'}</small>
+                </button>
+              ))}
+            </div>
+          </Modal>
+        )}
+        {modal === 'leave' && (
+          <Modal title="Faire une pause ou quitter ?" onClose={() => setModal(null)}>
+            <p>
+              {online
+                ? 'La partie en ligne continue lorsque vous revenez à l’accueil. Abandonner élimine votre joueur.'
+                : 'Revenir à l’accueil conserve votre partie. Abandonner élimine le joueur actif de cette partie.'}
+            </p>
+            <button
+              className="primary"
+              onClick={() => {
+                goHome();
+                setModal(null);
+              }}
+            >
+              Accueil et sauvegarde
+            </button>
+            <button
+              className="secondary"
+              onClick={() => {
+                act({ type: 'quit', playerId: online?.self ?? active.id });
+                setModal(null);
+              }}
+            >
+              {online ? 'Abandonner ma partie' : `Abandonner pour ${active.name}`}
+            </button>
+          </Modal>
+        )}
+        {offer && (
+          <Modal
+            title={'Bienvenue à ' + offer.tile.name}
+            onClose={() => setDismissedOffer(offerKey)}
+          >
+            <PurchaseDetails
+              state={current}
+              onBuy={() => act({ type: 'buy', playerId: active.id })}
+              onPass={() => act({ type: 'finish', playerId: active.id })}
+            />
+          </Modal>
+        )}
+        {tile && !offer && (
+          <Modal title={tile.name} inline={screen === 'game'} onClose={() => setSelected(null)}>
+            <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
+              {tile.type === 'city' ? (
+                <span
+                  className={`property-art ${property?.level === 4 ? 'hotel-art' : ''}`}
+                  aria-hidden="true"
+                />
+              ) : (
+                <span>{tile.type === 'resort' ? '☀' : '✦'}</span>
               )}
               <p>
-                {current.festivals.includes(tile.id) ? '✦ Festival permanent : loyers ×2. ' : ''}
-                {property?.championships
-                  ? `Mondial : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`
-                  : ''}
+                {property?.ownerId
+                  ? `Propriété de ${current.players.find((p) => p.id === property.ownerId)?.name}`
+                  : tile.price
+                    ? 'Cette escale attend son propriétaire.'
+                    : 'Une escale spéciale de votre voyage.'}
               </p>
-            </>
-          ) : (
-            <p>
-              {tile.type === 'start'
-                ? 'Chaque passage en avant rapporte 300 k.'
-                : tile.type === 'island'
-                  ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200 k.'
-                  : tile.type === 'championship'
-                    ? 'Pour 50 k, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Mondial renouvelle la durée, sans cumuler le bonus.'
-                    : tile.type === 'travel'
-                      ? 'Au prochain tour, voyagez pour 50 k vers une case libre ou alliée.'
-                      : tile.type === 'tax'
-                        ? 'Vous payez 50 k plus 10 % de la valeur foncière de vos propriétés.'
-                        : 'Une des dix-huit cartes peut transformer votre voyage, y compris des attaques contre vos adversaires.'}
-            </p>
-          )}
-          <button className="secondary" onClick={() => setSelected(null)}>
-            Retour au plateau
-          </button>
-        </Modal>
-      )}
-      {screen === 'game' && cinema.frame.cue.kind === 'tax' && (
-        <Modal
-          title="Aïe… passage à la caisse !"
-          onClose={!online && !active.bot ? cinema.advance : undefined}
-        >
-          <div className="tax-reveal">
-            <div className="tax-illustration" aria-hidden="true" />
-            <small>LES ACTUALITÉS DÉCALÉES DE L’ARCHIPEL</small>
-            <h3>
-              {
-                [
-                  'Le président augmente encore le prix de l’essence. Même votre pion fait le plein !',
-                  'Oups, dissolution de l’assemblée ! L’inflation explose… votre portefeuille demande des vacances.',
-                  'Le président américain augmente les droits de douane. Vos souvenirs passent à la caisse !',
-                ][(current.turn + (cinema.frame.cue.tile ?? 0)) % 3]
-              }
-            </h3>
-            <p>
-              {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name} · somme à
-              régler
-            </p>
-            <strong className="tax-amount">{money(cinema.frame.cue.amount ?? 0)}</strong>
-            <p>
-              Taxe : {money(current.config.taxBase ?? 0, true)} + {current.config.taxRate * 100} %
-              de votre patrimoine immobilier.
-            </p>
-            {!online && !active.bot ? (
-              <button className="primary" onClick={cinema.advance}>
-                Aïe, j’ai compris !
-              </button>
-            ) : (
-              <p>Le trésor public s’en occupe… la partie reprend dans un instant.</p>
-            )}
-          </div>
-        </Modal>
-      )}
-      {screen === 'game' && cinema.frame.cue.kind === 'card' && (
-        <Modal
-          title={
-            'Carte de ' +
-            (current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ?? active.name)
-          }
-          onClose={!online && !active.bot ? cinema.advance : undefined}
-        >
-          <div className="chance-reveal">
-            <img
-              src={import.meta.env.BASE_URL + 'textures/chance.webp'}
-              alt="Une enveloppe pleine de surprises"
-            />
-            <h2>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.title}</h2>
-            <p>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description}</p>
-            {!online && !active.bot ? (
-              <button className="primary" onClick={cinema.advance}>
-                J’ai lu · continuer
-              </button>
-            ) : (
-              <p className="card-readonly">
-                Une surprise pour{' '}
-                {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ??
-                  active.name}{' '}
-                · la partie reprend dans un instant
+            </div>
+            {tile.group && (
+              <p className="group-detail">
+                Groupe {tile.group.slice(1)} ·{' '}
+                {current.config.board
+                  .filter((t) => t.group === tile.group)
+                  .map((t) => t.name)
+                  .join(' · ')}
               </p>
             )}
-          </div>
-        </Modal>
-      )}
-      <Suspense fallback={<div className="notice">Ouverture du salon…</div>}>
-        {(modal === 'online' || online) && (
-          <OnlineLobby
-            open={modal === 'online'}
-            autoCreate={createSalon}
-            defaults={{ name: names[0]!, count, teams: mode === 'teams', minutes }}
-            onClose={() => {
-              setModal(null);
-              if (online?.state) setScreen('game');
-            }}
-            onSession={(session) => {
-              onlineSession.current = session;
-            }}
-            onLeave={() => {
-              onlineSession.current = null;
-              setOnline(null);
-              onlineSeq.current = -1;
-              goHome();
-              setHistory([]);
-            }}
-            onView={(view) => {
-              setOnline(view);
-              if (view.state && view.state.seq !== onlineSeq.current) {
-                if (onlineSeq.current < 0) {
-                  cinema.reset(view.state);
-                  setScreen('game');
-                  setModal(null);
-                  setPaused(false);
-                }
-                onlineSeq.current = view.state.seq;
-                if (screen === 'game' || onlineSeq.current < 0)
-                  cinema.present(view.state, view.events);
-                else cinema.reset(view.state);
-                const messages = view.events
-                  .map((event) => eventText(event, view.state!))
-                  .filter(Boolean);
-                if (messages.length)
-                  setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
-              }
-            }}
-          />
-        )}
-      </Suspense>
-      {screen === 'game' && current.winner && !rolling && (
-        <Modal title="Une fortune à célébrer !" onClose={goHome}>
-          <div className="victory-art">
-            ✦<span>♜</span>✦
-          </div>
-          <p className="winner-name">
-            {current.winner.playerIds
-              .map((id) => current.players.find((p) => p.id === id)?.name)
-              .join(' & ')}
-          </p>
-          <p className="winner-reason">
-            {current.winner.reasons.map((r) => victoryText[r] ?? r).join(' · ')}
-          </p>
-          <div className="results">
-            {[...current.players]
-              .sort((a, b) => getNetWorth(current, b.id) - getNetWorth(current, a.id))
-              .map((p, i) => (
-                <div key={p.id}>
-                  <span>
-                    {i + 1}. {p.name}
-                  </span>
-                  <b>{money(getNetWorth(current, p.id))}</b>
+            {tile.price ? (
+              <>
+                <div className="property-stats">
+                  <div>
+                    <small>Terrain</small>
+                    <strong>{money(tile.price)}</strong>
+                  </div>
+                  <div>
+                    <small>Loyer actuel</small>
+                    <strong>
+                      {money(
+                        getRent(current, tile.id) || tile.rents?.[0] || config.resortRents[0]!,
+                      )}
+                    </strong>
+                  </div>
                 </div>
-              ))}
-          </div>
-          <button className="primary" onClick={goHome}>
-            Un nouveau voyage →
-          </button>
-        </Modal>
-      )}
-    </div>
+                {tile.type === 'resort' && (
+                  <p>Collection d’îles : 1 → 50 k · 2 → 100 k · 3 → 200 k · 4 → 500 k de loyer.</p>
+                )}
+                {tile.rents && (
+                  <div className="rent-table">
+                    {tile.rents.map((rent, level) => (
+                      <div
+                        key={level}
+                        className={property?.ownerId && property.level === level ? 'selected' : ''}
+                      >
+                        <span>
+                          {['Terrain', 'Maison 1', 'Maison 2', 'Maison 3', 'Hôtel'][level]}
+                        </span>
+                        <b>{money(rent, true)}</b>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <p>
+                  {current.festivals.includes(tile.id) ? '✦ Festival permanent : loyers ×2. ' : ''}
+                  {property?.championships
+                    ? `Mondial : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`
+                    : ''}
+                </p>
+              </>
+            ) : (
+              <p>
+                {tile.type === 'start'
+                  ? 'Chaque passage en avant rapporte 300 k.'
+                  : tile.type === 'island'
+                    ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200 k.'
+                    : tile.type === 'championship'
+                      ? 'Pour 50 k, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Mondial renouvelle la durée, sans cumuler le bonus.'
+                      : tile.type === 'travel'
+                        ? 'Au prochain tour, voyagez pour 50 k vers une case libre ou alliée.'
+                        : tile.type === 'tax'
+                          ? 'Vous payez 50 k plus 10 % de la valeur foncière de vos propriétés.'
+                          : 'Une des dix-huit cartes peut transformer votre voyage, y compris des attaques contre vos adversaires.'}
+              </p>
+            )}
+            <button className="secondary" onClick={() => setSelected(null)}>
+              Retour au plateau
+            </button>
+          </Modal>
+        )}
+        {screen === 'game' && cinema.frame.cue.kind === 'tax' && (
+          <Modal
+            title="Aïe… passage à la caisse !"
+            onClose={!online && !active.bot ? cinema.advance : undefined}
+          >
+            <div className="tax-reveal">
+              <div className="tax-illustration" aria-hidden="true" />
+              <small>LES ACTUALITÉS DÉCALÉES DE L’ARCHIPEL</small>
+              <h3>
+                {
+                  [
+                    'Le président augmente encore le prix de l’essence. Même votre pion fait le plein !',
+                    'Oups, dissolution de l’assemblée ! L’inflation explose… votre portefeuille demande des vacances.',
+                    'Le président américain augmente les droits de douane. Vos souvenirs passent à la caisse !',
+                  ][(current.turn + (cinema.frame.cue.tile ?? 0)) % 3]
+                }
+              </h3>
+              <p>
+                {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name} · somme à
+                régler
+              </p>
+              <strong className="tax-amount">{money(cinema.frame.cue.amount ?? 0)}</strong>
+              <p>
+                Taxe : {money(current.config.taxBase ?? 0, true)} + {current.config.taxRate * 100} %
+                de votre patrimoine immobilier.
+              </p>
+              {!online && !active.bot ? (
+                <button className="primary" onClick={cinema.advance}>
+                  Aïe, j’ai compris ! <ActionClock />
+                </button>
+              ) : (
+                <p>Le trésor public s’en occupe… la partie reprend dans un instant.</p>
+              )}
+            </div>
+          </Modal>
+        )}
+        {screen === 'game' && cinema.frame.cue.kind === 'card' && (
+          <Modal
+            title={
+              'Carte de ' +
+              (current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ?? active.name)
+            }
+            onClose={!online && !active.bot ? cinema.advance : undefined}
+          >
+            <div className="chance-reveal">
+              <img
+                src={import.meta.env.BASE_URL + 'textures/chance.webp'}
+                alt="Une enveloppe pleine de surprises"
+              />
+              <h2>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.title}</h2>
+              <p>
+                {current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description}
+              </p>
+              {!online && !active.bot ? (
+                <button className="primary" onClick={cinema.advance}>
+                  J’ai lu · continuer <ActionClock />
+                </button>
+              ) : (
+                <p className="card-readonly">
+                  Une surprise pour{' '}
+                  {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ??
+                    active.name}{' '}
+                  · la partie reprend dans un instant
+                </p>
+              )}
+            </div>
+          </Modal>
+        )}
+        <Suspense fallback={<div className="notice">Ouverture du salon…</div>}>
+          {(modal === 'online' || online) && (
+            <OnlineLobby
+              open={modal === 'online'}
+              autoCreate={createSalon}
+              defaults={{ name: names[0]!, count, teams: mode === 'teams', minutes }}
+              onClose={() => {
+                setModal(null);
+                if (online?.state) setScreen('game');
+              }}
+              onSession={(session) => {
+                onlineSession.current = session;
+              }}
+              onLeave={() => {
+                onlineSession.current = null;
+                setOnline(null);
+                onlineSeq.current = -1;
+                goHome();
+                setHistory([]);
+              }}
+              onView={(view) => {
+                setOnline(view);
+                if (view.state && view.state.seq !== onlineSeq.current) {
+                  if (onlineSeq.current < 0) {
+                    cinema.reset(view.state);
+                    setScreen('game');
+                    setModal(null);
+                    setPaused(false);
+                  }
+                  onlineSeq.current = view.state.seq;
+                  if (screen === 'game' || onlineSeq.current < 0)
+                    cinema.present(view.state, view.events);
+                  else cinema.reset(view.state);
+                  const messages = view.events
+                    .map((event) => eventText(event, view.state!))
+                    .filter(Boolean);
+                  if (messages.length)
+                    setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
+                }
+              }}
+            />
+          )}
+        </Suspense>
+        {screen === 'game' && current.winner && !rolling && (
+          <Modal title="Une fortune à célébrer !" onClose={goHome}>
+            <div className="victory-art">
+              ✦<span>♜</span>✦
+            </div>
+            <p className="winner-name">
+              {current.winner.playerIds
+                .map((id) => current.players.find((p) => p.id === id)?.name)
+                .join(' & ')}
+            </p>
+            <p className="winner-reason">
+              {current.winner.reasons.map((r) => victoryText[r] ?? r).join(' · ')}
+            </p>
+            <div className="results">
+              {[...current.players]
+                .sort((a, b) => getNetWorth(current, b.id) - getNetWorth(current, a.id))
+                .map((p, i) => (
+                  <div key={p.id}>
+                    <span>
+                      {i + 1}. {p.name}
+                    </span>
+                    <b>{money(getNetWorth(current, p.id))}</b>
+                  </div>
+                ))}
+            </div>
+            <button className="primary" onClick={goHome}>
+              Un nouveau voyage →
+            </button>
+          </Modal>
+        )}
+      </div>
+    </GameClockContext.Provider>
   );
 }

@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 5,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -37,7 +37,7 @@
       "name": "Lisbonne",
       "type": "city",
       "group": "g1",
-      "color": "#f23763",
+      "color": "#E73B51",
       "line": 0,
       "price": 100000,
       "rents": [10000, 20000, 40000, 70000, 120000],
@@ -48,7 +48,7 @@
       "name": "Porto",
       "type": "city",
       "group": "g1",
-      "color": "#f23763",
+      "color": "#E73B51",
       "line": 0,
       "price": 125000,
       "rents": [12500, 25000, 50000, 87500, 150000],
@@ -62,30 +62,30 @@
     },
     {
       "id": 4,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 5,
       "name": "Madrid",
       "type": "city",
       "group": "g2",
-      "color": "#ff781f",
+      "color": "#FF9200",
       "line": 0,
       "price": 150000,
       "rents": [15000, 30000, 60000, 105000, 180000],
       "buildCosts": [0, 75000, 75000, 75000, 75000]
     },
     {
-      "id": 5,
+      "id": 6,
       "name": "Barcelone",
       "type": "city",
       "group": "g2",
-      "color": "#ff781f",
+      "color": "#FF9200",
       "line": 0,
       "price": 175000,
       "rents": [17500, 35000, 70000, 122500, 210000],
       "buildCosts": [0, 87500, 87500, 87500, 87500]
-    },
-    {
-      "id": 6,
-      "name": "La bonne étoile",
-      "type": "chance"
     },
     {
       "id": 7,
@@ -97,7 +97,7 @@
       "name": "Rome",
       "type": "city",
       "group": "g3",
-      "color": "#8cbc27",
+      "color": "#EAC000",
       "line": 1,
       "price": 200000,
       "rents": [20000, 40000, 80000, 140000, 240000],
@@ -108,7 +108,7 @@
       "name": "Venise",
       "type": "city",
       "group": "g3",
-      "color": "#8cbc27",
+      "color": "#EAC000",
       "line": 1,
       "price": 225000,
       "rents": [22500, 45000, 90000, 157500, 270000],
@@ -122,128 +122,138 @@
     },
     {
       "id": 11,
+      "name": "Impôt foncier",
+      "type": "tax"
+    },
+    {
+      "id": 12,
       "name": "Paris",
       "type": "city",
       "group": "g4",
-      "color": "#04a887",
+      "color": "#259B3D",
       "line": 1,
       "price": 250000,
       "rents": [25000, 50000, 100000, 175000, 300000],
       "buildCosts": [0, 125000, 125000, 125000, 125000]
     },
     {
-      "id": 12,
+      "id": 13,
       "name": "Lyon",
       "type": "city",
       "group": "g4",
-      "color": "#04a887",
+      "color": "#259B3D",
       "line": 1,
       "price": 275000,
       "rents": [27500, 55000, 110000, 192500, 330000],
       "buildCosts": [0, 137500, 137500, 137500, 137500]
     },
     {
-      "id": 13,
+      "id": 14,
       "name": "Championnat du monde",
       "type": "championship"
     },
     {
-      "id": 14,
+      "id": 15,
       "name": "Berlin",
       "type": "city",
       "group": "g5",
-      "color": "#00bde8",
+      "color": "#00ADBD",
       "line": 2,
       "price": 300000,
       "rents": [30000, 60000, 120000, 210000, 360000],
       "buildCosts": [0, 150000, 150000, 150000, 150000]
     },
     {
-      "id": 15,
+      "id": 16,
       "name": "Munich",
       "type": "city",
       "group": "g5",
-      "color": "#00bde8",
+      "color": "#00ADBD",
       "line": 2,
       "price": 325000,
       "rents": [32500, 65000, 130000, 227500, 390000],
       "buildCosts": [0, 162500, 162500, 162500, 162500]
     },
     {
-      "id": 16,
+      "id": 17,
       "name": "Maurice",
       "type": "resort",
       "price": 200000
     },
     {
-      "id": 17,
+      "id": 18,
+      "name": "La bonne étoile",
+      "type": "chance"
+    },
+    {
+      "id": 19,
       "name": "Londres",
       "type": "city",
       "group": "g6",
-      "color": "#3567e5",
+      "color": "#1769DD",
       "line": 2,
       "price": 350000,
       "rents": [35000, 70000, 140000, 245000, 420000],
       "buildCosts": [0, 175000, 175000, 175000, 175000]
     },
     {
-      "id": 18,
+      "id": 20,
       "name": "Édimbourg",
       "type": "city",
       "group": "g6",
-      "color": "#3567e5",
+      "color": "#1769DD",
       "line": 2,
       "price": 375000,
       "rents": [37500, 75000, 150000, 262500, 450000],
       "buildCosts": [0, 187500, 187500, 187500, 187500]
     },
     {
-      "id": 19,
-      "name": "La bonne étoile",
-      "type": "chance"
-    },
-    {
-      "id": 20,
+      "id": 21,
       "name": "Tour du monde",
       "type": "travel"
     },
     {
-      "id": 21,
+      "id": 22,
       "name": "Tokyo",
       "type": "city",
       "group": "g7",
-      "color": "#ae4edd",
+      "color": "#783BDC",
       "line": 3,
       "price": 400000,
       "rents": [40000, 80000, 160000, 280000, 480000],
       "buildCosts": [0, 200000, 200000, 200000, 200000]
     },
     {
-      "id": 22,
+      "id": 23,
       "name": "Kyoto",
       "type": "city",
       "group": "g7",
-      "color": "#ae4edd",
+      "color": "#783BDC",
       "line": 3,
       "price": 425000,
       "rents": [42500, 85000, 170000, 297500, 510000],
       "buildCosts": [0, 212500, 212500, 212500, 212500]
     },
     {
-      "id": 23,
+      "id": 24,
       "name": "Santorin",
       "type": "resort",
       "price": 200000
     },
     {
-      "id": 24,
+      "id": 25,
       "name": "La bonne étoile",
       "type": "chance"
     },
     {
-      "id": 25,
+      "id": 26,
       "name": "Taxe de séjour",
       "type": "tax"
+    },
+    {
+      "id": 27,
+      "name": "La bonne étoile",
+      "type": "chance"
     }
   ],
   "cards": [
@@ -326,7 +336,7 @@
       "title": "Invitation sportive",
       "description": "Avancez jusqu'au Championnat du monde.",
       "effect": "move_to",
-      "target": 13,
+      "target": 14,
       "salary": true
     },
     {
@@ -334,7 +344,7 @@
       "title": "Billet d'horizon",
       "description": "Avancez jusqu'au Tour du monde.",
       "effect": "move_to",
-      "target": 20,
+      "target": 21,
       "salary": true
     },
     {
@@ -387,6 +397,5 @@
   },
   "lineVictory": false,
   "resortVictory": false,
-  "championshipDuration": 4,
-  "shuffleStreets": true
+  "championshipDuration": 4
 }

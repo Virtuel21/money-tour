@@ -11,3 +11,6 @@ export {
   validateState,
 } from './engine.js';
 export type * from './types.js';
+
+export { sameRules } from './layout.js';
+export { default as legacyConfig } from './legacy-v5.config.json';

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { chooseBotAction } from '@money-tour/engine';
+import { chooseBotAction, legacyConfig, type GameConfig } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
 
 describe('local session', () => {
@@ -14,6 +14,7 @@ describe('local session', () => {
   afterEach(() => vi.unstubAllGlobals());
   it('migrates the previous edition without losing money, positions or the random stream', () => {
     const old = newLocal({
+      config: legacyConfig as GameConfig,
       players: [
         { id: 'a', name: 'A' },
         { id: 'b', name: 'B' },
@@ -67,7 +68,7 @@ describe('local session', () => {
       '{"version":2}',
       '{"version":1,"seed":"x","state":{}}',
     ]) {
-      data.set('money-tour.local.v5', value);
+      data.set('money-tour.local.v6', value);
       expect(loadLocal()).toBeNull();
     }
   });

@@ -19,3 +19,7 @@ Le GLB va dans apps/web/public/models/money-tour.glb, les sources .blend et stat
 Le contrôle scripts/check-models.mjs vérifie les dix racines, leurs bornes finies, les dimensions du plateau et des tuiles et l’absence de scènes étrangères. Il ne prétend pas mesurer l’absence de recouvrement des illustrations. Les cas de quatre voyageurs, trois maisons et hôtel se vérifient visuellement avec les scènes de développement crowded, build, travel et card. Ces scènes sont exclues du build public.
 
 L’identifiant de contenu du GLB dans son URL évite de réutiliser un ancien export en cache. Les atlas restent travelers-v3.webp et architecture-v3.webp. Le budget public reste inférieur à 12 Mo ; l’édition Îles utilise environ 8,25 Mo, dont la majorité correspond aux deux musiques de Julien. Aucun nouvel atlas généré n’est nécessaire pour cette reprise des maillages.
+
+## Réserves bancaires — édition 26 cases
+
+Le fichier wealth.glb ajoute deux racines : banknote_bundle et gold_bar. Les unités sont exportées en Y vertical puis disposées en deux rangées de piles horizontales. Le nombre de liasses et de lingots suit le solde ; la hauteur évolue progressivement pendant les transferts. Le script source est scripts/wealth_models.py. Les deux morceaux supplémentaires portent le budget public à 16 Mo ; les assets occupent 14,27 Mo, chargés selon les besoins.
