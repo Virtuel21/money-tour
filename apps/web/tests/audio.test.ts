@@ -1,0 +1,89 @@
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { Soundscape } from '../src/audio/synth';
+
+const sources: { stop: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn> }[] = [];
+beforeEach(() => {
+  sources.length = 0;
+  vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => {} });
+  vi.stubGlobal('fetch', () => new Promise(() => {}));
+  vi.stubGlobal(
+    'Audio',
+    class {
+      loop = false;
+      preload = '';
+      volume = 0;
+      src = '';
+      pause() {}
+      play() {
+        return Promise.resolve();
+      }
+    },
+  );
+  vi.stubGlobal(
+    'AudioContext',
+    class {
+      state = 'running';
+      currentTime = 1;
+      destination = {};
+      close() {
+        return Promise.resolve();
+      }
+      createGain() {
+        return {
+          connect() {},
+          disconnect() {},
+          gain: {
+            setTargetAtTime() {},
+            setValueAtTime() {},
+            linearRampToValueAtTime() {},
+            exponentialRampToValueAtTime() {},
+          },
+        };
+      }
+      createOscillator() {
+        const source = {
+          type: '',
+          frequency: { setValueAtTime() {} },
+          connect() {},
+          start() {},
+          stop: vi.fn(),
+          disconnect: vi.fn(),
+          onended: () => {},
+        };
+        sources.push(source);
+        return source;
+      }
+    },
+  );
+});
+afterEach(() => vi.unstubAllGlobals());
+
+it('cancels every scheduled game note immediately when returning home', async () => {
+  const sound = new Soundscape();
+  await sound.unlock();
+  sound.setScene('game');
+  sound.effect('dice');
+  expect(sources).toHaveLength(5);
+  sources.forEach((source) => source.stop.mockClear());
+  sound.setScene('menu');
+  sources.forEach((source) => {
+    expect(source.stop).toHaveBeenCalledOnce();
+    expect(source.disconnect).toHaveBeenCalledOnce();
+  });
+  sound.stopEffects();
+  sources.forEach((source) => expect(source.stop).toHaveBeenCalledOnce());
+  sound.close();
+});
+
+it('stops effects on pause and permits new effects after resuming', async () => {
+  const sound = new Soundscape();
+  await sound.unlock();
+  sound.effect('move');
+  sound.stopEffects();
+  sound.effect('purchase');
+  expect(sources).toHaveLength(5);
+  expect(sources[0]!.disconnect).toHaveBeenCalledOnce();
+  expect(sources[4]!.disconnect).not.toHaveBeenCalled();
+  sound.close();
+  expect(sources[4]!.disconnect).toHaveBeenCalledOnce();
+});

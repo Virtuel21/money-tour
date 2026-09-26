@@ -34,6 +34,18 @@ const melodies: Record<string, number[]> = {
 };
 /** User-supplied music, CC0 interface samples and original synthesis for remaining effects. */
 export class Soundscape {
+  private sources = new Set<AudioScheduledSourceNode>();
+  stopEffects(): void {
+    for (const source of this.sources) {
+      try {
+        source.stop();
+      } catch {
+        /* Already ended. */
+      }
+      source.disconnect();
+    }
+    this.sources.clear();
+  }
   private track: HTMLAudioElement | null = null;
   private scene: 'menu' | 'game' = 'menu';
   private unlocked = false;
@@ -89,6 +101,7 @@ export class Soundscape {
   setScene(scene: 'menu' | 'game'): void {
     if (scene === this.scene) return;
     this.scene = scene;
+    this.stopEffects();
     if (this.track) {
       this.track.pause();
       this.track.src = `${import.meta.env.BASE_URL}audio/${scene}.mp3`;
@@ -126,8 +139,10 @@ export class Soundscape {
     oscillator.connect(envelope);
     envelope.connect(bus);
     oscillator.start(start);
+    this.sources.add(oscillator);
     oscillator.stop(start + length + 0.03);
     oscillator.onended = () => {
+      this.sources.delete(oscillator);
       oscillator.disconnect();
       envelope.disconnect();
     };
@@ -140,7 +155,11 @@ export class Soundscape {
       source.buffer = sample;
       source.connect(this.master);
       source.start();
-      source.onended = () => source.disconnect();
+      this.sources.add(source);
+      source.onended = () => {
+        this.sources.delete(source);
+        source.disconnect();
+      };
       return;
     }
     const notes = melodies[type];
@@ -164,6 +183,7 @@ export class Soundscape {
     if (type) this.effect(type);
   }
   close(): void {
+    this.stopEffects();
     this.track?.pause();
     this.track = null;
     void this.context?.close();

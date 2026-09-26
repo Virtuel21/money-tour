@@ -40,6 +40,26 @@ describe('local session', () => {
       expect(loadLocal()).toBeNull();
     }
   });
+  it('migrates only the old cosmetic city palette and preserves the random stream', () => {
+    const save = newLocal({
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    const legacy = structuredClone(save);
+    legacy.state.config.version = 2;
+    legacy.state.config.board[1]!.name = 'Clairport';
+    legacy.state.config.board[1]!.color = '#85C7A5';
+    persistLocal(legacy);
+    expect(loadLocal()).toEqual(save);
+    const action = { type: 'roll', playerId: 'a' } as const;
+    expect(applyLocal(loadLocal()!, action).result.error).toBeUndefined();
+    expect(applyLocal(loadLocal()!, action)).toEqual(applyLocal(save, action));
+    legacy.state.config.initialCash += 1;
+    persistLocal(legacy);
+    expect(loadLocal()).toBeNull();
+  });
   it('handles denied storage without crashing', () => {
     vi.stubGlobal('localStorage', {
       getItem: () => {

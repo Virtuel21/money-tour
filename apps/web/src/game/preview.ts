@@ -5,7 +5,7 @@ import type { LocalSave } from './local';
 export function previewScenario(): LocalSave | null {
   if (!import.meta.env.DEV) return null;
   const name = new URLSearchParams(location.search).get('scenario');
-  if (!name || !['travel', 'build', 'card', 'crowded'].includes(name)) return null;
+  if (!name || !['travel', 'build', 'card', 'crowded', 'showcase'].includes(name)) return null;
   const state = createGame({
     players: [
       { id: 'p1', name: 'Léa' },
@@ -24,6 +24,25 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'showcase') {
+    state.players.forEach((p, i) => {
+      p.position = [4, 12, 20, 28][i]!;
+    });
+    [
+      [1, 2],
+      [9, 10],
+      [17, 18],
+      [25, 26],
+    ].forEach((pair, i) => {
+      pair.forEach((id, j) => {
+        state.properties[id] = {
+          ownerId: state.players[i]!.id,
+          level: j ? 4 : (i % 3) + 1,
+          championships: 0,
+        };
+      });
+    });
+  }
   if (name === 'crowded') {
     state.players.forEach((p) => {
       p.position = 1;

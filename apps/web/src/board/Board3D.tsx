@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { GameState } from '@money-tour/engine';
+import { getRent, type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
 import { colors, money } from '../game/local';
 
@@ -51,9 +51,10 @@ function compact(source: THREE.Object3D) {
 }
 function caption(text: string, width: number, height: number, color = '#163d4b') {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 192;
+  canvas.width = 1024;
+  canvas.height = 384;
   const context = canvas.getContext('2d')!;
+  context.scale(2, 2);
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   context.fillStyle = color;
@@ -91,7 +92,7 @@ export default function Board({
   const update = useRef<() => void>(() => {});
   const [error, setError] = useState(''),
     [ready, setReady] = useState(false);
-  const [anchors, setAnchors] = useState<{ x: number; y: number }[]>([]);
+  const [anchors, setAnchors] = useState<{ x: number; y: number; points: string }[]>([]);
   useEffect(() => {
     const element = host.current!;
     let disposed = false;
@@ -119,13 +120,13 @@ export default function Board({
         element.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         scene.add(resources);
-        const camera = new THREE.OrthographicCamera(-9, 9, 7.65, -7.65, 0.1, 80);
-        camera.position.set(0, 18, 18);
+        const camera = new THREE.OrthographicCamera(-12.2, 12.2, 8.3, -8.3, 0.1, 80);
+        camera.position.set(18, 22, 18);
         camera.lookAt(0, 0, 0);
         camera.updateMatrixWorld();
         const resize = () => {
           const size = element.clientWidth;
-          renderer!.setSize(size, size * 0.85, false);
+          renderer!.setSize(size, size * (8.3 / 12.2), false);
         };
         observer = new ResizeObserver(resize);
         observer.observe(element);
@@ -144,7 +145,7 @@ export default function Board({
         scene.add(light);
         const ground = new THREE.Mesh(
           new THREE.PlaneGeometry(200, 200),
-          new THREE.MeshStandardMaterial({ color: 0xf6ebd5, roughness: 1 }),
+          new THREE.MeshStandardMaterial({ color: 0xd5edf2, roughness: 1 }),
         );
         ground.rotation.x = -Math.PI / 2;
         ground.position.y = -0.5;
@@ -162,14 +163,7 @@ export default function Board({
         for (const name of [
           'board',
           'tile',
-          'house',
-          'hotel',
-          'pawn_0',
-          'pawn_1',
-          'pawn_2',
-          'pawn_3',
           'die',
-          'islands',
           'palm',
           'chance',
           'championship',
@@ -183,11 +177,71 @@ export default function Board({
           templates.set(name, compact(original));
         }
         const clone = (name: string) => templates.get(name)!.clone(true);
-        resources.add(clone('board'), clone('islands'));
+        resources.add(clone('board'));
+        const textureLoader = new THREE.TextureLoader();
+        const [travelers, architecture] = await Promise.all([
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/architecture-v3.webp'),
+        ]);
+        if (disposed) {
+          travelers.dispose();
+          architecture.dispose();
+          disposePending(gltf.scene);
+          return;
+        }
+        const atlasSprite = (
+          atlas: THREE.Texture,
+          index: number,
+          columns: number,
+          width: number,
+          height: number,
+        ) => {
+          const map = atlas.clone();
+          map.colorSpace = THREE.SRGBColorSpace;
+          map.repeat.set(1 / columns, 0.5);
+          map.offset.set((index % columns) / columns, index < columns ? 0.5 : 0);
+          map.anisotropy = renderer!.capabilities.getMaxAnisotropy();
+          const sprite = new THREE.Sprite(
+            new THREE.SpriteMaterial({
+              map,
+              alphaTest: 0.7,
+              transparent: true,
+              depthWrite: false,
+              toneMapped: false,
+            }),
+          );
+          sprite.center.set(0.5, 0.05);
+          sprite.scale.set(width, height, 1);
+          return sprite;
+        };
+        // Detailed pre-rendered dioramas: a fixed three-quarter camera lets the art retain its fine detail.
+        [
+          [-3.8, 1.5],
+          [1.5, -3.8],
+          [-0.2, 4.9],
+          [4.9, -0.2],
+        ].forEach(([x, z], i) => {
+          const island = atlasSprite(architecture, i + 2, 3, 4.6, 4.6);
+          island.position.set(x!, 0.08, z!);
+          resources.add(island);
+        });
+        const sea = new THREE.Mesh(
+          new THREE.BoxGeometry(12.6, 0.06, 12.6),
+          new THREE.MeshStandardMaterial({ color: '#31cbd0', roughness: 0.4 }),
+        );
+        sea.position.y = 0.02;
+        resources.add(sea);
+        for (let i = 0; i < 34; i++) {
+          const ripple = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.22 + (i % 3) * 0.13, 0.045),
+            new THREE.MeshBasicMaterial({ color: '#b1f5ed', transparent: true, opacity: 0.55 }),
+          );
+          ripple.rotation.x = -Math.PI / 2;
+          ripple.rotation.z = -Math.PI / 4;
+          ripple.position.set(((i * 37) % 113) / 10 - 5.5, 0.06, ((i * 29) % 109) / 10 - 5.4);
+          resources.add(ripple);
+        }
         // The water and its graphic ripples are authored in Blender with the islands.
-        const title = caption('MONEY TOUR', 3.5, 0.67);
-        title.position.set(0, 0.22, -0.3);
-        resources.add(title);
         const buildings: THREE.Group[] = [],
           trims: THREE.Mesh[] = [],
           borders: THREE.Mesh[] = [],
@@ -198,13 +252,13 @@ export default function Board({
           cell.position.set(p.x, 0, p.z);
           resources.add(cell);
           const strip = new THREE.Mesh(
-            new THREE.BoxGeometry(1.48, 0.035, 0.13),
+            new THREE.BoxGeometry(1.55, 0.045, 0.24),
             new THREE.MeshStandardMaterial({ color: tile.color ?? '#f9c34f' }),
           );
           strip.position.set(0, 0.27, -0.72);
           cell.add(strip);
           const trim = new THREE.Mesh(
-            new THREE.BoxGeometry(1.75, 0.15, 0.16),
+            new THREE.BoxGeometry(1.78, 0.25, 0.23),
             new THREE.MeshStandardMaterial({ color: 0xffffff }),
           );
           trim.position.set(p.x, 0.18, p.z);
@@ -242,13 +296,6 @@ export default function Board({
             icon.position.set(p.x, 0.27, p.z - 0.3);
             resources.add(icon);
           }
-          const text = caption(
-            `${tile.name.toUpperCase()}${tile.price ? '\n' + money(tile.price, true) : ''}`,
-            1.57,
-            0.32,
-          );
-          text.position.set(p.x, 0.3, p.z + 0.73);
-          resources.add(text);
           const flag = caption('⚑ ×2', 0.38, 0.22, '#b55b20');
           flag.position.set(p.x - 0.58, 0.7, p.z - 0.5);
           resources.add(flag);
@@ -257,12 +304,30 @@ export default function Board({
         setAnchors(
           live.current.state.config.board.map((t) => {
             const p = tilePoint(t.id);
-            const v = new THREE.Vector3(p.x, 0.22, p.z).project(camera);
-            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50 };
+            const v = new THREE.Vector3(p.x + 0.48, 0.3, p.z + 0.48).project(camera);
+            const points = [
+              [-0.87, -0.87],
+              [-0.87, 0.87],
+              [0.87, 0.87],
+              [0.87, -0.87],
+            ]
+              .map(([x, z]) => {
+                const corner = new THREE.Vector3(p.x + x!, 0.27, p.z + z!).project(camera);
+                return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
+              })
+              .join(' ');
+            return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points };
           }),
         );
         const pawns = live.current.state.players.map((_, i) => {
-          const pawn = clone('pawn_' + i);
+          const pawn = new THREE.Group();
+          const character = atlasSprite(travelers, i, 2, 2.55, 2.55);
+          pawn.add(character);
+          const base = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.5, 0.53, 0.12, 32),
+            new THREE.MeshStandardMaterial({ color: colors[i] }),
+          );
+          pawn.add(base);
           pawn.scale.setScalar(0.7);
           resources.add(pawn);
           const badge = caption(String(i + 1), 0.3, 0.3, colors[i]);
@@ -305,10 +370,12 @@ export default function Board({
             }
             const n = level === 4 ? 1 : level;
             for (let j = 0; j < n; j++) {
-              const building = clone(level === 4 ? 'hotel' : 'house');
+              const building = new THREE.Group();
+              building.add(atlasSprite(architecture, level === 4 ? 1 : 0, 3, 1.85, 1.85));
               building.scale.setScalar(level === 4 ? 0.61 : n === 1 ? 0.66 : 0.44);
-              building.position.x = (j - (n - 1) / 2) * 0.55;
-              building.position.z = level === 4 ? -0.1 : 0;
+              building.position.x = (j - (n - 1) / 2) * 0.46;
+              building.position.z = -(j - (n - 1) / 2) * 0.46;
+              if (level === 4) building.position.z -= 0.1;
               group.add(building);
             }
           });
@@ -351,7 +418,7 @@ export default function Board({
               slot = peers.findIndex((p) => p.id === player.id);
             // Separate the rear building plot from the front walking lane.
             // Four co-located travelers use two rows, never a stack of models.
-            pawn.scale.setScalar(peers.length > 2 ? 0.46 : peers.length === 2 ? 0.58 : 0.7);
+            pawn.scale.setScalar(game.currentPlayer === i ? 0.95 : peers.length > 1 ? 0.7 : 0.88);
             const offsetX =
               peers.length > 2
                 ? slot % 2
@@ -364,6 +431,13 @@ export default function Board({
                   : 0;
             const offsetZ = peers.length > 2 ? (slot < 2 ? 0.15 : 0.6) : 0.35;
             pawn.position.set(point.x + offsetX, height, point.z + offsetZ);
+            // A crowded cell remains readable: the active traveler stays solid; companions become translucent.
+            pawn.traverse((node) => {
+              if (node instanceof THREE.Sprite && node.material.map) {
+                node.material.opacity = peers.length > 1 && game.currentPlayer !== i ? 0.48 : 1;
+                node.material.alphaTest = 0.7 * node.material.opacity;
+              }
+            });
           });
           dice.forEach((die, i) => {
             const value = (activeCue?.kind === 'dice' ? activeCue.dice?.[i] : game.dice[i]) ?? 1;
@@ -378,16 +452,23 @@ export default function Board({
               );
               die.quaternion.copy(final).multiply(spin);
               die.position.set(
-                (i ? 0.52 : -0.52) + Math.sin(progress * 8 + i) * 0.5 * (1 - progress),
+                1.7 + (i ? 0.58 : -0.58) + Math.sin(progress * 8 + i) * 0.5 * (1 - progress),
                 0.52 + Math.abs(Math.sin(progress * Math.PI * 3)) * 1.25 * (1 - progress),
-                0.8 + Math.sin(progress * 5) * 0.4,
+                1.7 + (i ? -0.58 : 0.58) + Math.sin(progress * 5) * 0.4,
               );
             } else {
               die.quaternion.copy(final);
-              die.position.set(i ? 0.52 : -0.52, 0.52, 1.0);
+              die.position.set(1.7 + (i ? 0.58 : -0.58), 0.52, 1.7 + (i ? -0.58 : 0.58));
             }
           });
           buildings.forEach((g, i) => {
+            const occupied = game.players.some((p) => !p.eliminated && p.position === i);
+            g.traverse((node) => {
+              if (node instanceof THREE.Sprite) {
+                node.material.opacity = occupied ? 0.4 : 1;
+                node.material.alphaTest = 0.7 * node.material.opacity;
+              }
+            });
             g.scale.y =
               activeCue?.kind === 'build' && activeCue.tile === i && !reduced
                 ? Math.max(
@@ -421,6 +502,8 @@ export default function Board({
           gather(resources);
           gather(gltf.scene);
           templates.forEach(gather);
+          textures.add(travelers);
+          textures.add(architecture);
           detached.forEach(gather);
           geometries.forEach((g) => g.dispose());
           materials.forEach((m) => m.dispose());
@@ -450,19 +533,77 @@ export default function Board({
     <div className={`board-shell board-3d ${demo ? 'board-demo' : ''}`}>
       <div ref={host} className="board-canvas" aria-label="Plateau 3D Money Tour" />
       {!ready && !error && <div className="board-loading">Construction de votre archipel…</div>}
-      {ready && !demo && (
-        <div className="board-hit-targets">
-          {state.config.board.map((t, i) => (
-            <button
-              key={t.id}
-              aria-label={`${choices.includes(t.id) ? 'Choisir' : 'Voir'} ${t.name}`}
-              title={`${t.name}${state.properties[t.id]?.ownerId ? ' · ' + state.players.find((p) => p.id === state.properties[t.id]?.ownerId)?.name : ''}`}
-              style={{ left: `${anchors[i]?.x}%`, top: `${anchors[i]?.y}%` }}
-              className={choices.includes(t.id) ? 'selectable' : ''}
-              onClick={() => onTile(t.id)}
-            />
-          ))}
-        </div>
+      {ready && (
+        <>
+          {!demo && (
+            <svg
+              className="board-hit-polygons"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-label="Cases du plateau"
+            >
+              {state.config.board.map((t, i) => (
+                <polygon
+                  key={t.id}
+                  points={anchors[i]?.points}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={(choices.includes(t.id) ? 'Choisir ' : 'Voir ') + t.name}
+                  className={choices.includes(t.id) ? 'selectable' : ''}
+                  onClick={() => onTile(t.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onTile(t.id);
+                    }
+                  }}
+                />
+              ))}
+            </svg>
+          )}
+          <div className="board-labels" aria-hidden="true">
+            <div className="board-watermark">
+              MONEY
+              <br />
+              TOUR <span>✦</span>
+            </div>
+            {state.config.board.map((t, i) => {
+              const owner = state.players.findIndex(
+                (p) => p.id === state.properties[t.id]?.ownerId,
+              );
+              const short =
+                t.type === 'chance'
+                  ? 'CHANCE'
+                  : t.type === 'championship'
+                    ? 'MONDIAL'
+                    : t.type === 'travel'
+                      ? 'VOYAGE'
+                      : t.type === 'tax'
+                        ? 'TAXE'
+                        : t.name;
+              return (
+                <div
+                  key={t.id}
+                  className="city-label"
+                  style={
+                    {
+                      left: anchors[i]?.x + '%',
+                      top: anchors[i]?.y + '%',
+                      '--street-color': t.color ?? '#e4b63c',
+                    } as React.CSSProperties
+                  }
+                >
+                  <b>{short}</b>
+                  <span>
+                    {t.price ? money(owner >= 0 ? getRent(state, t.id) : t.price, true) : '✦'}{' '}
+                    {t.group && <i>G{t.group.slice(1)}</i>}
+                  </span>
+                  {owner >= 0 && <em style={{ background: colors[owner] }}>J{owner + 1}</em>}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
       {error && (
         <div className="board-fallback">

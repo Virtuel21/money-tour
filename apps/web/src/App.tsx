@@ -176,15 +176,30 @@ export default function App() {
     sound.current?.setScene(screen);
   }, [screen]);
   useEffect(() => {
+    if (screen !== 'game' || paused) return;
     const kind = cinema.frame.cue.kind;
     if (cinema.frame.cue.sound) sound.current?.effect(cinema.frame.cue.sound);
     else if (kind !== 'settle') sound.current?.effect(kind === 'hop' ? 'move' : kind);
-  }, [cinema.frame]);
+  }, [cinema.frame, screen, paused]);
+  const goHome = () => {
+    sound.current?.stopEffects();
+    cinema.reset(online?.state ?? save?.state ?? demo);
+    setScreen('menu');
+    setPaused(true);
+    setSelected(null);
+  };
+  const togglePause = () => {
+    if (online) return;
+    sound.current?.stopEffects();
+    cinema.reset(save?.state ?? demo);
+    setPaused((value) => !value);
+  };
   const current =
     screen === 'game' ? (rolling ? display : (online?.state ?? save?.state ?? demo)) : demo;
   const active = current.players[current.currentPlayer]!;
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
+    if (screen !== 'game' || (paused && action.type !== 'quit')) return;
     if (onlineSession.current) {
       void onlineSession.current.intent(action);
       return;
@@ -314,14 +329,7 @@ export default function App() {
       onKeyDownCapture={() => void sound.current?.unlock()}
     >
       <header className="topbar">
-        <button
-          className="brand-button"
-          aria-label="Money Tour, accueil"
-          onClick={() => {
-            setScreen('menu');
-            setPaused(false);
-          }}
-        >
+        <button className="brand-button" aria-label="Money Tour, accueil" onClick={goHome}>
           <Logo />
         </button>
         <nav>
@@ -453,17 +461,23 @@ export default function App() {
                 Jouer sur cet appareil · solo / local
               </button>
               {save && (
-                <button
-                  className="resume"
-                  disabled={!!online}
-                  onClick={() => {
-                    cinema.reset(save.state);
-                    setScreen('game');
-                    setPaused(false);
-                  }}
-                >
-                  ↻ {save.state.winner ? 'Revoir le dernier résultat' : 'Reprendre ma partie'}
-                </button>
+                <>
+                  <button
+                    className="resume"
+                    disabled={!!online}
+                    onClick={() => {
+                      cinema.reset(save.state);
+                      setScreen('game');
+                      setPaused(false);
+                    }}
+                  >
+                    ↻ {save.state.winner ? 'Revoir le dernier résultat' : 'Reprendre ma partie'}
+                  </button>
+                  <p className="saved-progress">
+                    Partie conservée · tour {save.state.turn} ·{' '}
+                    {duration(save.state.durationMs - save.state.elapsedMs)} restantes
+                  </p>
+                </>
               )}
               <p className="setup-note">
                 {mode === 'local'
@@ -523,12 +537,25 @@ export default function App() {
               <h1>Le tour de la fortune</h1>
             </div>
             <div className="game-tools">
+              <button
+                className="icon-button"
+                aria-label="Réglages de la partie"
+                onClick={() => setModal('settings')}
+              >
+                ⚙
+              </button>
               <span className="clock" aria-label="Temps restant">
                 ◷ {duration(current.durationMs - current.elapsedMs)}
               </span>
               <button
                 className="subtle"
-                onClick={() => setPaused(!paused)}
+                onClick={togglePause}
+                aria-pressed={paused}
+                title={
+                  online
+                    ? 'La pause est réservée au solo et au jeu local'
+                    : 'Suspendre le chrono et les bots'
+                }
                 disabled={!!current.winner || !!online}
               >
                 {paused ? 'Reprendre' : 'Pause'}
@@ -549,9 +576,7 @@ export default function App() {
                 className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''}`}
                 style={{ '--player-color': colors[i] } as React.CSSProperties}
               >
-                <span className="avatar">
-                  {i === 0 ? '◭' : i === 1 ? '◉' : i === 2 ? '♜' : '◇'}
-                </span>
+                <span className={`avatar portrait portrait-${i}`} aria-label={pawnNames[i]} />
                 <div>
                   <span className="player-name">
                     {p.name}{' '}
@@ -847,7 +872,7 @@ export default function App() {
           <button
             className="primary"
             onClick={() => {
-              setScreen('menu');
+              goHome();
               setModal(null);
             }}
           >
@@ -867,7 +892,14 @@ export default function App() {
       {tile && (
         <Modal title={tile.name} onClose={() => setSelected(null)}>
           <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
-            <span>{tile.type === 'city' ? '⌂' : tile.type === 'resort' ? '☀' : '✦'}</span>
+            {tile.type === 'city' ? (
+              <span
+                className={`property-art ${property?.level === 4 ? 'hotel-art' : ''}`}
+                aria-hidden="true"
+              />
+            ) : (
+              <span>{tile.type === 'resort' ? '☀' : '✦'}</span>
+            )}
             <p>
               {property?.ownerId
                 ? `Propriété de ${current.players.find((p) => p.id === property.ownerId)?.name}`
@@ -876,6 +908,15 @@ export default function App() {
                   : 'Une escale spéciale de votre voyage.'}
             </p>
           </div>
+          {tile.group && (
+            <p className="group-detail">
+              Groupe {tile.group.slice(1)} ·{' '}
+              {current.config.board
+                .filter((t) => t.group === tile.group)
+                .map((t) => t.name)
+                .join(' · ')}
+            </p>
+          )}
           {tile.price ? (
             <>
               <div className="property-stats">
@@ -962,7 +1003,7 @@ export default function App() {
               onlineSession.current = null;
               setOnline(null);
               onlineSeq.current = -1;
-              setScreen('menu');
+              goHome();
               setHistory([]);
             }}
             onView={(view) => {
@@ -975,7 +1016,9 @@ export default function App() {
                   setPaused(false);
                 }
                 onlineSeq.current = view.state.seq;
-                cinema.present(view.state, view.events);
+                if (screen === 'game' || onlineSeq.current < 0)
+                  cinema.present(view.state, view.events);
+                else cinema.reset(view.state);
                 const messages = view.events
                   .map((event) => eventText(event, view.state!))
                   .filter(Boolean);
@@ -987,7 +1030,7 @@ export default function App() {
         )}
       </Suspense>
       {screen === 'game' && current.winner && !rolling && (
-        <Modal title="Une fortune à célébrer !" onClose={() => setScreen('menu')}>
+        <Modal title="Une fortune à célébrer !" onClose={goHome}>
           <div className="victory-art">
             ✦<span>♜</span>✦
           </div>
@@ -1011,7 +1054,7 @@ export default function App() {
                 </div>
               ))}
           </div>
-          <button className="primary" onClick={() => setScreen('menu')}>
+          <button className="primary" onClick={goHome}>
             Un nouveau voyage →
           </button>
         </Modal>

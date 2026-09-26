@@ -32,6 +32,17 @@ export function loadLocal(): LocalSave | null {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const save = JSON.parse(raw) as LocalSave;
+    // Cosmetic atlas update: retain positions, money, ownership and the RNG sequence.
+    if (save.state?.config?.version === 2) {
+      const gameplay = (value: typeof config) =>
+        JSON.stringify({
+          ...value,
+          version: 0,
+          board: value.board.map(({ name: _name, color: _color, ...tile }) => tile),
+        });
+      if (gameplay(save.state.config) === gameplay(config))
+        save.state.config = structuredClone(config);
+    }
     if (
       save.version !== 1 ||
       typeof save.seed !== 'string' ||
@@ -61,7 +72,7 @@ export const duration = (ms: number): string =>
     .padStart(2, '0')}:${Math.floor((ms % 60000) / 1000)
     .toString()
     .padStart(2, '0')}`;
-export const colors = ['#2ba8bc', '#e8725b', '#d8a62e', '#70a88b'];
+export const colors = ['#087BEE', '#EE2758', '#7E36DF', '#F3B600'];
 export const pawnNames = ['Léa', 'Max', 'Lou', 'Noa'];
 export const phaseText: Record<GameState['phase'], string> = {
   roll: 'À vous de lancer !',
