@@ -44,6 +44,8 @@ export function previewScenario(): LocalSave | null {
     state.properties[1] = { ownerId: 'p1', level: 2, championships: 1, championshipTurns: 4 };
   }
   if (name === 'showcase') {
+    for (const tile of state.config.board.filter((t) => t.type === 'resort'))
+      state.properties[tile.id]!.ownerId = 'p3';
     state.players.forEach((p, i) => {
       p.position = [5, 12, 19, 22][i]!;
     });

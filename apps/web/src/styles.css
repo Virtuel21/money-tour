@@ -2690,6 +2690,26 @@ footer a {
   font-size: 0.85em;
   text-shadow: none;
 }
+.city-label .tile-rent {
+  display: block;
+  font-size: clamp(10px, 2.05cqw, 28px);
+  line-height: 1.04;
+  font-weight: 950;
+  letter-spacing: -0.04em;
+  white-space: nowrap;
+  color: #102f3c;
+  text-shadow:
+    -1px -1px 0 #fff9df,
+    1px -1px 0 #fff9df,
+    -1px 1px 0 #fff9df,
+    1px 1px 0 #fff9df,
+    0 0 4px #fff9df;
+}
+.tile-rent small {
+  font-size: 0.75em;
+  font-weight: 900;
+  letter-spacing: 0;
+}
 .tax-reveal {
   text-align: center;
 }

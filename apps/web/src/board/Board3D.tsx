@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { type GameState } from '@money-tour/engine';
+import { getRent, type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
 import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
@@ -369,11 +369,8 @@ export default function Board({
         setAnchors(
           live.current.state.config.board.map((t) => {
             const p = tilePoint(t.id, live.current.state.config.board.length);
-            const v = new THREE.Vector3(
-              p.x + (t.type === 'city' ? 0 : 0.48),
-              0.32,
-              p.z + (t.type === 'city' ? 0 : 0.48),
-            ).project(camera);
+            const labelOffset = t.type === 'city' ? 0 : t.type === 'resort' ? 0.18 : 0.48;
+            const v = new THREE.Vector3(p.x + labelOffset, 0.32, p.z + labelOffset).project(camera);
             const points = [
               [-0.98, -0.98],
               [-0.98, 0.98],
@@ -683,6 +680,14 @@ export default function Board({
                   }
                 >
                   <b>{short}</b>
+                  {state.properties[t.id]?.ownerId && (
+                    <strong className="tile-rent" title="Loyer actuel">
+                      {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
+                        getRent(state, t.id) / 1000,
+                      )}
+                      <small> k</small>
+                    </strong>
+                  )}
                   {!!state.properties[t.id]?.championships && (
                     <small className="world-badge">
                       🏆 {state.properties[t.id]?.championshipTurns ?? 4} tours

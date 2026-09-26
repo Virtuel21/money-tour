@@ -19,6 +19,8 @@ Un Mondial coûte 50 k et double le loyer de la ville pendant quatre retours du 
 
 Les [événements aléatoires proposés](docs/EVENT_IDEAS.md) sont des idées pour une prochaine version ; ils ne sont pas activés dans les parties.
 
+Après achat, le loyer actuel s’affiche en gros et en gras directement sur la case. Il est recalculé avec les constructions, festivals, Mondial et le nombre d’îles détenues.
+
 Le moteur couvre les 28 cases, les 18 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 
 - [Plan et critères de livraison](PLAN.md)
