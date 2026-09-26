@@ -25,7 +25,7 @@ Ces tests vérifient le moteur, pas encore l'ergonomie ni le transport WebRTC. L
 
 ## Phase 3 — réseau
 
-- Dix tests réseau passent : engagements, révélation prématurée, secrets invalides, signatures falsifiées, quatre contributeurs, intention d’un autre siège, historique altéré, révélation manquante, perte d’une action et rattrapage, duplication/réordonnancement, relève après 15 s, reconnexion avec la même clé et partie complète à deux pairs simulés.
+- Onze tests réseau passent : engagements, révélation prématurée, secrets invalides, signatures falsifiées, quatre contributeurs, intention d’un autre siège, historique altéré, révélation manquante, perte d’une action et rattrapage, duplication/réordonnancement, relève après 15 s, reconnexion avec la même clé, retour de l’ancien hôte après migration et partie complète à deux pairs simulés.
 - WebRTC réel via Trystero/Nostr dans Chromium : deux origines (`127.0.0.1` et `localhost`) sur le même ordinateur, deux joueurs et deux bots en 2v2. Les deux écrans ont affiché les dés 4 + 2, puis l’achat de Préclair pour 180 k. Après fermeture de l’hôte, Camille est devenue hôte (époque 1) et la partie a fini au chrono avec le classement Camille & Alba.
 - L’historique ne prend aucun solde ou position directement depuis le réseau : signatures, schémas, règles, commit-reveal et hashes sont revérifiés par replay.
 - Cette vérification ne remplace pas une recette sur quatre réseaux distincts avec smartphone 4G ; elle reste ouverte. Les garanties sont celles d’un jeu privé entre amis, avec les limites de confiance détaillées dans le README.
@@ -36,4 +36,8 @@ Huit effets et une boucle originale synthétisés avec Web Audio. Réglages acti
 
 Image Open Graph originale 1200 × 630 inspectée visuellement, favicon et inventaire livrés. Assets statiques mesurés : 90 262 octets, sous la limite de 5 Mo. Le build sépare le module réseau (environ 181 ko bruts) du client principal (environ 556 ko bruts).
 
-Le workflow Pages est fourni ; l’URL publique et son déploiement seront vérifiés après fusion de la PR de livraison. La recette terrain #10 demeure ouverte.
+Validation finale du 26 septembre 2026 : `pnpm check` passe avec 195 tests dans neuf fichiers, TypeScript, ESLint et build de production. Le contrôle Prettier passe également.
+
+Le [déploiement GitHub Pages](https://github.com/Virtuel21/money-tour/actions/runs/36225452430) a réussi pour le commit `0e6b6309f228d8895fe59315666819f15e13bf0d`. Le [site public](https://virtuel21.github.io/money-tour/) a été ouvert dans Chromium : une partie express à quatre bots a atteint son classement final, sans erreur ni avertissement dans la console. L’image de partage répond en HTTP 200 avec le type `image/png` et une taille de 84 413 octets. La création d’un salon privé depuis le site publié affiche l’hôte, le code et le lien d’invitation.
+
+La [recette terrain #10](https://github.com/Virtuel21/money-tour/issues/10) demeure ouverte : quatre réseaux distincts, dont un smartphone physique en 4G. Le contrôle du salon publié ne constitue pas à lui seul une validation de ce scénario.
