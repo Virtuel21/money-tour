@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   chooseBotAction,
   config,
@@ -12,7 +12,8 @@ import {
   type GameState,
 } from '@money-tour/engine';
 import Board from './board/Board';
-import OnlineLobby from './network/OnlineLobby';
+import { Soundscape, loadAudio } from './audio/synth';
+const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
 import type { Session, SessionView } from './network/session';
 import {
   applyLocal,
@@ -157,6 +158,15 @@ export default function App() {
   const [online, setOnline] = useState<SessionView | null>(null);
   const onlineSession = useRef<Session | null>(null);
   const onlineSeq = useRef(-1);
+  const [audioPrefs, setAudioPrefs] = useState(loadAudio);
+  const sound = useRef<Soundscape | null>(null);
+  useEffect(() => {
+    sound.current = new Soundscape();
+    return () => sound.current?.close();
+  }, []);
+  useEffect(() => {
+    sound.current?.configure(audioPrefs);
+  }, [audioPrefs]);
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(4),
     [mode, setMode] = useState<'solo' | 'local' | 'teams'>('solo');
@@ -188,6 +198,7 @@ export default function App() {
       return;
     }
     setSave(next);
+    sound.current?.events(result.events);
     const messages = result.events.map((e) => eventText(e, next.state)).filter(Boolean);
     if (messages.length) setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
     if (result.events.some((e) => e.type === 'dice')) {
@@ -310,7 +321,11 @@ export default function App() {
               : 'Deux dés. Une destination. Une nouvelle opportunité.';
 
   return (
-    <div className="app">
+    <div
+      className="app"
+      onPointerDownCapture={() => void sound.current?.unlock()}
+      onKeyDownCapture={() => void sound.current?.unlock()}
+    >
       <header className="topbar">
         <button
           className="brand-button"
@@ -575,7 +590,9 @@ export default function App() {
                   ? 'PARTIE EN PAUSE'
                   : active.bot
                     ? 'UN BOT RÉFLÉCHIT…'
-                    : `À VOUS, ${active.name.toUpperCase()}`}
+                    : online && online.self !== active.id
+                      ? `TOUR DE ${active.name.toUpperCase()}`
+                      : `À VOUS, ${active.name.toUpperCase()}`}
               </span>
               <h2>{paused ? 'Une petite escale ?' : phaseText[current.phase]}</h2>
               <p>{paused ? 'Le chrono et les bots vous attendent.' : actionDescription}</p>
@@ -742,6 +759,41 @@ export default function App() {
           <label className="toggle">
             <input
               type="checkbox"
+              checked={audioPrefs.effects}
+              onChange={(e) => setAudioPrefs((old) => ({ ...old, effects: e.target.checked }))}
+            />{' '}
+            Effets sonores
+          </label>
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={audioPrefs.music}
+              onChange={(e) => setAudioPrefs((old) => ({ ...old, music: e.target.checked }))}
+            />{' '}
+            Musique de l’archipel
+          </label>
+          <label className="field">
+            Volume
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={audioPrefs.volume}
+              onChange={(e) => setAudioPrefs((old) => ({ ...old, volume: Number(e.target.value) }))}
+            />
+          </label>
+          <button
+            className="secondary"
+            onClick={() => {
+              void sound.current?.unlock().then(() => sound.current?.effect('victory'));
+            }}
+          >
+            Écouter un aperçu
+          </button>
+          <label className="toggle">
+            <input
+              type="checkbox"
               checked={reduced}
               onChange={(e) => setReduced(e.target.checked)}
             />{' '}
@@ -867,43 +919,49 @@ export default function App() {
           </button>
         </Modal>
       )}
-      <OnlineLobby
-        open={modal === 'online'}
-        onClose={() => {
-          setModal(null);
-          if (online?.state) setScreen('game');
-        }}
-        onSession={(session) => {
-          onlineSession.current = session;
-        }}
-        onLeave={() => {
-          onlineSession.current = null;
-          setOnline(null);
-          onlineSeq.current = -1;
-          setScreen('menu');
-          setHistory([]);
-        }}
-        onView={(view) => {
-          setOnline(view);
-          if (view.state && view.state.seq !== onlineSeq.current) {
-            if (onlineSeq.current < 0) {
-              setScreen('game');
+      <Suspense fallback={null}>
+        {(modal === 'online' || online) && (
+          <OnlineLobby
+            open={modal === 'online'}
+            onClose={() => {
               setModal(null);
-              setPaused(false);
-            }
-            onlineSeq.current = view.state.seq;
-            const messages = view.events
-              .map((event) => eventText(event, view.state!))
-              .filter(Boolean);
-            if (messages.length) setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
-            if (view.events.some((event) => event.type === 'dice')) {
-              setRolling(!reduced);
-              if (rollTimer.current) clearTimeout(rollTimer.current);
-              rollTimer.current = setTimeout(() => setRolling(false), reduced ? 0 : 550);
-            }
-          }
-        }}
-      />
+              if (online?.state) setScreen('game');
+            }}
+            onSession={(session) => {
+              onlineSession.current = session;
+            }}
+            onLeave={() => {
+              onlineSession.current = null;
+              setOnline(null);
+              onlineSeq.current = -1;
+              setScreen('menu');
+              setHistory([]);
+            }}
+            onView={(view) => {
+              setOnline(view);
+              if (view.state && view.state.seq !== onlineSeq.current) {
+                if (onlineSeq.current < 0) {
+                  setScreen('game');
+                  setModal(null);
+                  setPaused(false);
+                }
+                onlineSeq.current = view.state.seq;
+                sound.current?.events(view.events);
+                const messages = view.events
+                  .map((event) => eventText(event, view.state!))
+                  .filter(Boolean);
+                if (messages.length)
+                  setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
+                if (view.events.some((event) => event.type === 'dice')) {
+                  setRolling(!reduced);
+                  if (rollTimer.current) clearTimeout(rollTimer.current);
+                  rollTimer.current = setTimeout(() => setRolling(false), reduced ? 0 : 550);
+                }
+              }
+            }}
+          />
+        )}
+      </Suspense>
       {screen === 'game' && current.winner && (
         <Modal title="Une fortune à célébrer !" onClose={() => setScreen('menu')}>
           <div className="victory-art">

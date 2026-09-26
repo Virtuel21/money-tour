@@ -30,6 +30,10 @@ Ces tests vérifient le moteur, pas encore l'ergonomie ni le transport WebRTC. L
 - L’historique ne prend aucun solde ou position directement depuis le réseau : signatures, schémas, règles, commit-reveal et hashes sont revérifiés par replay.
 - Cette vérification ne remplace pas une recette sur quatre réseaux distincts avec smartphone 4G ; elle reste ouverte. Les garanties sont celles d’un jeu privé entre amis, avec les limites de confiance détaillées dans le README.
 
-## Phase 4 — à réaliser
+## Phase 4 — finitions
 
-Sons, musique et livraison GitHub Pages : à tester lors de leur réalisation. Le choix GitHub Actions comme source de Pages est enregistré ; aucune URL de jeu n'est encore publiée.
+Huit effets et une boucle originale synthétisés avec Web Audio. Réglages activés par geste et aperçu déclenché sans erreur dans Chromium ; effets et musique désactivés, puis actualisation : les deux cases restent décochées. Aucune écoute humaine n’est déduite du seul test technique.
+
+Image Open Graph originale 1200 × 630 inspectée visuellement, favicon et inventaire livrés. Assets statiques mesurés : 90 262 octets, sous la limite de 5 Mo. Le build sépare le module réseau (environ 181 ko bruts) du client principal (environ 556 ko bruts).
+
+Le workflow Pages est fourni ; l’URL publique et son déploiement seront vérifiés après fusion de la PR de livraison. La recette terrain #10 demeure ouverte.
