@@ -118,7 +118,7 @@ export default function Board({
         element.appendChild(renderer.domElement);
         const scene = new THREE.Scene();
         scene.add(resources);
-        const camera = new THREE.OrthographicCamera(-16, 16, 10.885, -10.885, 0.1, 80);
+        const camera = new THREE.OrthographicCamera(-18, 18, 12.25, -12.25, 0.1, 80);
         camera.position.set(18, 22, 18);
         camera.lookAt(0, 0, 0);
         camera.updateMatrixWorld();
@@ -175,6 +175,14 @@ export default function Board({
           templates.set(name, compact(original));
         }
         const clone = (name: string) => templates.get(name)!.clone(true);
+        const fortuneGltf = await loader.loadAsync(import.meta.env.BASE_URL + 'models/fortune.glb');
+        if (disposed) {
+          disposePending(fortuneGltf.scene);
+          disposePending(gltf.scene);
+          return;
+        }
+        for (const name of ['casino_roulette', 'casino_slots', 'insurance_shield', 'karma_scale'])
+          templates.set(name, compact(fortuneGltf.scene.getObjectByName(name)!));
         const shape = boardShape(live.current.state.config.board.length);
         const platform = clone('board');
         platform.scale.set(
@@ -231,20 +239,26 @@ export default function Board({
         const shownWealth = live.current.state.players.map((p) => p.cash);
         setBankAnchors(
           wealthPoints.map((p) => {
-            const v = new THREE.Vector3(p.x, 0, p.z + 1).project(camera);
+            const v = new THREE.Vector3(
+              p.x + (Math.abs(p.x) > Math.abs(p.z) ? Math.sign(p.x) * 1.2 : 0),
+              0,
+              p.z + (Math.abs(p.z) > Math.abs(p.x) ? Math.sign(p.z) * 1.2 : 0),
+            ).project(camera);
             return { x: (v.x + 1) * 50, y: (1 - v.y) * 50 };
           }),
         );
         const textureLoader = new THREE.TextureLoader();
-        const [travelers, architecture, specialTiles] = await Promise.all([
+        const [travelers, architecture, specialTiles, expansionTiles] = await Promise.all([
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/architecture-v3.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/special-tiles-v1.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/expansion-v1.webp'),
         ]);
         if (disposed) {
           travelers.dispose();
           architecture.dispose();
           specialTiles.dispose();
+          expansionTiles.dispose();
           disposePending(gltf.scene);
           return;
         }
@@ -332,29 +346,51 @@ export default function Board({
           cell.scale.set(p.width / 1.66, 1, p.depth / 1.66);
           resources.add(cell);
           const special = tile.type === 'chance' || tile.type === 'tax';
-          const tileMap = special ? specialTiles.clone() : streetSurface(tile);
+          const extra = ['casino', 'insurance', 'karma'].includes(tile.type);
+          const tileMap = extra
+            ? expansionTiles.clone()
+            : special
+              ? specialTiles.clone()
+              : streetSurface(tile);
+          if (extra) {
+            const index =
+              tile.type === 'casino' ? (tile.id < 15 ? 0 : 1) : tile.type === 'insurance' ? 2 : 3;
+            tileMap.repeat.set(0.5, 0.5);
+            tileMap.offset.set((index % 2) * 0.5, index < 2 ? 0.5 : 0);
+            tileMap.colorSpace = THREE.SRGBColorSpace;
+            tileMap.anisotropy = renderer!.capabilities.getMaxAnisotropy();
+          }
           if (special) {
             tileMap.repeat.set(0.5, 1);
             tileMap.offset.x = tile.type === 'chance' ? 0 : 0.5;
             tileMap.colorSpace = THREE.SRGBColorSpace;
             tileMap.anisotropy = renderer!.capabilities.getMaxAnisotropy();
           }
+          const iconSize = Math.min(p.width, p.depth) - 0.12;
+          if (special || extra) {
+            const backdrop = new THREE.Mesh(
+              new THREE.PlaneGeometry(p.width - 0.12, p.depth - 0.12),
+              new THREE.MeshStandardMaterial({
+                color:
+                  tile.type === 'chance' ? '#722caf' : tile.type === 'tax' ? '#c77337' : '#25625e',
+                roughness: 0.95,
+              }),
+            );
+            backdrop.rotation.x = -Math.PI / 2;
+            backdrop.position.set(p.x, 0.276, p.z);
+            resources.add(backdrop);
+          }
           const surface = new THREE.Mesh(
-            new THREE.PlaneGeometry(p.width - 0.12, p.depth - 0.12),
+            new THREE.PlaneGeometry(
+              special || extra ? iconSize : p.width - 0.12,
+              special || extra ? iconSize : p.depth - 0.12,
+            ),
             new THREE.MeshStandardMaterial({ map: tileMap, roughness: 0.95 }),
           );
           surface.rotation.x = -Math.PI / 2;
           surface.position.set(p.x, 0.28, p.z);
           surface.receiveShadow = true;
           resources.add(surface);
-          const strip = new THREE.Mesh(
-            new THREE.BoxGeometry((p.corner ? shape.depth : shape.step) - 0.3, 0.045, 0.2),
-            new THREE.MeshStandardMaterial({ color: tile.color ?? '#f9c34f' }),
-          );
-          strip.position.set(p.x - p.normal.x * 1.4, 0.3, p.z - p.normal.z * 1.4);
-          strip.rotation.y = p.angle;
-          strip.visible = !special;
-          resources.add(strip);
           const trim = new THREE.Mesh(
             new THREE.BoxGeometry((p.corner ? shape.depth : shape.step) - 0.04, 0.25, 0.16),
             new THREE.MeshStandardMaterial({ color: 0xffffff }),
@@ -383,7 +419,18 @@ export default function Board({
             resources.add(palm);
           }
           if (!['city', 'resort', 'island', 'chance', 'tax'].includes(tile.type)) {
-            const icon = clone(tile.type);
+            const model =
+              tile.type === 'casino'
+                ? tile.id < 15
+                  ? 'casino_roulette'
+                  : 'casino_slots'
+                : tile.type === 'insurance'
+                  ? 'insurance_shield'
+                  : tile.type === 'karma'
+                    ? 'karma_scale'
+                    : tile.type;
+            const icon = clone(model);
+            if (extra) icon.scale.setScalar(0.72);
             icon.position.set(p.x - p.normal.x * 0.3, 0.27, p.z - p.normal.z * 0.3);
             resources.add(icon);
           }
@@ -474,11 +521,34 @@ export default function Board({
           pawn.add(badge);
           return pawn;
         });
+        const diceScene = new THREE.Scene();
+        const diceCamera = new THREE.OrthographicCamera(-2.8, 2.8, 2, -2, 0.1, 100);
+        diceCamera.position.set(0, 6, 7);
+        diceCamera.lookAt(0, 0, 0);
+        diceScene.add(new THREE.AmbientLight(0xffffff, 2.3));
+        const diceLight = new THREE.DirectionalLight(0xfff0d2, 3);
+        diceLight.position.set(-3, 7, 4);
+        diceScene.add(diceLight);
+        const diceTray = new THREE.Mesh(
+          new THREE.CylinderGeometry(2.35, 2.4, 0.18, 64),
+          new THREE.MeshStandardMaterial({ color: '#d8a34c', roughness: 0.45, metalness: 0.2 }),
+        );
+        diceTray.position.y = -0.16;
+        diceTray.scale.z = 0.72;
+        diceScene.add(diceTray);
+        const felt = new THREE.Mesh(
+          new THREE.CylinderGeometry(2.2, 2.2, 0.035, 64),
+          new THREE.MeshStandardMaterial({ color: '#185b58', roughness: 0.95 }),
+        );
+        felt.scale.z = 0.72;
+        felt.position.y = -0.045;
+        diceScene.add(felt);
+        let diceVisibleUntil = 0;
         const dice = [clone('die'), clone('die')];
         dice.forEach((die, i) => {
           die.position.set(i ? 0.52 : -0.52, 0.55, 1.0);
           die.scale.setScalar(1.15);
-          resources.add(die);
+          diceScene.add(die);
         });
         let lastCue: Cue | undefined,
           started = 0;
@@ -612,13 +682,13 @@ export default function Board({
               );
               die.quaternion.copy(final).multiply(spin);
               die.position.set(
-                1.7 + (i ? 0.58 : -0.58) + Math.sin(progress * 8 + i) * 0.5 * (1 - progress),
+                (i ? 0.78 : -0.78) + Math.sin(progress * 8 + i) * 0.5 * (1 - progress),
                 0.52 + Math.abs(Math.sin(progress * Math.PI * 3)) * 1.25 * (1 - progress),
-                1.7 + (i ? -0.58 : 0.58) + Math.sin(progress * 5) * 0.4,
+                (i ? -0.25 : 0.25) + Math.sin(progress * 5) * 0.4,
               );
             } else {
               die.quaternion.copy(final);
-              die.position.set(1.7 + (i ? 0.58 : -0.58), 0.52, 1.7 + (i ? -0.58 : 0.58));
+              die.position.set(i ? 0.78 : -0.78, 0.52, i ? -0.25 : 0.25);
             }
           });
           buildings.forEach((g, i) => {
@@ -649,7 +719,24 @@ export default function Board({
             (b.material as THREE.MeshStandardMaterial).opacity =
               0.42 + (reduced ? 0 : Math.sin(now / 240) * 0.18);
           });
+          const fullSize = renderer!.getSize(new THREE.Vector2());
+          renderer!.setViewport(0, 0, fullSize.x, fullSize.y);
           renderer!.render(scene, camera);
+          if (activeCue?.kind === 'dice') diceVisibleUntil = now + 450;
+          if (now < diceVisibleUntil) {
+            const width = Math.min(390, fullSize.x * 0.8),
+              height = width * 0.72;
+            renderer!.autoClear = false;
+            renderer!.clearDepth();
+            renderer!.setViewport(
+              (fullSize.x - width) / 2,
+              (fullSize.y - height) / 2,
+              width,
+              height,
+            );
+            renderer!.render(diceScene, diceCamera);
+            renderer!.autoClear = true;
+          }
         });
         cleanup = () => {
           observer?.disconnect();
@@ -668,14 +755,17 @@ export default function Board({
               }
             });
           gather(resources);
+          gather(diceScene);
           gather(gltf.scene);
           gather(wealthGltf.scene);
+          gather(fortuneGltf.scene);
           gather(note);
           gather(ingot);
           templates.forEach(gather);
           textures.add(travelers);
           textures.add(architecture);
           textures.add(specialTiles);
+          textures.add(expansionTiles);
           detached.forEach(gather);
           geometries.forEach((g) => g.dispose());
           materials.forEach((m) => m.dispose());
@@ -764,12 +854,21 @@ export default function Board({
                       ? 'VOYAGE'
                       : t.type === 'tax'
                         ? 'TAXE'
-                        : t.name;
+                        : t.type === 'casino'
+                          ? 'CASINO'
+                          : t.type === 'insurance'
+                            ? 'ASSURANCE'
+                            : t.type === 'karma'
+                              ? 'KARMA'
+                              : t.name;
               return (
                 <div
                   key={t.id}
                   data-tile-label={t.id}
-                  className="city-label"
+                  className={
+                    'city-label' +
+                    (['casino', 'insurance', 'karma'].includes(t.type) ? ' special-label' : '')
+                  }
                   style={
                     {
                       left: anchors[i]?.x + '%',
@@ -780,6 +879,14 @@ export default function Board({
                   }
                 >
                   <b>{short}</b>
+                  {state.players.some((p) => p.insurance?.tile === t.id) && (
+                    <small className="tile-condition">🛡 Assurée</small>
+                  )}
+                  {!!state.properties[t.id]?.roachTurns && (
+                    <small className="tile-condition">
+                      −50 % · {state.properties[t.id]?.roachTurns} tours
+                    </small>
+                  )}
                   {state.properties[t.id]?.ownerId && (
                     <strong className="tile-rent" title="Loyer actuel">
                       {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(

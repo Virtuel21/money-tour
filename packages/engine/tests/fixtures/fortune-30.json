@@ -57,19 +57,13 @@
     },
     {
       "id": 3,
-      "name": "La bonne étoile",
-      "type": "chance",
-      "line": 0
-    },
-    {
-      "id": 4,
       "name": "Bali",
       "type": "resort",
       "price": 200000,
       "line": 0
     },
     {
-      "id": 5,
+      "id": 4,
       "name": "Madrid",
       "type": "city",
       "group": "g2",
@@ -80,7 +74,7 @@
       "buildCosts": [0, 75000, 75000, 75000, 75000]
     },
     {
-      "id": 6,
+      "id": 5,
       "name": "Barcelone",
       "type": "city",
       "group": "g2",
@@ -91,19 +85,31 @@
       "buildCosts": [0, 87500, 87500, 87500, 87500]
     },
     {
+      "id": 6,
+      "name": "La bonne étoile",
+      "type": "chance",
+      "line": 0
+    },
+    {
       "name": "Casino Riviera",
       "type": "casino",
       "id": 7,
       "line": 0
     },
     {
+      "name": "Assurance voyage",
+      "type": "insurance",
       "id": 8,
+      "line": 0
+    },
+    {
+      "id": 9,
       "name": "Île perdue",
       "type": "island",
       "line": 1
     },
     {
-      "id": 9,
+      "id": 10,
       "name": "Rome",
       "type": "city",
       "group": "g3",
@@ -114,7 +120,7 @@
       "buildCosts": [0, 100000, 100000, 100000, 100000]
     },
     {
-      "id": 10,
+      "id": 11,
       "name": "Venise",
       "type": "city",
       "group": "g3",
@@ -123,12 +129,6 @@
       "price": 225000,
       "rents": [22500, 45000, 90000, 157500, 270000],
       "buildCosts": [0, 112500, 112500, 112500, 112500]
-    },
-    {
-      "name": "Assurance voyage",
-      "type": "insurance",
-      "id": 11,
-      "line": 1
     },
     {
       "id": 12,
@@ -161,18 +161,12 @@
     },
     {
       "id": 15,
-      "name": "La bonne étoile",
-      "type": "chance",
-      "line": 1
-    },
-    {
-      "id": 16,
       "name": "Championnat du monde",
       "type": "championship",
       "line": 2
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "Berlin",
       "type": "city",
       "group": "g5",
@@ -183,7 +177,7 @@
       "buildCosts": [0, 150000, 150000, 150000, 150000]
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "Munich",
       "type": "city",
       "group": "g5",
@@ -194,20 +188,14 @@
       "buildCosts": [0, 162500, 162500, 162500, 162500]
     },
     {
-      "name": "Casino Royal",
-      "type": "casino",
-      "id": 19,
-      "line": 2
-    },
-    {
-      "id": 20,
+      "id": 18,
       "name": "Maurice",
       "type": "resort",
       "price": 200000,
       "line": 2
     },
     {
-      "id": 21,
+      "id": 19,
       "name": "Londres",
       "type": "city",
       "group": "g6",
@@ -218,7 +206,7 @@
       "buildCosts": [0, 175000, 175000, 175000, 175000]
     },
     {
-      "id": 22,
+      "id": 20,
       "name": "Édimbourg",
       "type": "city",
       "group": "g6",
@@ -227,6 +215,18 @@
       "price": 375000,
       "rents": [37500, 75000, 150000, 262500, 450000],
       "buildCosts": [0, 187500, 187500, 187500, 187500]
+    },
+    {
+      "id": 21,
+      "name": "La bonne étoile",
+      "type": "chance",
+      "line": 2
+    },
+    {
+      "name": "Casino Royal",
+      "type": "casino",
+      "id": 22,
+      "line": 2
     },
     {
       "name": "La roue du Karma",
@@ -264,41 +264,19 @@
     },
     {
       "id": 27,
-      "name": "La bonne étoile",
-      "type": "chance",
-      "line": 3
-    },
-    {
-      "id": 28,
       "name": "Santorin",
       "type": "resort",
       "price": 200000,
       "line": 3
     },
     {
-      "name": "New York",
-      "type": "city",
-      "group": "g8",
-      "color": "#805965",
-      "price": 400000,
-      "rents": [40000, 80000, 160000, 280000, 480000],
-      "buildCosts": [0, 200000, 200000, 200000, 200000],
+      "id": 28,
+      "name": "La bonne étoile",
+      "type": "chance",
+      "line": 3
+    },
+    {
       "id": 29,
-      "line": 3
-    },
-    {
-      "name": "Boston",
-      "type": "city",
-      "group": "g8",
-      "color": "#805965",
-      "price": 425000,
-      "rents": [42500, 85000, 170000, 297500, 510000],
-      "buildCosts": [0, 212500, 212500, 212500, 212500],
-      "id": 30,
-      "line": 3
-    },
-    {
-      "id": 31,
       "name": "Taxe de séjour",
       "type": "tax",
       "line": 3
@@ -360,7 +338,7 @@
       "title": "Courant contraire",
       "description": "Rejoignez directement l'Île perdue sans prime.",
       "effect": "move_to",
-      "target": 8,
+      "target": 9,
       "salary": false
     },
     {
@@ -384,7 +362,7 @@
       "title": "Invitation sportive",
       "description": "Avancez jusqu'au Championnat du monde.",
       "effect": "move_to",
-      "target": 16,
+      "target": 15,
       "salary": true
     },
     {

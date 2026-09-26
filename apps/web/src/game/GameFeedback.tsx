@@ -75,21 +75,37 @@ export function MoneyFlight({
         ))}
       <div className="money-toast" role="status">
         <small>
-          {cue.reason === 'purchase'
-            ? 'PROPRIÉTÉ ACHETÉE'
-            : cue.reason === 'build'
-              ? 'CONSTRUCTION'
-              : cue.reason === 'championship'
-                ? 'MONDIAL ORGANISÉ'
-                : cue.reason === 'start_bonus'
-                  ? 'PRIME DE DÉPART'
-                  : cue.reason === 'rent'
-                    ? 'LOYER VERSÉ'
-                    : cue.reason === 'attack'
-                      ? 'ATTAQUE RÉUSSIE'
-                      : recipient
-                        ? 'ARGENT REÇU'
-                        : 'TAXE / FRAIS PAYÉS'}
+          {cue.reason === 'duel_stake'
+            ? 'MISE AU POT DU DUEL'
+            : cue.reason === 'duel_prize'
+              ? 'DUEL REMPORTÉ'
+              : cue.reason === 'duel_refund'
+                ? 'MISE REMBOURSÉE'
+                : cue.reason === 'alliance'
+                  ? 'GAINS PARTAGÉS · ALLIANCE'
+                  : cue.reason === 'jackpot'
+                    ? 'JACKPOT DU CASINO'
+                    : cue.reason === 'casino'
+                      ? 'GAIN AU CASINO'
+                      : cue.reason === 'karma'
+                        ? recipient
+                          ? 'LE KARMA VOUS RÉCOMPENSE'
+                          : 'LE KARMA RÉÉQUILIBRE'
+                        : cue.reason === 'purchase'
+                          ? 'PROPRIÉTÉ ACHETÉE'
+                          : cue.reason === 'build'
+                            ? 'CONSTRUCTION'
+                            : cue.reason === 'championship'
+                              ? 'MONDIAL ORGANISÉ'
+                              : cue.reason === 'start_bonus'
+                                ? 'PRIME DE DÉPART'
+                                : cue.reason === 'rent'
+                                  ? 'LOYER VERSÉ'
+                                  : cue.reason === 'attack'
+                                    ? 'ATTAQUE RÉUSSIE'
+                                    : recipient
+                                      ? 'ARGENT REÇU'
+                                      : 'TAXE / FRAIS PAYÉS'}
         </small>
         <strong>
           {recipient ? '+' : '−'}
@@ -97,7 +113,7 @@ export function MoneyFlight({
         </strong>
         <span>
           {payer ? `${payer} → ` : ''}
-          {recipient ?? 'La banque'}
+          {recipient ?? (cue.reason === 'duel_stake' ? 'Le pot du duel' : 'La banque')}
         </span>
       </div>
     </div>

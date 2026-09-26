@@ -20,10 +20,12 @@ export function purchaseOffer(state: GameState, self?: string) {
 export function PurchaseDetails({
   state,
   onBuy,
+  onFraud,
   onPass,
 }: {
   state: GameState;
   onBuy: () => void;
+  onFraud?: () => void;
   onPass: () => void;
 }) {
   const { player, tile, canBuy } = purchaseOffer(state)!;
@@ -110,6 +112,21 @@ export function PurchaseDetails({
         <span>Non merci, je passe</span>
         <ActionClock />
       </button>
+      {onFraud && getLegalActions(state).some((a) => a.type === 'buy_fraud') && (
+        <>
+          <button className="secondary purchase-cta" onClick={onFraud}>
+            <span>
+              Utiliser Fraude fiscale ·{' '}
+              {money(Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5)), true)}
+            </span>
+            <ActionClock />
+          </button>
+          <p className="fraud-risk">
+            Risque jusqu’au prochain passage par Départ : {money(tile.price! * 2, true)} si vous
+            tombez sur Taxe.
+          </p>
+        </>
+      )}
     </div>
   );
 }

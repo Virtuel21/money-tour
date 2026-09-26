@@ -1,7 +1,13 @@
 import type { GameEvent, GameState } from '@money-tour/engine';
 
 export interface Cue {
-  kind: 'dice' | 'hop' | 'card' | 'tax' | 'build' | 'money' | 'turn' | 'settle';
+  kind:
+    'dice' | 'hop' | 'card' | 'tax' | 'build' | 'money' | 'turn' | 'settle' | 'casino' | 'notice';
+  casinoGame?: 'roulette' | 'slots';
+  casinoColor?: string;
+  casinoReels?: number[];
+  jackpot?: boolean;
+  message?: string;
   duration: number;
   amount?: number;
   payerId?: string;
@@ -49,6 +55,59 @@ export function presentation(
   };
   let departure: GameEvent | undefined;
   for (const [index, event] of events.entries()) {
+    if (event.type === 'casino_result')
+      add({
+        kind: 'casino',
+        duration: reduced ? 1200 : 3600,
+        playerId: event.playerId,
+        amount: event.amount,
+        casinoGame: event.game as 'roulette' | 'slots',
+        casinoColor: String(event.color),
+        casinoReels: event.reels as number[],
+        jackpot: Boolean(event.jackpot),
+        sound: 'dice',
+      });
+    const notice: Record<string, string> = {
+      alliance: String(event.message),
+      alliance_expired: String(event.message),
+      crisis: String(event.message),
+      crisis_expired: String(event.message),
+      duel_forfeit: String(event.message),
+      duel_cancelled: String(event.message),
+      duel_result:
+        event.type === 'duel_result'
+          ? ((event.choices as string[]) ?? [])
+              .map(
+                (c, i) =>
+                  (next.players.find((p) => p.id === (i ? event.targetId : event.challengerId))
+                    ?.name ?? '') +
+                  ' : ' +
+                  ({ rock: '✊ Pierre', paper: '✋ Feuille', scissors: '✌️ Ciseaux' }[c] ?? c),
+              )
+              .join(' · ') +
+            '. ' +
+            event.message
+          : '',
+      insurance: 'Un jeton assurance vous attend. Choisissez une propriété à protéger.',
+      insured: 'Votre assurance a bloqué l’attaque ! Le jeton est consommé.',
+      insured_tile: 'Cette propriété est maintenant assurée.',
+      squatter: 'Vous passez sans payer de loyer !',
+      expropriate: 'Expropriation : cette ville est à nouveau disponible.',
+      roaches:
+        'Invasion de cafards : le loyer de cet hôtel est divisé par deux pendant deux tours.',
+      roaches_expired: 'La désinsectisation est terminée : le loyer revient à la normale.',
+      karma: String(event.message ?? 'Le Karma a tranché.'),
+    };
+    if (notice[event.type])
+      add({
+        kind: 'notice',
+        reason: event.type,
+        duration: reduced ? 800 : 2600,
+        playerId: event.playerId,
+        tile: event.tile,
+        message: notice[event.type],
+        sound: 'card',
+      });
     if (
       event.type === 'start_bonus' &&
       events[index + 1]?.type === 'move' &&
@@ -94,6 +153,7 @@ export function presentation(
     if (event.type === 'tax_notice')
       add({
         kind: 'tax',
+        reason: typeof event.reason === 'string' ? event.reason : undefined,
         playerId: event.playerId,
         tile: event.tile,
         amount: event.amount,
@@ -137,23 +197,43 @@ export function presentationMs(events: GameEvent[]): number {
       ms +
       (e.type === 'dice'
         ? 2000
-        : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) && (e.amount ?? 0) > 0
-          ? 1500
-          : ['turn', 'extra_roll'].includes(e.type)
-            ? 1400
-            : e.type === 'move'
-              ? Math.abs(Number(e.steps ?? 0)) * 270
-              : e.type === 'tax_notice'
-                ? 5000
-                : e.type === 'card'
-                  ? 5500
-                  : ['build', 'purchase', 'buyout'].includes(e.type)
-                    ? 2200
-                    : e.type === 'championship'
-                      ? 1500
-                      : e.type === 'island'
-                        ? 8640
-                        : 0),
+        : e.type === 'casino_result'
+          ? 3600
+          : [
+                'alliance',
+                'alliance_expired',
+                'crisis',
+                'crisis_expired',
+                'duel_result',
+                'duel_cancelled',
+                'duel_forfeit',
+                'insurance',
+                'insured',
+                'insured_tile',
+                'squatter',
+                'expropriate',
+                'roaches',
+                'roaches_expired',
+                'karma',
+              ].includes(e.type)
+            ? 2600
+            : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) && (e.amount ?? 0) > 0
+              ? 1500
+              : ['turn', 'extra_roll'].includes(e.type)
+                ? 1400
+                : e.type === 'move'
+                  ? Math.abs(Number(e.steps ?? 0)) * 270
+                  : e.type === 'tax_notice'
+                    ? 5000
+                    : e.type === 'card'
+                      ? 5500
+                      : ['build', 'purchase', 'buyout'].includes(e.type)
+                        ? 2200
+                        : e.type === 'championship'
+                          ? 1500
+                          : e.type === 'island'
+                            ? 8640
+                            : 0),
     0,
   );
 }

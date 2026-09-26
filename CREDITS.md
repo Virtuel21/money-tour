@@ -32,3 +32,11 @@ Auteur : Kenney. Pack [Interface Sounds](https://kenney.nl/assets/interface-soun
 ## Bibliothèques
 
 React, Three.js, Vite, Vitest, Trystero et Zod : MIT. TypeScript et Sharp : Apache-2.0. Leurs notices restent dans les distributions des dépendances. Blender est l’outil de création des modèles, pas une dépendance exécutée dans le navigateur.
+
+## Fortune, alliance et duel
+
+models/fortune.glb et scripts/casino_models.py : roulette, machine à sous, bouclier/maison et balance Karma, quatre racines et 117 objets réalisés dans Blender 5.2.2 via MCP. Créations originales, MIT. Scène éditable livrée : money-tour-fortune.blend ; scènes préexistantes conservées.
+
+textures/expansion-v1.webp : atlas original généré avec l’outil d’images intégré de ChatGPT, 1254 × 1254 natifs, WebP qualité 95. [Prompt exact et provenance](docs/FORTUNE_ART.md). Aucun asset tiers incorporé.
+
+[@noble/hashes](https://github.com/paulmillr/noble-hashes), version 2.4.0, MIT, vérifie les engagements SHA-256 des choix de duel.

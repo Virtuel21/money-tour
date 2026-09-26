@@ -1,6 +1,7 @@
 import {
   config,
   legacyConfig,
+  legacyConfigV6,
   sameRules,
   type GameConfig,
   createGame,
@@ -18,7 +19,7 @@ export interface LocalSave {
   seed: string;
   state: GameState;
 }
-const key = 'money-tour.local.v6'; // Keep the original 32-cell save untouched.
+const key = 'money-tour.local.v7'; // Keep the original 32-cell save untouched.
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
   return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
@@ -34,6 +35,7 @@ export function loadLocal(): LocalSave | null {
   try {
     const raw =
       localStorage.getItem(key) ??
+      localStorage.getItem('money-tour.local.v6') ??
       localStorage.getItem('money-tour.local.v5') ??
       localStorage.getItem('money-tour.local.v4');
     if (!raw) return null;
@@ -58,6 +60,7 @@ export function loadLocal(): LocalSave | null {
       typeof save.seed !== 'string' ||
       !(
         sameRules(save.state.config, config) ||
+        sameRules(save.state.config, legacyConfigV6 as GameConfig) ||
         sameRules(save.state.config, legacyConfig as GameConfig)
       ) ||
       validateState(save.state).length
@@ -88,6 +91,11 @@ export const duration = (ms: number): string =>
 export const colors = ['#087BEE', '#EE2758', '#7E36DF', '#F3B600'];
 export const pawnNames = ['Léa', 'Max', 'Lou', 'Noa'];
 export const phaseText: Record<GameState['phase'], string> = {
+  duel: 'Pierre, feuille, ciseaux !',
+  alliance: 'Une alliance à conclure',
+  casino: 'La chance vous sourit ?',
+  attack: 'Choisissez votre cible',
+  rent: 'Un loyer vous attend',
   roll: 'À vous de lancer !',
   island: 'Une escale sur l’île',
   travel: 'Le monde vous attend',

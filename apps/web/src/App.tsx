@@ -6,6 +6,7 @@ import {
   config,
   createGame,
   getLegalActions,
+  getDecisionPlayerId,
   getNetWorth,
   getPropertyValue,
   getRent,
@@ -34,6 +35,8 @@ import {
 } from './game/local';
 import { MoneyFlight, TurnBanner } from './game/GameFeedback';
 import { purchaseOffer, PurchaseDetails } from './game/PurchaseOffer';
+import { DuelView } from './game/DuelView';
+import { CasinoView } from './game/CasinoView';
 import credits from '../../../CREDITS.md?raw';
 
 function Logo() {
@@ -111,6 +114,27 @@ function eventText(event: GameEvent, state: GameState): string {
   const name = state.players.find((p) => p.id === event.playerId)?.name ?? 'La banque';
   const tile = event.tile !== undefined ? state.config.board[event.tile]?.name : '';
   switch (event.type) {
+    case 'alliance':
+    case 'alliance_expired':
+    case 'crisis':
+    case 'crisis_expired':
+    case 'duel_result':
+    case 'duel_forfeit':
+    case 'duel_cancelled':
+      return String(event.message);
+    case 'casino_result':
+      return `${name} au casino : ${event.jackpot ? 'jackpot ! ' : ''}+${money(event.amount ?? 0, true)}.`;
+    case 'insurance':
+    case 'insured':
+    case 'squatter':
+    case 'karma':
+      return `${name} : ${event.message}`;
+    case 'expropriate':
+      return `${tile} a été expropriée et redevient libre.`;
+    case 'roaches':
+      return `${tile} : loyer divisé par deux pendant deux tours.`;
+    case 'insured_tile':
+      return `${name} assure ${tile}.`;
     case 'dice':
       return `${name} lance ${event.dice?.join(' + ')}.`;
     case 'purchase':
@@ -165,10 +189,10 @@ demo.players.forEach((player, i) => {
 for (const [id, ownerId, level] of [
   [1, 'p1', 2],
   [2, 'p1', 1],
-  [8, 'p2', 3],
-  [9, 'p2', 1],
-  [14, 'p3', 2],
-  [21, 'p4', 4],
+  [9, 'p2', 3],
+  [10, 'p2', 1],
+  [17, 'p3', 2],
+  [25, 'p4', 4],
 ] as const)
   demo.properties[id] = { ownerId, level, championships: 0 };
 
@@ -237,6 +261,7 @@ export default function App() {
   const current =
     screen === 'game' ? (rolling ? display : (online?.state ?? save?.state ?? demo)) : demo;
   const active = current.players[current.currentPlayer]!;
+  const decisionPlayer = current.players.find((p) => p.id === getDecisionPlayerId(current))!;
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
     if (screen !== 'game' || (paused && action.type !== 'quit')) return;
@@ -282,7 +307,8 @@ export default function App() {
     return () => clearInterval(timer);
   }, [screen, paused, rolling, Boolean(current.winner), Boolean(online)]);
   useEffect(() => {
-    if (online || screen !== 'game' || paused || rolling || current.winner || !active.bot) return;
+    if (online || screen !== 'game' || paused || rolling || current.winner || !decisionPlayer.bot)
+      return;
     const timer = setTimeout(() => dispatchRef.current(chooseBotAction(current)), 650);
     return () => clearTimeout(timer);
   }, [save, screen, paused, rolling, Boolean(online)]);
@@ -323,6 +349,22 @@ export default function App() {
         return 'Utiliser mon billet de sortie';
       case 'buy':
         return `Acheter · ${money(tile.price ?? 0, true)}`;
+      case 'buy_fraud':
+        return `Fraude fiscale · ${money(Math.floor(tile.price! * (current.config.fraudDiscount ?? 0.5)), true)}`;
+      case 'use_squatter':
+        return 'Utiliser Squatteur · aucun loyer';
+      case 'pay_rent':
+        return `Payer le loyer · ${money(current.pendingRent?.amount ?? 0, true)}`;
+      case 'casino_red':
+        return 'Jouer rouge';
+      case 'casino_black':
+        return 'Jouer noir';
+      case 'casino_spin':
+        return 'Lancer les rouleaux';
+      case 'insure':
+        return `Assurer ${current.config.board[action.tile]?.name}`;
+      case 'attack':
+        return `Viser ${current.config.board[action.tile]?.name}`;
       case 'buyout':
         return `Racheter · ${money(getPropertyValue(current, tile.id) * config.buyoutMultiplier, true)}`;
       case 'upgrade':
@@ -336,7 +378,7 @@ export default function App() {
       case 'decline_travel':
         return 'Rester et lancer les dés';
       case 'sell':
-        return `Vendre ${current.config.board[action.tile]?.name} · ${money(getPropertyValue(current, action.tile) * config.resaleRate, true)}`;
+        return `Vendre ${current.config.board[action.tile]?.name} · ${money(getPropertyValue(current, action.tile) * current.config.resaleRate)}`;
       case 'travel':
         return `Voyager à ${current.config.board[action.tile]?.name}`;
       case 'place_championship':
@@ -350,9 +392,9 @@ export default function App() {
   const interactionDisabled =
     paused ||
     rolling ||
-    active.bot ||
+    decisionPlayer.bot ||
     Boolean(current.winner) ||
-    Boolean(online && (online.self !== active.id || online.busy || online.blocked));
+    Boolean(online && (online.self !== decisionPlayer.id || online.busy || online.blocked));
   const eligibleOffer =
     screen === 'game' && !interactionDisabled && !modal
       ? purchaseOffer(current, online?.self)
@@ -367,26 +409,39 @@ export default function App() {
       setDismissedOffer('');
     } else if (!rolling) setSelected(id);
   };
-  const available = legal.filter((a) => !['quit', 'travel', 'place_championship'].includes(a.type));
-  const options = legal.filter(
-    (a): a is Extract<GameAction, { type: 'sell' | 'travel' | 'place_championship' }> =>
-      a.type === 'travel' || a.type === 'place_championship',
+  const available = legal.filter(
+    (a) =>
+      !a.type.startsWith('duel_') &&
+      !['alliance', 'quit', 'travel', 'place_championship', 'insure', 'attack'].includes(a.type),
+  );
+  const options = legal.filter((a): a is Extract<GameAction, { tile: number }> =>
+    ['travel', 'place_championship', 'insure', 'attack', 'sell'].includes(a.type),
   );
   const actionDescription =
-    current.phase === 'debt'
-      ? `Il vous manque ${money(Math.max(0, (current.debt?.amount ?? 0) - active.cash))}. Vendez un bien pour régler votre dette.`
-      : current.phase === 'island'
-        ? 'Payez le voyage de retour, utilisez un billet ou tentez un double. Vous sortirez au plus tard à la troisième tentative.'
-        : current.phase === 'travel'
-          ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
-          : current.phase === 'championship'
-            ? `Choisissez une de vos villes sur le plateau pour y organiser le Mondial : ${money(current.config.championshipFee, true)}. Loyer ×2 pendant quatre de vos tours, sans cumul. Cliquez sur une de vos villes en surbrillance.`
-            : current.phase === 'property'
-              ? current.properties[active.position]?.ownerId &&
-                current.properties[active.position]?.ownerId !== active.id
-                ? `${current.config.board[active.position]!.name} · le loyer adverse est prélevé automatiquement. Vous pouvez poursuivre ou proposer un rachat.`
-                : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
-              : 'Deux dés. Une destination. Une nouvelle opportunité.';
+    current.phase === 'duel'
+      ? 'La fenêtre de duel indique qui doit miser, choisir ou révéler sa main.'
+      : current.phase === 'alliance'
+        ? 'Choisissez le joueur avec qui partager les prochains gains.'
+        : current.phase === 'casino'
+          ? 'Roulette ou machine à sous : tentez le jackpot dans la fenêtre du casino.'
+          : current.phase === 'attack'
+            ? 'Choisissez une ville adverse en surbrillance sur le plateau. Une assurance bloque l’expropriation, mais pas les cafards.'
+            : active.insurance?.tile === null
+              ? 'Votre jeton assurance est disponible : cliquez sur une de vos propriétés en surbrillance pour la protéger.'
+              : current.phase === 'debt'
+                ? `Il vous manque ${money(Math.max(0, (current.debt?.amount ?? 0) - active.cash))}. Vendez un bien pour régler votre dette.`
+                : current.phase === 'island'
+                  ? 'Payez le voyage de retour, utilisez un billet ou tentez un double. Vous sortirez au plus tard à la troisième tentative.'
+                  : current.phase === 'travel'
+                    ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
+                    : current.phase === 'championship'
+                      ? `Choisissez une de vos villes sur le plateau pour y organiser le Mondial : ${money(current.config.championshipFee, true)}. Loyer ×2 pendant quatre de vos tours, sans cumul. Cliquez sur une de vos villes en surbrillance.`
+                      : current.phase === 'property'
+                        ? current.properties[active.position]?.ownerId &&
+                          current.properties[active.position]?.ownerId !== active.id
+                          ? `${current.config.board[active.position]!.name} · le loyer adverse est prélevé automatiquement. Vous pouvez poursuivre ou proposer un rachat.`
+                          : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
+                        : 'Deux dés. Une destination. Une nouvelle opportunité.';
 
   return (
     <GameClockContext.Provider
@@ -558,7 +613,7 @@ export default function App() {
             </section>
             <section className="hero-map" aria-label="Aperçu du plateau">
               <span className="map-stamp">
-                26 ESCALES
+                32 ESCALES
                 <br />
                 <b>∞ POSSIBILITÉS</b>
               </span>
@@ -662,6 +717,18 @@ export default function App() {
                   <div>
                     <span className="player-name">
                       {p.name === 'Vous' && online ? `Joueur ${i + 1}` : p.name}{' '}
+                      {p.insurance && (
+                        <span
+                          className="inventory-token"
+                          title={
+                            p.insurance.tile === null
+                              ? 'Assurance disponible'
+                              : `Assurance : ${current.config.board[p.insurance.tile]?.name}`
+                          }
+                        >
+                          🛡
+                        </span>
+                      )}
                       <small>
                         {online?.self === p.id
                           ? 'VOUS'
@@ -677,6 +744,23 @@ export default function App() {
                   <span className="property-count" title="Propriétés">
                     ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}
                   </span>
+                  {!!p.heldCards?.length && (
+                    <span className="held-cards">
+                      {p.heldCards.map((id) => (
+                        <span
+                          key={id}
+                          title={current.config.cards.find((c) => c.id === id)?.description}
+                        >
+                          {current.config.cards.find((c) => c.id === id)?.title}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                  {!!p.fraudLiability && (
+                    <small className="fraud-risk" title="Jusqu’au prochain passage par Départ">
+                      ⚠ Taxe : {money(p.fraudLiability, true)}
+                    </small>
+                  )}
                 </article>
               ))}
             </div>
@@ -718,23 +802,23 @@ export default function App() {
                 <span className="eyebrow">
                   {paused
                     ? 'PARTIE EN PAUSE'
-                    : active.bot
+                    : decisionPlayer.bot
                       ? 'UN BOT RÉFLÉCHIT…'
-                      : online && online.self !== active.id
-                        ? `TOUR DE ${active.name.toUpperCase()}`
-                        : `À VOUS, ${active.name.toUpperCase()}`}
+                      : online && online.self !== decisionPlayer.id
+                        ? `TOUR DE ${decisionPlayer.name.toUpperCase()}`
+                        : `À VOUS, ${decisionPlayer.name.toUpperCase()}`}
                 </span>
                 <h2>
                   {paused
                     ? 'Une petite escale ?'
-                    : active.bot || (online && online.self !== active.id)
-                      ? `${active.name} joue`
+                    : decisionPlayer.bot || (online && online.self !== decisionPlayer.id)
+                      ? `${decisionPlayer.name} joue`
                       : phaseText[current.phase]}
                 </h2>
                 <p>
                   {paused
                     ? 'Le chrono et les bots vous attendent.'
-                    : active.bot || (online && online.self !== active.id)
+                    : decisionPlayer.bot || (online && online.self !== decisionPlayer.id)
                       ? 'Suivez son déplacement. Vos commandes seront disponibles à votre tour.'
                       : actionDescription}
                 </p>
@@ -759,7 +843,16 @@ export default function App() {
                 {options.length > 0 && !interactionDisabled && (
                   <p className="board-choice-hint">
                     Cliquez directement sur une case dorée du plateau pour{' '}
-                    {current.phase === 'travel' ? 'vous y déplacer' : 'y placer le championnat'}.
+                    {current.phase === 'travel'
+                      ? 'vous y déplacer'
+                      : current.phase === 'attack'
+                        ? 'choisir votre cible'
+                        : current.phase === 'debt'
+                          ? 'la vendre et régler votre dette'
+                          : current.phase === 'championship'
+                            ? 'y placer le championnat'
+                            : 'l’assurer'}
+                    .
                   </p>
                 )}
                 <div className="actions">
@@ -791,7 +884,7 @@ export default function App() {
                     {online.state?.players.find((p) => p.id === online.self)?.bot &&
                       !current.winner && (
                         <button
-                          className="secondary"
+                          className="secondary reclaim-seat"
                           onClick={() =>
                             act({ type: 'set_control', playerId: online.self, bot: false })
                           }
@@ -808,6 +901,19 @@ export default function App() {
                   >
                     Prendre la main sur ce bot
                   </button>
+                )}
+                {current.crisis && (
+                  <p className="world-event-status">
+                    📉 Crise économique · loyers −50 % · {current.crisis.remaining.length} joueur(s)
+                    doivent encore terminer leur tour
+                  </p>
+                )}
+                {current.alliance && (
+                  <p className="world-event-status">
+                    🤝 {current.players.find((p) => p.id === current.alliance!.beneficiaryId)!.name}{' '}
+                    reçoit 50 % des gains de{' '}
+                    {current.players.find((p) => p.id === current.alliance!.targetId)!.name}
+                  </p>
                 )}
                 <small className="action-help">
                   Les villes avec fanions ont un festival : loyer ×2.
@@ -866,21 +972,47 @@ export default function App() {
               </p>
               <h3>3. Plusieurs façons de gagner</h3>
               <p>
-                Complétez trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k,
-                sans terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À
-                la fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
+                Possédez toutes les propriétés achetables d’un côté, île comprise, ou complétez
+                trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k, sans
+                terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
+                fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
               </p>
               <h3>4. Des escales qui changent tout</h3>
               <p>
-                26 cases : 7 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe et 4 coins
-                spéciaux. Les loyers sont payés automatiquement par le visiteur. Les cartes se
-                résolvent pour leur destinataire uniquement.
+                32 cases : 8 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe, 2 casinos,
+                1 assurance, 1 karma et 4 coins spéciaux. Les loyers sont payés automatiquement par
+                le visiteur. Les cartes se résolvent pour leur destinataire uniquement.
               </p>
               <p>
                 Trois festivals doublent les loyers. Le championnat augmente encore le
                 multiplicateur. L’île vous retient jusqu’à trois tours. Le Tour du monde ouvre un
                 voyage payant au prochain tour. Si votre cash manque, vendez des biens à la banque à
                 moitié de leur valeur.
+              </p>
+              <h3>5. Tentez votre chance, protégez vos biens</h3>
+              <p>
+                Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot
+                rapporte 10 % de votre solde ; ses chances augmentent à chaque visite du casino. Le
+                Karma offre 50 k au dernier patrimoine ou prélève 50 k au premier.
+              </p>
+              <p>
+                L’assurance donne un jeton unique à placer sur un bien : il bloque une destruction
+                ou une expropriation, puis disparaît. Squatteur se garde pour éviter un loyer.
+                Expropriation remet une ville adverse à la banque ; les cafards divisent le loyer
+                d’un hôtel par deux pendant deux tours de son propriétaire.
+              </p>
+              <p>
+                Fraude fiscale permet un achat à moitié prix. Jusqu’au prochain passage Départ,
+                tomber sur Taxe coûte deux fois le prix normal de cet achat. Une dette impose de
+                choisir les biens à vendre ; la faillite survient seulement si leur valeur totale de
+                revente et votre compte ne suffisent pas.
+              </p>
+              <p>
+                Alliance temporaire prélève la moitié des gains d’un joueur jusqu’à la fin de son
+                prochain tour. Une crise économique aléatoire divise tous les loyers par deux
+                pendant un tour complet de tous les joueurs. Le duel propose une mise identique
+                acceptée par les deux adversaires : pierre, feuille, ciseaux avec choix secrets ; le
+                gagnant remporte le pot, une égalité rembourse les mises.
               </p>
               <h3>À quatre, jouez en équipe</h3>
               <p>
@@ -1011,8 +1143,150 @@ export default function App() {
             <PurchaseDetails
               state={current}
               onBuy={() => act({ type: 'buy', playerId: active.id })}
+              onFraud={() => act({ type: 'buy_fraud', playerId: active.id })}
               onPass={() => act({ type: 'finish', playerId: active.id })}
             />
+          </Modal>
+        )}
+        {screen === 'game' &&
+          !rolling &&
+          !modal &&
+          !paused &&
+          current.phase === 'duel' &&
+          current.duel && (
+            <Modal title="Le grand duel">
+              <DuelView
+                key={current.duel.id}
+                state={current}
+                self={online?.self}
+                act={act}
+                disabled={Boolean(online?.busy || online?.blocked)}
+              />
+            </Modal>
+          )}
+        {screen === 'game' && !interactionDisabled && !modal && current.phase === 'alliance' && (
+          <Modal title="Choisissez votre alliance">
+            <p>
+              Recevez 50 % des gains du joueur choisi jusqu’à la fin de son prochain tour. Cette
+              part est prélevée sur ses gains.
+            </p>
+            <div className="decision-actions">
+              {legal
+                .filter((a) => a.type === 'alliance')
+                .map(
+                  (a) =>
+                    a.type === 'alliance' && (
+                      <button className="primary" key={a.targetId} onClick={() => act(a)}>
+                        Choisir {current.players.find((p) => p.id === a.targetId)!.name}
+                        <ActionClock />
+                      </button>
+                    ),
+                )}
+            </div>
+            <button
+              className="secondary"
+              onClick={() => act({ type: 'finish', playerId: active.id })}
+            >
+              Passer <ActionClock />
+            </button>
+          </Modal>
+        )}
+        {screen === 'game' && !interactionDisabled && !modal && current.phase === 'casino' && (
+          <Modal title="Bienvenue au casino">
+            <CasinoView state={current} act={act} />
+          </Modal>
+        )}
+        {screen === 'game' && !paused && cinema.frame.cue.kind === 'casino' && (
+          <Modal title="Le casino joue pour vous">
+            <CasinoView
+              key={current.seq + '-casino'}
+              state={current}
+              cue={cinema.frame.cue}
+              act={act}
+            />
+          </Modal>
+        )}
+        {screen === 'game' && !paused && cinema.frame.cue.kind === 'notice' && (
+          <Modal
+            title={
+              cinema.frame.cue.reason === 'duel_result'
+                ? 'Le duel est joué !'
+                : cinema.frame.cue.reason === 'crisis'
+                  ? 'Crise économique'
+                  : cinema.frame.cue.reason === 'alliance'
+                    ? 'Une alliance est née'
+                    : 'Votre aventure continue'
+            }
+          >
+            <p className="event-notice">{cinema.frame.cue.message}</p>
+          </Modal>
+        )}
+        {screen === 'game' && !interactionDisabled && !modal && current.phase === 'rent' && (
+          <Modal title="Un loyer… ou votre carte Squatteur ?">
+            <p>
+              Vous arrivez à {current.config.board[active.position]?.name}. Le loyer est de{' '}
+              {money(current.pendingRent?.amount ?? 0)}.
+            </p>
+            <p>La carte Squatteur annule ce paiement et sera défaussée.</p>
+            <div className="decision-actions">
+              {available
+                .filter((a) => ['use_squatter', 'pay_rent'].includes(a.type))
+                .map((a) => (
+                  <button
+                    className={a.type === 'use_squatter' ? 'primary' : 'secondary'}
+                    key={a.type}
+                    onClick={() => act(a)}
+                  >
+                    {actionLabel(a)}
+                    <ActionClock />
+                  </button>
+                ))}
+            </div>
+          </Modal>
+        )}
+        {screen === 'game' && !interactionDisabled && !modal && current.phase === 'debt' && (
+          <Modal title="Réglons cette dette ensemble">
+            <p>
+              À payer : <strong>{money(current.debt!.amount)}</strong> · En banque :{' '}
+              {money(active.cash)}.
+            </p>
+            <p>
+              Il manque <strong>{money(current.debt!.amount - active.cash)}</strong>. Choisissez les
+              biens à vendre. Le paiement se règle dès que le total suffit.
+            </p>
+            <p>
+              Valeur vendable totale :{' '}
+              <strong>
+                {money(
+                  legal
+                    .filter((a) => a.type === 'sell')
+                    .reduce(
+                      (sum, a) =>
+                        sum +
+                        Math.floor(
+                          getPropertyValue(current, 'tile' in a ? a.tile : 0) *
+                            current.config.resaleRate,
+                        ),
+                      0,
+                    ),
+                )}
+              </strong>
+              .
+            </p>
+            <div className="decision-actions">
+              {available
+                .filter((a) => a.type === 'sell')
+                .map((a) => (
+                  <button
+                    className="secondary"
+                    key={'tile' in a ? a.tile : a.type}
+                    onClick={() => act(a)}
+                  >
+                    {actionLabel(a)}
+                    <ActionClock />
+                  </button>
+                ))}
+            </div>
           </Modal>
         )}
         {tile && !offer && (
@@ -1127,8 +1401,14 @@ export default function App() {
               </p>
               <strong className="tax-amount">{money(cinema.frame.cue.amount ?? 0)}</strong>
               <p>
-                Taxe : {money(current.config.taxBase ?? 0, true)} + {current.config.taxRate * 100} %
-                de votre patrimoine immobilier.
+                {cinema.frame.cue.reason === 'fraud' ? (
+                  'Contrôle fiscal ! Votre achat à prix réduit entraîne une taxe égale à deux fois le prix normal de la ville. Le contrôle clôt ce risque.'
+                ) : (
+                  <>
+                    Taxe : {money(current.config.taxBase ?? 0, true)} +{' '}
+                    {current.config.taxRate * 100} % de votre patrimoine immobilier.
+                  </>
+                )}
               </p>
               {!online && !active.bot ? (
                 <button className="primary" onClick={cinema.advance}>

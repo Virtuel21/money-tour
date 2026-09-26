@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { tileFrame, boardShape } from '../src/board/layout';
-it.each([26, 28])(
+it.each([26, 28, 30, 32])(
   'keeps all %i interactive rectangles separate, including corner neighbours',
   (count) => {
     const tiles = Array.from({ length: count }, (_, i) => tileFrame(i, count));
@@ -13,7 +13,15 @@ it.each([26, 28])(
         const overlapZ = (a.depth + b.depth) / 2 - Math.abs(a.z - b.z);
         expect(overlapX <= 0.001 || overlapZ <= 0.001, `Overlapping tiles ${i},${j}`).toBe(true);
       }
-    expect(boardShape(count).corners).toEqual(count === 26 ? [0, 7, 13, 20] : [0, 7, 14, 21]);
+    expect(boardShape(count).corners).toEqual(
+      count === 32
+        ? [0, 8, 16, 24]
+        : count === 30
+          ? [0, 9, 15, 24]
+          : count === 26
+            ? [0, 7, 13, 20]
+            : [0, 7, 14, 21],
+    );
     expect(
       tiles
         .filter((t) => !t.corner)
