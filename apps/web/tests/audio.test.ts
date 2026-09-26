@@ -87,3 +87,18 @@ it('stops effects on pause and permits new effects after resuming', async () => 
   sound.close();
   expect(sources[4]!.disconnect).toHaveBeenCalledOnce();
 });
+
+it('cancels coin chimes when effects are stopped and respects mute', async () => {
+  const sound = new Soundscape();
+  await sound.unlock();
+  sound.effect('coin-in');
+  sound.effect('coin-out');
+  expect(sources.length).toBeGreaterThan(0);
+  sound.stopEffects();
+  sources.forEach((s) => expect(s.disconnect).toHaveBeenCalledOnce());
+  const count = sources.length;
+  sound.configure({ effects: false, music: false, volume: 0.4 });
+  sound.effect('coin-in');
+  expect(sources).toHaveLength(count);
+  sound.close();
+});

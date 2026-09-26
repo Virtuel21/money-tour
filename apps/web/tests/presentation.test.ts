@@ -105,3 +105,36 @@ it('identifies the card reader and announces the next player after resolution', 
   expect(frames[1]!.cue).toMatchObject({ kind: 'turn', playerId: 'b' });
   expect(frames[1]!.state.currentPlayer).toBe(1);
 });
+
+it('credits the departure bonus at the actual forward crossing, not before the hops', () => {
+  const before = game(),
+    after = structuredClone(before);
+  before.players[0]!.position = 26;
+  after.players[0]!.position = 2;
+  after.players[0]!.cash += 300000;
+  const frames = presentation(before, after, [
+    { type: 'start_bonus', playerId: 'a', amount: 300000 },
+    { type: 'move', playerId: 'a', tile: 2, steps: 4 },
+  ]);
+  expect(
+    frames
+      .slice(0, 3)
+      .map((f) => [f.cue.kind, f.state.players[0]!.position, f.state.players[0]!.cash]),
+  ).toEqual([
+    ['hop', 27, 1500000],
+    ['hop', 0, 1500000],
+    ['money', 0, 1800000],
+  ]);
+  expect(frames[2]!.cue.sound).toBe('coin-in');
+});
+it('plays outgoing coins for purchases and taxes without crediting the payer', () => {
+  const before = game(),
+    after = structuredClone(before);
+  const frames = presentation(before, after, [
+    { type: 'purchase', playerId: 'a', tile: 1, amount: 100000 },
+    { type: 'payment', payerId: 'a', amount: 50000, reason: 'tax' },
+  ]);
+  const cash = frames.filter((f) => f.cue.kind === 'money');
+  expect(cash.map((f) => f.state.players[0]!.cash)).toEqual([1400000, 1350000]);
+  expect(cash.every((f) => f.cue.sound === 'coin-out' && !f.cue.playerId)).toBe(true);
+});

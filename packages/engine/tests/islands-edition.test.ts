@@ -119,3 +119,29 @@ describe('28-space island edition', () => {
     expect(paid.state.players[1]!.cash).toBe(1500000);
   });
 });
+
+it('pays exactly one 300k salary on forward arrival at departure and allows only owned cities for Mondial', () => {
+  const s = game();
+  s.players[0]!.position = 23;
+  const arrived = reduceGame(s, { type: 'roll', playerId: 'p1' }, sequence(0.2, 0.4));
+  expect(arrived.state.players[0]!.position).toBe(0);
+  expect(arrived.state.players[0]!.cash).toBe(1800000);
+  expect(arrived.events.filter((e) => e.type === 'start_bonus')).toHaveLength(1);
+  const m = game();
+  m.phase = 'championship';
+  m.players[0]!.position = 14;
+  m.properties[1]!.ownerId = 'p1';
+  m.properties[3]!.ownerId = 'p1';
+  m.properties[5]!.ownerId = 'p2';
+  expect(getLegalActions(m).filter((a) => a.type === 'place_championship')).toEqual([
+    { type: 'place_championship', playerId: 'p1', tile: 1 },
+  ]);
+  const rent = getRent(m, 1);
+  const boosted = reduceGame(
+    m,
+    { type: 'place_championship', playerId: 'p1', tile: 1 },
+    sequence(0),
+  );
+  expect(boosted.state.players[0]!.cash).toBe(1500000 - m.config.championshipFee);
+  expect(getRent(boosted.state, 1)).toBe(rent * 2);
+});
