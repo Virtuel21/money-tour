@@ -1,4 +1,19 @@
 import {
+  initAdventure,
+  twinMultiplier,
+  reservedCity,
+  trackQuests,
+  payCapital,
+  maybeAuction,
+  auctionActions,
+  legalAuction,
+  applyAuction,
+  botAuction,
+  auctionActor,
+  advanceAuction,
+  validateAdventure,
+} from './adventure.js';
+import {
   duelActions,
   isLegalDuelAction,
   applyDuelAction,
@@ -79,6 +94,7 @@ export function getRent(state: GameState, tileId: number): number {
     (tile.rents?.[property.level] ?? 0) *
       (state.festivals.includes(tileId) ? state.config.festivalMultiplier : 1) *
       (1 + property.championships) *
+      twinMultiplier(state, tileId) *
       (property.roachTurns ? 0.5 : 1) *
       (state.crisis ? 0.5 : 1),
   );
@@ -229,7 +245,7 @@ export function createGame(
   for (const tile of config.board)
     if (tile.type === 'city' || tile.type === 'resort')
       properties[tile.id] = { ownerId: null, level: 0, championships: 0 };
-  return {
+  const state: GameState = {
     version: config.version,
     config,
     mode,
@@ -252,6 +268,8 @@ export function createGame(
     debt: null,
     winner: null,
   };
+  initAdventure(state, rng);
+  return state;
 }
 
 function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
@@ -272,6 +290,7 @@ function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
 
 export function getLegalActions(state: GameState): GameAction[] {
   if (state.phase === 'finished' || state.winner) return [];
+  if (state.phase === 'auction') return auctionActions(state);
   if (state.phase === 'duel') return duelActions(state);
   const player = activePlayer(state);
   if (!player || player.eliminated) return [];
@@ -316,10 +335,16 @@ export function getLegalActions(state: GameState): GameAction[] {
   if (state.phase === 'property') {
     const tile = tileAt(state, player.position);
     const property = state.properties[tile.id];
-    if (property && !property.ownerId && player.cash >= (tile.price ?? Infinity))
+    if (
+      property &&
+      !property.ownerId &&
+      !reservedCity(state, tile.id) &&
+      player.cash >= (tile.price ?? Infinity)
+    )
       result.push(action('buy'));
     if (
       tile.type === 'city' &&
+      !reservedCity(state, tile.id) &&
       !property?.ownerId &&
       heldCard(state, player, 'fraud') &&
       player.cash >= Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5))
@@ -789,7 +814,10 @@ function nextTurn(state: GameState, events: GameEvent[], rng: Rng): void {
     }
   }
   state.turn += 1;
-  if (state.currentPlayer <= current) maybeCrisis(state, rng, events);
+  if (state.currentPlayer <= current) {
+    if (state.adventure) state.adventure.round += 1;
+    maybeCrisis(state, rng, events);
+  }
   for (const [id, property] of Object.entries(state.properties)) {
     if (property.ownerId === activePlayer(state).id && property.roachTurns) {
       property.roachTurns -= 1;
@@ -808,6 +836,7 @@ function nextTurn(state: GameState, events: GameEvent[], rng: Rng): void {
   }
   beginTurn(state);
   events.push({ type: 'turn', playerId: activePlayer(state).id, turn: state.turn });
+  maybeAuction(state, rng, events);
 }
 
 function roll(state: GameState, rng: Rng, events: GameEvent[], fromIsland: boolean): void {
@@ -844,6 +873,17 @@ function roll(state: GameState, rng: Rng, events: GameEvent[], fromIsland: boole
 function checkVictory(state: GameState, events: GameEvent[]): void {
   if (state.winner) return;
   if (state.duel && state.elapsedMs >= state.durationMs) cancelDuel(state, events);
+  if (state.elapsedMs >= state.durationMs) {
+    if (state.auction) {
+      state.phase = state.auction.resume;
+      delete state.auction;
+      events.push({
+        type: 'auction_result',
+        message: 'Fin de partie : enchère annulée, aucune somme débitée.',
+      });
+    }
+    payCapital(state, events);
+  }
   const living = state.players.filter((player) => !player.eliminated);
   const collections =
     state.mode === 'teams'
@@ -914,6 +954,14 @@ function checkVictory(state: GameState, events: GameEvent[]): void {
     };
   }
   if (result) {
+    payCapital(state, events);
+    result.netWorth = Math.max(
+      0,
+      ...collections
+        .filter((c) => c.ids.some((id) => result!.playerIds.includes(id)))
+        .map((c) => c.members.reduce((sum, p) => sum + getNetWorth(state, p.id), 0)),
+    );
+    delete state.auction;
     state.winner = result;
     state.phase = 'finished';
     state.debt = null;
@@ -938,6 +986,7 @@ function liquidationOrder(state: GameState): Tile[] {
 
 function timeoutAction(state: GameState): GameAction {
   const playerId = activePlayer(state).id;
+  if (state.phase === 'auction') return { type: 'auction_pass', playerId: auctionActor(state)! };
   if (state.phase === 'duel') return { type: 'duel_cancel', playerId: getDecisionPlayerId(state) };
   if (state.phase === 'rent') return { type: 'use_squatter', playerId };
   if (state.phase === 'debt')
@@ -950,6 +999,10 @@ function timeoutAction(state: GameState): GameAction {
 
 function applyAction(state: GameState, action: GameAction, rng: Rng, events: GameEvent[]): void {
   const player = activePlayer(state);
+  if (action.type.startsWith('auction_')) {
+    applyAuction(state, action, rng, events);
+    return;
+  }
   if (action.type.startsWith('duel_')) {
     applyDuelAction(state, action, rng, events);
     return;
@@ -1159,6 +1212,7 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
 
 export function isLegalPlayerAction(state: GameState, action: GameAction): boolean {
   if (state.winner) return false;
+  if (action.type.startsWith('auction_')) return legalAuction(state, action);
   if (action.type.startsWith('duel_')) return isLegalDuelAction(state, action);
   return getLegalActions(state).some(
     (candidate) =>
@@ -1193,6 +1247,8 @@ export function reduceGame(
   // Configuration is immutable during a game. Copy only mutable game data per action.
   const next: GameState = {
     ...state,
+    ...(state.adventure ? { adventure: clone(state.adventure), quests: clone(state.quests) } : {}),
+    ...(state.auction ? { auction: clone(state.auction) } : {}),
     ...(state.duel ? { duel: clone(state.duel) } : {}),
     ...(state.crisis ? { crisis: clone(state.crisis) } : {}),
     ...(state.alliance ? { alliance: { ...state.alliance } } : {}),
@@ -1231,8 +1287,12 @@ export function reduceGame(
     )
       next.decisionElapsedMs = 0;
   }
+  if (!next.winner) {
+    if (next.auction) advanceAuction(next, rng, events);
+    trackQuests(next, events);
+  }
   checkVictory(next, events);
-  if (!next.winner && activePlayer(next).eliminated) nextTurn(next, events, rng);
+  if (!next.winner && !next.auction && activePlayer(next).eliminated) nextTurn(next, events, rng);
   return { state: next, events };
 }
 
@@ -1242,6 +1302,7 @@ export function chooseBotAction(state: GameState): GameAction {
   if (!legal.length) throw new Error('No bot action is available in a finished game.');
   const find = (type: GameAction['type']): GameAction | undefined =>
     legal.find((action) => action.type === type);
+  if (state.phase === 'auction') return botAuction(state);
   if (state.phase === 'duel' || state.phase === 'alliance') return legal[0]!;
   if (state.phase === 'casino') return find('casino_red') ?? find('casino_spin')!;
   if (state.phase === 'rent') return find('use_squatter') ?? find('pay_rent')!;
@@ -1343,7 +1404,7 @@ function opportunity(state: GameState, tileId: number): number {
 }
 
 export function validateState(state: GameState): string[] {
-  const errors: string[] = [];
+  const errors: string[] = validateAdventure(state);
   const safe = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
   if (!state.players[state.currentPlayer]) errors.push('Invalid active player index.');
   if (new Set(state.players.map((player) => player.id)).size !== state.players.length)
@@ -1421,7 +1482,8 @@ export function validateState(state: GameState): string[] {
   )
     errors.push('Missing property entry.');
   if (
-    state.festivals.length !== state.config.festivalCount ||
+    state.festivals.length !==
+      (state.adventure && state.adventure.twist !== 'festivals' ? 0 : state.config.festivalCount) ||
     new Set(state.festivals).size !== state.festivals.length ||
     state.festivals.some((id) => tileAt(state, id)?.type !== 'city')
   )

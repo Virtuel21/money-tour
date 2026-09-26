@@ -1,6 +1,6 @@
 import { expect, it } from 'vitest';
 import { createGame, legacyConfig, type GameConfig } from '@money-tour/engine';
-import { presentation } from '../src/game/presentation';
+import { presentation, presentationMs } from '../src/game/presentation';
 
 const game = () =>
   createGame({
@@ -154,4 +154,16 @@ it('plays outgoing coins for purchases and taxes without crediting the payer', (
   const cash = frames.filter((f) => f.cue.kind === 'money');
   expect(cash.map((f) => f.state.players[0]!.cash)).toEqual([1400000, 1350000]);
   expect(cash.every((f) => f.cue.sound === 'coin-out' && !f.cue.playerId)).toBe(true);
+});
+
+it('keeps event notices five seconds longer, including reduced-motion mode', () => {
+  const s = game();
+  for (const reduced of [false, true]) {
+    const frames = presentation(s, s, [{ type: 'crisis', message: 'Crise économique' }], reduced);
+    expect(frames.find((f) => f.cue.kind === 'notice')!.cue.duration).toBe(
+      (reduced ? 800 : 2600) + 5000,
+    );
+    expect(presentationMs([{ type: 'crisis' }])).toBe(7600);
+    expect(presentationMs([{ type: 'auction_started' }])).toBe(7600);
+  }
 });

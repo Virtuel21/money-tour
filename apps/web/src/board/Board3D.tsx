@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { getRent, type GameState } from '@money-tour/engine';
+import { reservedCity, getRent, type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
 import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
@@ -73,6 +73,7 @@ export default function Board({
   demo = false,
   cue,
   choices = [],
+  selecting = false,
 }: {
   state: GameState;
   onTile: (id: number) => void;
@@ -80,6 +81,7 @@ export default function Board({
   demo?: boolean;
   cue?: Cue;
   choices?: number[];
+  selecting?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const live = useRef({ state, cue, reducedMotion, choices });
@@ -811,7 +813,9 @@ export default function Board({
                   tabIndex={0}
                   role="button"
                   aria-label={(choices.includes(t.id) ? 'Choisir ' : 'Voir ') + t.name}
-                  className={choices.includes(t.id) ? 'selectable' : ''}
+                  className={
+                    choices.includes(t.id) ? 'selectable' : selecting ? 'choice-dimmed' : ''
+                  }
                   onClick={() => onTile(t.id)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
@@ -867,6 +871,7 @@ export default function Board({
                   data-tile-label={t.id}
                   className={
                     'city-label' +
+                    (selecting && !choices.includes(t.id) ? ' label-dimmed' : '') +
                     (['casino', 'insurance', 'karma'].includes(t.type) ? ' special-label' : '')
                   }
                   style={
@@ -879,6 +884,9 @@ export default function Board({
                   }
                 >
                   <b>{short}</b>
+                  {reservedCity(state, t.id) && (
+                    <small className="tile-condition">🔒 Enchère T10</small>
+                  )}
                   {state.players.some((p) => p.insurance?.tile === t.id) && (
                     <small className="tile-condition">🛡 Assurée</small>
                   )}

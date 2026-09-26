@@ -3200,3 +3200,270 @@ footer a {
     font-size: 14px;
   }
 }
+/* Session rules, compact estate cards and readable target selection. */
+.adventure-banner {
+  background: #fff8e7;
+  border: 1px solid #dfc380;
+  border-radius: 14px;
+  padding: 10px 18px;
+  color: #193b48;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0 10px 8px;
+  text-align: center;
+}
+.adventure-banner > span {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 900;
+  color: #77530b;
+}
+.adventure-banner strong {
+  font-size: 14px;
+}
+.adventure-banner small {
+  font-size: 11px;
+}
+.player-card .player-inventory {
+  flex: 1 1 100%;
+  width: 100%;
+}
+.mini-properties {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  max-height: 145px;
+  overflow-y: auto;
+}
+.mini-property {
+  padding: 4px 2px;
+  min-width: 0;
+  border: 1px solid #a3b6b7;
+  border-top: 7px solid;
+  border-radius: 5px;
+  background: #fffaf0;
+  color: #173943;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-height: 62px;
+  box-shadow: 0 2px 0 #16374522;
+}
+.mini-property b {
+  font-size: 10px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.mini-property small {
+  font-size: 10px;
+  font-weight: 800;
+}
+.empty-estate {
+  grid-column: 1/-1;
+  font-size: 10px;
+  color: #536a72;
+}
+.bonus-tokens {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin-top: 5px;
+}
+.bonus-tokens span {
+  background: #f8edc5;
+  color: #55420d;
+  border: 1px solid #dfc775;
+  border-radius: 5px;
+  padding: 4px;
+  font-size: 10px;
+}
+.player-card .property-count {
+  position: static;
+}
+.private-quest {
+  border-top: 1px solid #a8cbb05c;
+  margin-top: 8px;
+  padding-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: 12px;
+}
+.private-quest button {
+  min-height: 32px;
+  padding: 5px 10px;
+  color: #fdf5d9;
+  background: #244e5b;
+  border: 1px solid #7baba5;
+}
+.private-quest strong,
+.private-quest span {
+  color: #fff5d5;
+}
+.mondial-picker {
+  margin: 8px 0;
+  border: 1px solid #e9c56d;
+  border-radius: 12px;
+  padding: 10px;
+  background: #234b55;
+  color: #fff4cf;
+}
+.mondial-picker > div {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.mondial-picker button {
+  min-height: 42px;
+  font-size: 13px;
+  padding: 8px 12px;
+}
+.board-hit-polygons polygon.choice-dimmed,
+.board-hit-polygons polygon.choice-dimmed:hover {
+  fill: #071624;
+  fill-opacity: 0.73;
+  stroke: none;
+  cursor: default;
+}
+.city-label.label-dimmed {
+  opacity: 0.2;
+}
+.board-hit-polygons polygon.selectable {
+  fill: #ffd25b;
+  fill-opacity: 0.18;
+  stroke: #fff3ad;
+  stroke-width: 0.22px;
+}
+.auction-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.auction-property {
+  border: 1px solid #dcc89a;
+  border-top: 12px solid;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff8e7;
+  text-align: center;
+}
+.auction-property > span {
+  font-size: 34px;
+}
+.auction-property h3 {
+  margin: 4px;
+  font-size: 28px;
+}
+.auction-seals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.auction-seals span {
+  background: #e9f0eb;
+  border: 1px solid #9bbab2;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+}
+.auction-view input {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  font-size: 24px;
+  padding: 12px;
+}
+@media (min-width: 1100px) {
+  .players {
+    max-height: calc(100dvh - 95px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    padding: 4px;
+    align-self: start;
+  }
+  .game-layout .board-area {
+    align-self: center;
+  }
+}
+@media (max-width: 700px) {
+  .adventure-banner {
+    padding: 7px;
+    margin: 5px 0;
+  }
+  .adventure-banner strong {
+    font-size: 11px;
+  }
+  .adventure-banner small {
+    font-size: 9px;
+  }
+  .mini-properties {
+    max-height: 100px;
+  }
+  .player-card .player-inventory {
+    min-width: 120px;
+  }
+  .players {
+    align-items: start;
+  }
+}
+.player-card .private-quest {
+  flex-basis: 100%;
+  color: #183b47;
+}
+.player-card .private-quest strong,
+.player-card .private-quest span {
+  color: #183b47;
+  font-size: 11px;
+}
+.player-card .private-quest button {
+  font-size: 10px;
+}
+.game-sidebar > .mondial-picker {
+  background: #fff8df;
+  color: #193d48;
+}
+.game-sidebar > .mondial-picker > div {
+  flex-direction: column;
+}
+.game-sidebar > .mondial-picker button {
+  color: #173a44;
+}
+@media (min-width: 1000px) {
+  .game-layout .board-area {
+    max-width: min(100%, calc((100dvh - 400px) * 1.47));
+    align-self: start;
+  }
+  .game-sidebar:has(> .mondial-picker) {
+    align-self: start;
+  }
+  .players {
+    max-height: calc(100dvh - 85px);
+  }
+}
+@media (min-width: 1000px) {
+  .players .player-card {
+    flex-shrink: 0;
+  }
+  .game-layout .board-area {
+    max-width: min(100%, calc((100dvh - 350px) * 1.47));
+  }
+}
+@media (min-width: 1000px) {
+  .players .player-card .avatar {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+  .players .player-card > div:not(.player-inventory) {
+    flex: 1 1 50px;
+  }
+  .players .mini-properties {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .players .player-card {
+    gap: 6px;
+    min-height: 95px;
+  }
+}

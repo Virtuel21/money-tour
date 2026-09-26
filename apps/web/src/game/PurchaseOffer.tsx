@@ -1,5 +1,5 @@
 import { ActionClock } from './ActionClock';
-import { getLegalActions, type GameState } from '@money-tour/engine';
+import { reservedCity, getLegalActions, type GameState } from '@money-tour/engine';
 import { money } from './local';
 
 export function purchaseOffer(state: GameState, self?: string) {
@@ -11,6 +11,7 @@ export function purchaseOffer(state: GameState, self?: string) {
     player.bot ||
     (self !== undefined && self !== player.id) ||
     !tile.price ||
+    reservedCity(state, tile.id) ||
     state.properties[tile.id]?.ownerId
   )
     return null;

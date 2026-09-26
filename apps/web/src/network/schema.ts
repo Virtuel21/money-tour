@@ -2,6 +2,22 @@ import { z } from 'zod';
 const id = z.string().min(1).max(80);
 const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const actionSchema = z.union([
+  z.object({ type: z.literal('auction_pass'), playerId: id }).strict(),
+  z
+    .object({
+      type: z.literal('auction_commit'),
+      playerId: id,
+      hash: z.string().regex(/^[a-f0-9]{64}$/),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal('auction_reveal'),
+      playerId: id,
+      amount: natural,
+      salt: z.string().regex(/^[a-f0-9]{32,64}$/),
+    })
+    .strict(),
   z.object({ type: z.literal('alliance'), playerId: id, targetId: id }).strict(),
   z
     .object({

@@ -12,6 +12,7 @@ export type Phase =
   | 'attack'
   | 'rent'
   | 'alliance'
+  | 'auction'
   | 'duel';
 export type TileType =
   | 'start'
@@ -60,6 +61,7 @@ export interface ChanceCard {
   salary?: boolean;
 }
 export interface GameConfig {
+  adventures?: boolean;
   version: number;
   shuffleStreets?: boolean;
   casinoBaseChance?: number;
@@ -149,6 +151,9 @@ export interface Winner {
   netWorth: number;
 }
 export interface GameState {
+  adventure?: Adventure;
+  quests?: Record<string, Quest>;
+  auction?: Auction;
   version: number;
   config: GameConfig;
   mode: 'free-for-all' | 'teams';
@@ -207,6 +212,9 @@ type PlayerActionType =
   | 'decline_travel'
   | 'quit';
 export type GameAction =
+  | { type: 'auction_commit'; playerId: string; hash: string }
+  | { type: 'auction_reveal'; playerId: string; amount: number; salt: string }
+  | { type: 'auction_pass'; playerId: string }
   | { type: PlayerActionType; playerId: string }
   | {
       type: 'sell' | 'place_championship' | 'travel' | 'insure' | 'attack';
@@ -244,4 +252,32 @@ export interface GameResult {
   state: GameState;
   events: GameEvent[];
   error?: string;
+}
+export type Twist = 'twins' | 'festivals' | 'inheritance' | 'market' | 'capital';
+export interface Adventure {
+  twist: Twist;
+  round: number;
+  tenderRound: number;
+  tenderDone: boolean;
+  marketTile?: number;
+  marketDone?: boolean;
+  capitalTile?: number;
+  capitalPaid?: boolean;
+  twinTiles?: number[];
+}
+export interface Quest {
+  kind: 'islands' | 'doubles' | 'builds' | 'laps' | 'cities';
+  progress: number;
+  completed: boolean;
+}
+export interface Auction {
+  id: string;
+  tile: number;
+  kind: 'tender' | 'market';
+  resume: Phase;
+  participants: string[];
+  stage: 'commit' | 'reveal';
+  commitments: Record<string, string>;
+  bids: Record<string, number>;
+  passed: string[];
 }
