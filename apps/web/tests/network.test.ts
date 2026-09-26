@@ -1,0 +1,261 @@
+import { describe, it, expect } from 'vitest';
+import {
+  Ceremony,
+  commitment,
+  drawSeed,
+  hash,
+  identity,
+  secret,
+  sign,
+  verify,
+} from '../src/network/crypto';
+import { MemoryNetwork, MemoryTransport } from '../src/network/transport';
+import { Session, type SavedSession } from '../src/network/session';
+import { getLegalActions } from '@money-tour/engine';
+
+describe('shared randomness', () => {
+  it('requires identical commitments before reveal and verifies every secret', async () => {
+    const context = {
+      room: 'a'.repeat(64),
+      epoch: 0,
+      seq: 0,
+      parent: '0'.repeat(64),
+      command: 'b'.repeat(64),
+      participants: ['a', 'b'],
+      nonce: secret(),
+    };
+    const ceremony = new Ceremony(context);
+    const a = secret(),
+      b = secret();
+    expect(() => ceremony.put('reveal', 'a', a)).toThrow('Early');
+    ceremony.put('commit', 'a', await commitment(context, 'a', a));
+    ceremony.put('commit', 'b', await commitment(context, 'b', b));
+    const lock = await hash(ceremony.commitments);
+    ceremony.put('lock', 'a', lock);
+    ceremony.put('lock', 'b', lock);
+    ceremony.put('reveal', 'a', a);
+    expect(() => ceremony.proof()).toThrow('Incomplete');
+    ceremony.put('reveal', 'b', b);
+    const proof = ceremony.proof();
+    expect(await drawSeed(proof)).toHaveLength(64);
+    await expect(drawSeed({ ...proof, secrets: { a, b: secret() } })).rejects.toThrow(
+      'Invalid reveal',
+    );
+    await expect(drawSeed({ ...proof, context: { ...context, seq: 1 } })).rejects.toThrow(
+      'Invalid reveal',
+    );
+    expect(() => ceremony.put('commit', 'a', secret())).toThrow('Conflicting');
+    expect(() => ceremony.put('commit', 'intruder', secret())).toThrow('Invalid');
+  });
+  it('rejects forged identity signatures', async () => {
+    const user = await identity();
+    const value = { action: 'buy', seq: 4 };
+    const signature = await sign(user.privateKey, value);
+    expect(await verify(user.publicKey, value, signature)).toBe(true);
+    expect(await verify(user.publicKey, { ...value, seq: 5 }, signature)).toBe(false);
+  });
+});
+
+async function setup(count = 3) {
+  const network = new MemoryNetwork();
+  let time = 100000;
+  const sessions: Session[] = [];
+  for (let i = 0; i < count; i++) {
+    const session = new Session(
+      new MemoryTransport(`peer-${i}`, network),
+      await identity(),
+      `Joueur ${i}`,
+      i === 0,
+      () => time,
+    );
+    sessions.push(session);
+    await session.join('test-code', undefined, false);
+  }
+  async function flush() {
+    for (let n = 0; n < 8; n++) {
+      await network.flush();
+      await Promise.all(sessions.map((s) => s.idle()));
+    }
+  }
+  await flush();
+  return {
+    network,
+    sessions,
+    flush,
+    advance: (ms: number) => {
+      time += ms;
+    },
+  };
+}
+describe('network sessions', () => {
+  it('refuses incomplete rounds and retries without accepting the missing contribution', async () => {
+    const { network, sessions, flush, advance } = await setup(2);
+    const host = sessions[0]!;
+    network.drop = (from, _to, message) => {
+      const body = (message as { body: { type: string; kind?: string } }).body;
+      return from === 'peer-1' && body.type === 'contribution' && body.kind === 'reveal';
+    };
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    expect(host.state).toBeNull();
+    advance(17000);
+    await host.pulse();
+    await flush();
+    expect(host.state).toBeNull();
+    expect(host.incidents.join(' ')).toContain('Tirage annulé');
+    network.drop = () => false;
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    expect(host.state).not.toBeNull();
+    expect(host.frames[0]?.proof?.context.participants).toHaveLength(1);
+    expect(sessions[1]!.head).toBe(host.head);
+    sessions.forEach((s) => s.close());
+  });
+  it('rejects a tampered saved history', async () => {
+    const { sessions, network, flush } = await setup(2);
+    const host = sessions[0]!;
+    let saved: SavedSession | undefined;
+    host.onPersist = (value) => {
+      saved = structuredClone(value);
+    };
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    saved!.frames[0]!.result = 'f'.repeat(64);
+    const restored = new Session(new MemoryTransport('tampered', network), host.user, host.name);
+    await expect(restored.join('test-code', saved, false)).rejects.toThrow('Signature');
+    sessions.forEach((s) => s.close());
+  });
+  it('converges with delayed, duplicated and reordered deliveries', async () => {
+    const { sessions, network } = await setup(3);
+    await sessions[0]!.start(3, false, 60000);
+    await sessions[0]!.idle();
+    for (let i = 0; i < 20; i++) {
+      await network.flush(true, true);
+      await Promise.all(sessions.map((s) => s.idle()));
+    }
+    expect(sessions[0]!.state).not.toBeNull();
+    expect(new Set(sessions.map((s) => s.head)).size).toBe(1);
+    sessions.forEach((s) => s.close());
+  });
+  it('starts with four contributors, verifies an action and rejects another seat intention', async () => {
+    const { sessions, flush } = await setup(4);
+    const host = sessions[0]!;
+    expect(host.members).toHaveLength(4);
+    await host.start(4, false, 60000);
+    await host.idle();
+    await flush();
+    expect(host.state).not.toBeNull();
+    expect(host.frames[0]?.proof?.context.participants).toHaveLength(4);
+    for (const peer of sessions) expect(peer.head).toBe(host.head);
+    const initial = host.head;
+    await sessions[1]!.intent({ type: 'roll', playerId: host.user.id });
+    await flush();
+    expect(host.head).toBe(initial);
+    await host.intent({ type: 'roll', playerId: host.user.id });
+    await host.idle();
+    await flush();
+    expect(host.head).not.toBe(initial);
+    for (const peer of sessions) expect(peer.head).toBe(host.head);
+    sessions.forEach((s) => s.close());
+  });
+  it('recovers dropped frames through authenticated history and ignores duplicates', async () => {
+    const { network, sessions, flush, advance } = await setup(2);
+    const host = sessions[0]!,
+      client = sessions[1]!;
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    network.drop = (_from, to, message) =>
+      to === 'peer-1' && (message as { body: { type: string } }).body.type === 'frame';
+    advance(1000);
+    await host.pulse();
+    await flush();
+    expect(client.head).not.toBe(host.head);
+    network.drop = () => false;
+    advance(3000);
+    await host.pulse();
+    await flush();
+    expect(client.head).toBe(host.head);
+    await network.flush(true, true);
+    await flush();
+    expect(client.head).toBe(host.head);
+    sessions.forEach((s) => s.close());
+  });
+  it('migrates after 15 seconds, preserves history and replaces the absent seat', async () => {
+    const { sessions, flush, advance } = await setup(3);
+    const host = sessions[0]!,
+      next = sessions[1]!;
+    await host.start(3, false, 60000);
+    await host.idle();
+    await flush();
+    const head = host.head;
+    host.close();
+    advance(14999);
+    await next.pulse();
+    await flush();
+    expect(next.host).toBe(host.user.id);
+    advance(2);
+    await next.pulse();
+    await flush();
+    expect(next.isHost).toBe(true);
+    expect(next.head).toBe(head);
+    await next.pulse();
+    await flush();
+    expect(next.state!.players[0]!.bot).toBe(true);
+    expect(sessions[2]!.head).toBe(next.head);
+    sessions.forEach((s) => s.close());
+  });
+  it('reconnects with the same key and replays the snapshot before reclaiming a seat', async () => {
+    const { network, sessions, flush, advance } = await setup(2);
+    const host = sessions[0]!,
+      client = sessions[1]!;
+    let saved: SavedSession | undefined;
+    client.onPersist = (value) => {
+      saved = structuredClone(value);
+    };
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    client.close();
+    advance(16000);
+    await host.pulse();
+    await flush();
+    const returned = new Session(
+      new MemoryTransport('peer-returned', network),
+      client.user,
+      client.name,
+      false,
+    );
+    sessions.push(returned);
+    await returned.join('test-code', saved, false);
+    await flush();
+    expect(returned.head).toBe(host.head);
+    await returned.intent({ type: 'set_control', playerId: client.user.id, bot: false });
+    await flush();
+    expect(host.state!.players[1]!.bot).toBe(false);
+    sessions.forEach((s) => s.close());
+  });
+  it('plays a full deterministic two-browser game to the timer', async () => {
+    const { sessions, flush, advance } = await setup(2);
+    const host = sessions[0]!;
+    await host.start(2, false, 60000);
+    await host.idle();
+    await flush();
+    for (let turn = 0; turn < 75 && !host.state?.winner; turn++) {
+      const state = host.state!;
+      const active = sessions.find((s) => s.user.id === state.players[state.currentPlayer]!.id)!;
+      const action = getLegalActions(state).find((a) => a.type !== 'quit');
+      if (action) await active.intent(action);
+      await flush();
+      advance(1100);
+      await host.pulse();
+      await flush();
+    }
+    expect(host.state?.winner).not.toBeNull();
+    expect(sessions[1]!.head).toBe(host.head);
+    sessions.forEach((s) => s.close());
+  });
+});

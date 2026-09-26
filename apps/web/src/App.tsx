@@ -12,6 +12,8 @@ import {
   type GameState,
 } from '@money-tour/engine';
 import Board from './board/Board';
+import OnlineLobby from './network/OnlineLobby';
+import type { Session, SessionView } from './network/session';
 import {
   applyLocal,
   colors,
@@ -149,9 +151,12 @@ for (const [id, ownerId, level] of [
 export default function App() {
   const [save, setSave] = useState<LocalSave | null>(() => loadLocal());
   const [screen, setScreen] = useState<'menu' | 'game'>('menu');
-  const [modal, setModal] = useState<'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | null>(
-    null,
-  );
+  const [modal, setModal] = useState<
+    'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | null
+  >(location.hash.includes('room=') ? 'online' : null);
+  const [online, setOnline] = useState<SessionView | null>(null);
+  const onlineSession = useRef<Session | null>(null);
+  const onlineSeq = useRef(-1);
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(4),
     [mode, setMode] = useState<'solo' | 'local' | 'teams'>('solo');
@@ -168,10 +173,14 @@ export default function App() {
     [notice, setNotice] = useState('');
   const dispatchRef = useRef<(action: GameAction) => void>(() => {});
   const rollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const current = screen === 'game' && save ? save.state : demo;
+  const current = screen === 'game' ? (online?.state ?? save?.state ?? demo) : demo;
   const active = current.players[current.currentPlayer]!;
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
+    if (onlineSession.current) {
+      void onlineSession.current.intent(action);
+      return;
+    }
     if (!save) return;
     const { save: next, result } = applyLocal(save, action);
     if (result.error) {
@@ -193,7 +202,7 @@ export default function App() {
       setNotice('Le navigateur ne permet pas la sauvegarde locale. Gardez cet onglet ouvert.');
   }, [save]);
   useEffect(() => {
-    if (screen !== 'game' || paused || current.winner) return;
+    if (online || screen !== 'game' || paused || current.winner) return;
     let last = performance.now();
     const timer = setInterval(() => {
       const now = performance.now();
@@ -202,12 +211,12 @@ export default function App() {
       dispatchRef.current({ type: 'tick', elapsedMs });
     }, 1000);
     return () => clearInterval(timer);
-  }, [screen, paused, Boolean(current.winner)]);
+  }, [screen, paused, Boolean(current.winner), Boolean(online)]);
   useEffect(() => {
-    if (screen !== 'game' || paused || rolling || current.winner || !active.bot) return;
+    if (online || screen !== 'game' || paused || rolling || current.winner || !active.bot) return;
     const timer = setTimeout(() => dispatchRef.current(chooseBotAction(current)), 650);
     return () => clearTimeout(timer);
-  }, [save, screen, paused, rolling]);
+  }, [save, screen, paused, rolling, Boolean(online)]);
   useEffect(
     () => () => {
       if (rollTimer.current) clearTimeout(rollTimer.current);
@@ -276,7 +285,12 @@ export default function App() {
   };
   const tile = selected === null ? null : current.config.board[selected]!;
   const property = selected === null ? undefined : current.properties[selected];
-  const interactionDisabled = paused || rolling || active.bot || Boolean(current.winner);
+  const interactionDisabled =
+    paused ||
+    rolling ||
+    active.bot ||
+    Boolean(current.winner) ||
+    Boolean(online && (online.self !== active.id || online.busy || online.blocked));
   const available = legal.filter((a) => !['quit', 'travel', 'place_championship'].includes(a.type));
   const options = legal.filter(
     (a): a is Extract<GameAction, { type: 'sell' | 'travel' | 'place_championship' }> =>
@@ -309,6 +323,7 @@ export default function App() {
           <Logo />
         </button>
         <nav>
+          <button onClick={() => setModal('online')}>Salon en ligne</button>
           <button onClick={() => setModal('rules')}>
             Comment jouer <span>↗</span>
           </button>
@@ -415,7 +430,7 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <button className="primary launch" onClick={start}>
+              <button className="primary launch" onClick={start} disabled={!!online}>
                 Embarquer <span>→</span>
               </button>
               {save && (
@@ -475,8 +490,12 @@ export default function App() {
           <div className="game-top">
             <div>
               <span className="eyebrow">
-                {current.mode === 'teams' ? 'EXPÉDITION EN ÉQUIPE' : 'PARTIE LOCALE'} · TOUR{' '}
-                {current.turn}
+                {current.mode === 'teams'
+                  ? 'EXPÉDITION EN ÉQUIPE'
+                  : online
+                    ? 'SALON EN LIGNE'
+                    : 'PARTIE LOCALE'}{' '}
+                · TOUR {current.turn}
               </span>
               <h1>Le tour de la fortune</h1>
             </div>
@@ -487,7 +506,7 @@ export default function App() {
               <button
                 className="subtle"
                 onClick={() => setPaused(!paused)}
-                disabled={!!current.winner}
+                disabled={!!current.winner || !!online}
               >
                 {paused ? 'Reprendre' : 'Pause'}
               </button>
@@ -609,7 +628,25 @@ export default function App() {
                   </button>
                 ))}
               </div>
-              {active.bot && !current.winner && (
+              {online && (
+                <>
+                  <p className="network-status" role="status">
+                    {online.status}
+                  </p>
+                  {online.state?.players.find((p) => p.id === online.self)?.bot &&
+                    !current.winner && (
+                      <button
+                        className="secondary"
+                        onClick={() =>
+                          act({ type: 'set_control', playerId: online.self, bot: false })
+                        }
+                      >
+                        Reprendre mon siège
+                      </button>
+                    )}
+                </>
+              )}
+              {active.bot && !current.winner && !online && (
                 <button
                   className="text-button"
                   onClick={() => act({ type: 'set_control', playerId: active.id, bot: false })}
@@ -740,8 +777,9 @@ export default function App() {
       {modal === 'leave' && (
         <Modal title="Faire une pause ou quitter ?" onClose={() => setModal(null)}>
           <p>
-            Revenir à l’accueil conserve votre partie. Abandonner élimine le joueur actif de cette
-            partie.
+            {online
+              ? 'La partie en ligne continue lorsque vous revenez à l’accueil. Abandonner élimine votre joueur.'
+              : 'Revenir à l’accueil conserve votre partie. Abandonner élimine le joueur actif de cette partie.'}
           </p>
           <button
             className="primary"
@@ -755,11 +793,11 @@ export default function App() {
           <button
             className="secondary"
             onClick={() => {
-              act({ type: 'quit', playerId: active.id });
+              act({ type: 'quit', playerId: online?.self ?? active.id });
               setModal(null);
             }}
           >
-            Abandonner pour {active.name}
+            {online ? 'Abandonner ma partie' : `Abandonner pour ${active.name}`}
           </button>
         </Modal>
       )}
@@ -829,6 +867,43 @@ export default function App() {
           </button>
         </Modal>
       )}
+      <OnlineLobby
+        open={modal === 'online'}
+        onClose={() => {
+          setModal(null);
+          if (online?.state) setScreen('game');
+        }}
+        onSession={(session) => {
+          onlineSession.current = session;
+        }}
+        onLeave={() => {
+          onlineSession.current = null;
+          setOnline(null);
+          onlineSeq.current = -1;
+          setScreen('menu');
+          setHistory([]);
+        }}
+        onView={(view) => {
+          setOnline(view);
+          if (view.state && view.state.seq !== onlineSeq.current) {
+            if (onlineSeq.current < 0) {
+              setScreen('game');
+              setModal(null);
+              setPaused(false);
+            }
+            onlineSeq.current = view.state.seq;
+            const messages = view.events
+              .map((event) => eventText(event, view.state!))
+              .filter(Boolean);
+            if (messages.length) setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
+            if (view.events.some((event) => event.type === 'dice')) {
+              setRolling(!reduced);
+              if (rollTimer.current) clearTimeout(rollTimer.current);
+              rollTimer.current = setTimeout(() => setRolling(false), reduced ? 0 : 550);
+            }
+          }
+        }}
+      />
       {screen === 'game' && current.winner && (
         <Modal title="Une fortune à célébrer !" onClose={() => setScreen('menu')}>
           <div className="victory-art">
