@@ -1467,3 +1467,108 @@ footer a {
     transition: none !important;
   }
 }
+.field {
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
+  font-size: 14px;
+  font-weight: bold;
+}
+.field input,
+.invite-code input {
+  width: 100%;
+  border: 1px solid #dddccf;
+  border-radius: 10px;
+  padding: 13px;
+  background: #fffdf6;
+  color: var(--ink);
+  min-width: 0;
+}
+.divider {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 2px;
+  margin: 26px 0;
+  color: #63776c;
+}
+.advanced {
+  margin: 22px 0;
+  font-size: 13px;
+  color: #52675f;
+}
+.advanced summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+.invite-code {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  background: #edf2e8;
+  border-radius: 16px;
+}
+.invite-code code {
+  font-size: 18px;
+  word-break: break-word;
+  line-height: 1.7;
+}
+.invite-code small {
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.invite-code input {
+  font-size: 11px;
+}
+.lobby-members {
+  padding: 0;
+  list-style: none;
+}
+.lobby-members li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid #e9e6da;
+}
+.lobby-members small {
+  margin-left: auto;
+  font-size: 10px;
+  color: #4a7666;
+}
+.network-status {
+  padding: 12px;
+  border-radius: 9px;
+  background: #edf4eb;
+  color: #2f6050;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.network-error {
+  padding: 12px;
+  border-radius: 9px;
+  background: #ffe4dc;
+  color: #8c301c;
+  font-size: 13px;
+}
+.online-modal > .primary,
+.online-modal > .secondary {
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .topbar {
+    gap: 8px;
+  }
+  .topbar nav {
+    gap: 7px;
+  }
+  .topbar nav button {
+    font-size: 10px;
+  }
+  .brand {
+    font-size: 12px;
+  }
+  .brand svg {
+    width: 32px;
+    height: 32px;
+  }
+}

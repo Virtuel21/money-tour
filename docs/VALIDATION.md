@@ -23,6 +23,13 @@ Ces tests vérifient le moteur, pas encore l'ergonomie ni le transport WebRTC. L
 - Vue 390 × 844 : partie hot-seat, achat de Bellefrange, construction, passage de tour, catalogue des 32 cases et reprise après actualisation vérifiés. Cela valide un viewport mobile, pas un appareil physique.
 - Plateau et pions PixiJS originaux, dés animés, fiches de cases, pause, abandon, tutoriel, crédits et réduction des animations.
 
-## Phases suivantes — non réalisées
+## Phase 3 — réseau
 
-WebRTC et recette extérieure sur quatre réseaux dont 4G, migration réelle d'hôte, sons et livraison GitHub Pages : à tester lors de leur réalisation. Le choix GitHub Actions comme source de Pages est enregistré ; aucune URL de jeu n'est encore publiée.
+- Dix tests réseau passent : engagements, révélation prématurée, secrets invalides, signatures falsifiées, quatre contributeurs, intention d’un autre siège, historique altéré, révélation manquante, perte d’une action et rattrapage, duplication/réordonnancement, relève après 15 s, reconnexion avec la même clé et partie complète à deux pairs simulés.
+- WebRTC réel via Trystero/Nostr dans Chromium : deux origines (`127.0.0.1` et `localhost`) sur le même ordinateur, deux joueurs et deux bots en 2v2. Les deux écrans ont affiché les dés 4 + 2, puis l’achat de Préclair pour 180 k. Après fermeture de l’hôte, Camille est devenue hôte (époque 1) et la partie a fini au chrono avec le classement Camille & Alba.
+- L’historique ne prend aucun solde ou position directement depuis le réseau : signatures, schémas, règles, commit-reveal et hashes sont revérifiés par replay.
+- Cette vérification ne remplace pas une recette sur quatre réseaux distincts avec smartphone 4G ; elle reste ouverte. Les garanties sont celles d’un jeu privé entre amis, avec les limites de confiance détaillées dans le README.
+
+## Phase 4 — à réaliser
+
+Sons, musique et livraison GitHub Pages : à tester lors de leur réalisation. Le choix GitHub Actions comme source de Pages est enregistré ; aucune URL de jeu n'est encore publiée.

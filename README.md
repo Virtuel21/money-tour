@@ -2,7 +2,7 @@
 
 Un jeu de plateau original dans un archipel ensoleillé : acheter des villes, construire, réunir des collections et faire fortune. Objectif : 2 à 4 joueurs, solo contre bots, hot-seat et salons WebRTC, avec mode 2v2.
 
-**État : client local jouable, solo/bots et hot-seat, équipes 2v2. Multijoueur en ligne et déploiement en cours.**
+**État : client local et salons WebRTC jouables, solo/bots, hot-seat et équipes 2v2. Déploiement en cours. La recette sur quatre réseaux différents reste ouverte.**
 
 Prérequis : Node.js 22.12 ou supérieur et pnpm 10.32.1.
 
@@ -25,3 +25,18 @@ Architecture prévue : monorepo pnpm, moteur TypeScript pur, React/Vite, rendu P
 Le commit-reveal rend les tirages acceptés vérifiables mais n'empêche pas un participant de refuser sa révélation. La recette sur quatre réseaux distincts dont un smartphone en 4G restera explicitement séparée des tests locaux et simulés.
 
 Code sous [licence MIT](LICENSE). Illustrations et sons originaux prévus ; aucun asset du jeu de référence.
+
+## Jouer en ligne
+
+Ouvrez « Salon en ligne », choisissez un nom et créez un salon. Partagez son lien ou son code de 32 caractères avec vos invités. L’hôte choisit la durée, les sièges et le mode 2v2 ; les places libres deviennent des bots. Au-delà de 30 secondes d’inactivité ou après une déconnexion, un bot prend le relais. « Reprendre mon siège » rend la main au propriétaire de la clé conservée dans ce navigateur.
+
+Le lien contient un secret aléatoire de 128 bits dans son fragment, non envoyé au serveur statique. Trystero 0.25.4 utilise Nostr pour la signalisation, WebRTC pour le jeu et un mot de passe dérivé pour le salon. Les données du jeu sont échangées entre pairs. Votre clé de reprise reste sur cet appareil (24 h), l’historique dans `sessionStorage`. L’effacement du stockage ou un autre navigateur ne permet pas de reprendre automatiquement le même siège. Ne jouez pas simultanément le même siège dans plusieurs onglets.
+
+## Limites réseau et de confiance
+
+- Sans TURN, certains NAT, réseaux d’entreprise et connexions 4G bloquent WebRTC. Le salon affiche un diagnostic et propose des paramètres TURN facultatifs. Fournissez vos propres paramètres ; ne publiez jamais des identifiants TURN durables dans le dépôt ou le site.
+- Gardez les onglets au premier plan sur mobile. Les relais Nostr publics et STUN peuvent être indisponibles. Aucun service public gratuit n’offre une garantie de disponibilité.
+- Après 15 secondes sans hôte, le pair suivant dans l’ordre d’arrivée reprend le dernier historique validé. Une partition contradictoire suspend la partie ; aucun consensus distribué ou quorum n’est revendiqué.
+- Les intentions humaines sont signées. Chaque action aléatoire est figée avant le commit-reveal ; les pairs signent aussi la preuve complète. Les reprises rejouent l’historique et vérifient signatures, preuves, règles et hashes. Les horloges, exclusions pour absence et bascules en bot restent une politique de l’hôte : ce jeu entre amis n’est pas un système de compétition résistant à tout hôte malveillant.
+- Une révélation manquante annule le tirage et exclut temporairement le contributeur. Cela n’élimine pas l’abandon sélectif ni le déni de service. Avec un seul contributeur, l’interface indique explicitement « aléa local : hôte seul ».
+- Tests en mémoire et test WebRTC réel entre deux origines sur un ordinateur réalisés. **Quatre réseaux distincts, dont un smartphone physique en 4G : non vérifié.** Voir [journal de validation](docs/VALIDATION.md).
