@@ -29,7 +29,7 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
     setBusy(true);
     setFrame(next);
     const reading =
-      next.cue.kind === 'card' &&
+      ['card', 'tax'].includes(next.cue.kind) &&
       !onlineRef.current &&
       !next.state.players[next.state.currentPlayer]?.bot;
     timer.current = reading ? null : setTimeout(() => advanceRef.current(), next.cue.duration);

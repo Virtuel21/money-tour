@@ -15,6 +15,10 @@ pnpm simulate 1000
 
 Pour construire, le propriétaire doit posséder toutes les villes du même groupe de couleur (les propriétés d’un coéquipier ne complètent pas ce groupe). Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
 
+Un Mondial coûte 50 k et double le loyer de la ville pendant quatre retours du propriétaire : les doubles ne consomment pas de durée et un nouveau Mondial renouvelle les quatre tours sans cumuler le bonus. Un trophée, un ruban et des confettis signalent la ville hôte ; le badge indique les tours restants. Fermer l’offre d’achat ne termine pas le tour : cliquez de nouveau sur votre case ou sur Acheter pour la rouvrir. « Non merci, je passe » termine la décision. Les taxes sont annoncées par une fenêtre humoristique avant l’animation du prélèvement.
+
+Les [événements aléatoires proposés](docs/EVENT_IDEAS.md) sont des idées pour une prochaine version ; ils ne sont pas activés dans les parties.
+
 Le moteur couvre les 28 cases, les 18 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 
 - [Plan et critères de livraison](PLAN.md)

@@ -1,5 +1,13 @@
 # Journal de validation
 
+## Mondial temporaire et interface de jeu — 26 septembre 2026
+
+229 tests réussis dans 14 fichiers. Vérification des types, lint, compilation, budget des assets (8 352 912 / 12 000 000 octets) et dix racines Blender : succès. Couverture du moteur : 99,2 % des lignes, 95,43 % des branches, 100 % des fonctions.
+
+Nouveaux contrôles : expiration au quatrième retour du propriétaire et restauration du loyer, doubles et horloge sans consommation de durée, renouvellement sans cumul, validation des durées corrompues, annonce de taxe avant paiement, migration v4 vers v5 préservant joueurs, argent, positions et flux aléatoire. Les anciens championnats valides deviennent des bonus ×2 de quatre tours. Les sauvegardes v4 originales restent conservées ; une sauvegarde invalide n’est pas réparée silencieusement.
+
+Recette navigateur locale de fermeture/réouverture/achat, taxe et rendu responsive documentée dans VISUAL_QA.md. Le multijoueur physique sur réseaux distincts reste à recetter (issue #10) ; les tests de transport simulé passent. Les idées d’événements dans EVENT_IDEAS.md ne sont pas activées.
+
 ## Phase 0
 
 Dépôt public créé avant code, licence MIT, cadrage publié dans la PR #2 puis fusionné. La création a utilisé l'interface GitHub, et les publications le connecteur GitHub, car `gh` n'était pas installé. Cette différence d'outillage n'affecte pas le jeu.

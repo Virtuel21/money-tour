@@ -77,7 +77,7 @@ export function PurchaseDetails({
               .filter((t) => t.group === tile.group)
               .map((t) => t.name)
               .join(' · ')}
-            . Festivals ×2 ; Mondial : multiplicateur augmenté de 1.
+            . Festivals ×2 ; Mondial ×2 pendant 4 tours du propriétaire, sans cumul.
           </p>
         </>
       ) : (

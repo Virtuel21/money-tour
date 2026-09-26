@@ -1,5 +1,13 @@
 # Images de la refonte 3D
 
+## Cases Chance et Taxe — septembre 2026
+
+Fichier livré : `apps/web/public/textures/special-tiles-v1.webp`. Générateur d'images intégré de ChatGPT ; image originale inspectée puis encodée en WebP qualité 90, sans retouche créative. Atlas 2:1 : moitié gauche Chance, moitié droite Taxe. Utilisé sur les six cases spéciales et dans la popup de taxe.
+
+Prompt exact :
+
+> Create a production game texture atlas for Money Tour, a cheerful premium cartoon travel-property board game. One wide image, aspect ratio 2:1, containing exactly TWO equally sized SQUARE tile illustrations side by side edge to edge. LEFT square: vibrant royal purple background, an ivory open envelope with a large golden question mark medallion and a few gold stars, magical chance/reward mood. RIGHT square: rich coral orange background, a cream tax receipt and a chunky gold coin stack, a comical small rubber stamp, lighthearted fee mood. Orthographic straight top-down flat tile artwork, no perspective tilt, no scene, no people, no board, no mockup. Sculpted painted cartoon shading, rounded edges, crisp strong silhouette, detailed but readable at small size. Each motif contained inside central 65 percent of its square, generous colored margin. No written words, no letters, no numbers, no logos, no watermark; question-mark symbol only on the left. Uniform lighting from upper left. Full-bleed opaque colored backgrounds, no transparency. These will be mapped to 3D square board tiles; do not add extruded outer borders.
+
 Outil : générateur d’images intégré de ChatGPT, utilisé directement (pas de CLI/API externe). Génération originale le 26 septembre 2026. Les images ont été inspectées puis redimensionnées et encodées en WebP avec Sharp, sans retouche du contenu.
 
 ## `apps/web/public/textures/ocean.webp`

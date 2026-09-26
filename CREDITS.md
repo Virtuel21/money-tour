@@ -8,6 +8,8 @@ Créations originales pour Julien, MIT : scripts/art_*.py et scripts/build_model
 
 ## Images générées
 
+`apps/web/public/textures/special-tiles-v1.webp` : atlas original Chance/Taxe généré avec l’outil d’images intégré de ChatGPT le 26 septembre 2026, puis encodé en WebP qualité 90. Aucun asset tiers incorporé dans cet atlas. Prompt exact dans `docs/IMAGE_PROMPTS.md`.
+
 Créations originales avec le générateur d’images intégré de ChatGPT : apps/web/public/textures/ocean.webp (ancienne mer, conservée mais inutilisée depuis la reprise des artworks), chance.webp (carte), travelers-v3.webp (quatre personnages détaillés), architecture-v3.webp (maison, hôtel et quatre dioramas). Les illustrations en scène sont des sprites, pas des maillages 3D. Prompts et provenance dans docs/IMAGE_PROMPTS.md.
 
 ## Audio fourni par Julien

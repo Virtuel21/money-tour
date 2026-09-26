@@ -46,8 +46,8 @@ describe('28-space island edition', () => {
   it('includes festivals and championships, but never charges a teammate', () => {
     const s = game(true);
     s.festivals = [5];
-    s.properties[5] = { ownerId: 'p3', level: 2, championships: 2 };
-    expect(getRent(s, 5)).toBe(s.config.board[5]!.rents![2]! * 6);
+    s.properties[5] = { ownerId: 'p3', level: 2, championships: 1, championshipTurns: 4 };
+    expect(getRent(s, 5)).toBe(s.config.board[5]!.rents![2]! * 4);
     const result = reduceGame(s, { type: 'roll', playerId: 'p1' }, sequence(0.2, 0.4));
     expect(result.state.players.map((p) => p.cash)).toEqual([1500000, 1500000, 1500000, 1500000]);
   });

@@ -12,6 +12,37 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('migrates the previous edition without losing money, positions or the random stream', () => {
+    const old = newLocal({
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    old.state.config.version = 4;
+    delete old.state.config.championshipDuration;
+    old.state.players[0]!.cash = 876543;
+    old.state.players[0]!.position = 12;
+    old.state.seq = 23;
+    old.state.properties[1] = { ownerId: 'a', level: 2, championships: 3 };
+    const raw = JSON.stringify(old);
+    data.set('money-tour.local.v4', raw);
+    const resumed = loadLocal()!;
+    expect(resumed.state.config.version).toBe(5);
+    expect(resumed.seed).toBe(old.seed);
+    expect(resumed.state.seq).toBe(23);
+    expect(resumed.state.players).toEqual(old.state.players);
+    expect(resumed.state.properties[1]).toEqual({
+      ownerId: 'a',
+      level: 2,
+      championships: 1,
+      championshipTurns: 4,
+    });
+    expect(data.get('money-tour.local.v4')).toBe(raw);
+    old.state.properties[1]!.championships = -1;
+    data.set('money-tour.local.v4', JSON.stringify(old));
+    expect(loadLocal()).toBeNull();
+  });
   it('resumes the exact same random stream after serialization', () => {
     let save = newLocal({
       players: [
@@ -36,7 +67,7 @@ describe('local session', () => {
       '{"version":2}',
       '{"version":1,"seed":"x","state":{}}',
     ]) {
-      data.set('money-tour.local.v4', value);
+      data.set('money-tour.local.v5', value);
       expect(loadLocal()).toBeNull();
     }
   });
