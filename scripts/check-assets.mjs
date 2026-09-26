@@ -9,7 +9,7 @@ async function size(path) {
   return bytes;
 }
 const assets = await size('apps/web/public');
-if (assets >= 5_000_000) throw new Error(`Asset budget exceeded: ${assets} bytes`);
+if (assets >= 12_000_000) throw new Error(`Asset budget exceeded: ${assets} bytes`);
 console.log(
-  `Original static assets: ${assets} bytes / 5,000,000 bytes. Graphics and audio are otherwise synthesized in code.`,
+  `Static assets: ${assets} bytes / 12,000,000 bytes, including two user-supplied music tracks and Blender models.`,
 );

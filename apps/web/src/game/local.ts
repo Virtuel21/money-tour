@@ -62,7 +62,7 @@ export const duration = (ms: number): string =>
     .toString()
     .padStart(2, '0')}`;
 export const colors = ['#2ba8bc', '#e8725b', '#d8a62e', '#70a88b'];
-export const pawnNames = ['Voilier', 'Montgolfière', 'Phare', 'Cerf-volant'];
+export const pawnNames = ['Léa', 'Max', 'Lou', 'Noa'];
 export const phaseText: Record<GameState['phase'], string> = {
   roll: 'À vous de lancer !',
   island: 'Une escale sur l’île',

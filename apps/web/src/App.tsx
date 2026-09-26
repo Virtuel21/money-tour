@@ -11,7 +11,9 @@ import {
   type GameEvent,
   type GameState,
 } from '@money-tour/engine';
-import Board from './board/Board';
+const Board = lazy(() => import('./board/Board3D'));
+import { usePresentation } from './game/usePresentation';
+import { previewScenario } from './game/preview';
 import { Soundscape, loadAudio } from './audio/synth';
 const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
 import type { Session, SessionView } from './network/session';
@@ -68,23 +70,6 @@ function Modal({
       </div>
       {children}
     </dialog>
-  );
-}
-function Dice({ value, rolling }: { value: number; rolling: boolean }) {
-  const dots: Record<number, number[]> = {
-    1: [4],
-    2: [0, 8],
-    3: [0, 4, 8],
-    4: [0, 2, 6, 8],
-    5: [0, 2, 4, 6, 8],
-    6: [0, 2, 3, 5, 6, 8],
-  };
-  return (
-    <div className={`die ${rolling ? 'rolling' : ''}`} aria-label={`Dé : ${value}`}>
-      {Array.from({ length: 9 }, (_, i) => (
-        <i key={i} className={dots[value]!.includes(i) ? 'pip' : ''} />
-      ))}
-    </div>
   );
 }
 function eventText(event: GameEvent, state: GameState): string {
@@ -150,11 +135,14 @@ for (const [id, ownerId, level] of [
   demo.properties[id] = { ownerId, level, championships: 0 };
 
 export default function App() {
-  const [save, setSave] = useState<LocalSave | null>(() => loadLocal());
-  const [screen, setScreen] = useState<'menu' | 'game'>('menu');
+  const [save, setSave] = useState<LocalSave | null>(() => previewScenario() ?? loadLocal());
+  const [screen, setScreen] = useState<'menu' | 'game'>(() =>
+    previewScenario() ? 'game' : 'menu',
+  );
   const [modal, setModal] = useState<
     'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | null
   >(location.hash.includes('room=') ? 'online' : null);
+  const [createSalon, setCreateSalon] = useState(false);
   const [online, setOnline] = useState<SessionView | null>(null);
   const onlineSession = useRef<Session | null>(null);
   const onlineSeq = useRef(-1);
@@ -174,7 +162,6 @@ export default function App() {
     [names, setNames] = useState(['Vous', 'Sacha', 'Lou', 'Noa']);
   const [bots, setBots] = useState([false, true, true, true]);
   const [paused, setPaused] = useState(false),
-    [rolling, setRolling] = useState(false),
     [zoom, setZoom] = useState(false);
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -182,8 +169,19 @@ export default function App() {
   const [history, setHistory] = useState<string[]>([]),
     [notice, setNotice] = useState('');
   const dispatchRef = useRef<(action: GameAction) => void>(() => {});
-  const rollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const current = screen === 'game' ? (online?.state ?? save?.state ?? demo) : demo;
+  const cinema = usePresentation(save?.state ?? demo, reduced, !!online);
+  const rolling = cinema.busy;
+  const display = cinema.frame.state;
+  useEffect(() => {
+    sound.current?.setScene(screen);
+  }, [screen]);
+  useEffect(() => {
+    const kind = cinema.frame.cue.kind;
+    if (cinema.frame.cue.sound) sound.current?.effect(cinema.frame.cue.sound);
+    else if (kind !== 'settle') sound.current?.effect(kind === 'hop' ? 'move' : kind);
+  }, [cinema.frame]);
+  const current =
+    screen === 'game' ? (rolling ? display : (online?.state ?? save?.state ?? demo)) : demo;
   const active = current.players[current.currentPlayer]!;
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
@@ -197,23 +195,19 @@ export default function App() {
       setNotice('Cette action n’est plus disponible.');
       return;
     }
+    cinema.present(next.state, result.events);
     setSave(next);
-    sound.current?.events(result.events);
     const messages = result.events.map((e) => eventText(e, next.state)).filter(Boolean);
     if (messages.length) setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
-    if (result.events.some((e) => e.type === 'dice')) {
-      setRolling(!reduced);
-      if (rollTimer.current) clearTimeout(rollTimer.current);
-      rollTimer.current = setTimeout(() => setRolling(false), reduced ? 0 : 550);
-    }
   };
   dispatchRef.current = act;
   useEffect(() => {
-    if (save && !persistLocal(save))
+    if (save && !previewScenario() && !persistLocal(save))
       setNotice('Le navigateur ne permet pas la sauvegarde locale. Gardez cet onglet ouvert.');
   }, [save]);
   useEffect(() => {
-    if (online || screen !== 'game' || paused || current.winner) return;
+    if (previewScenario() || online || screen !== 'game' || paused || rolling || current.winner)
+      return;
     let last = performance.now();
     const timer = setInterval(() => {
       const now = performance.now();
@@ -222,21 +216,13 @@ export default function App() {
       dispatchRef.current({ type: 'tick', elapsedMs });
     }, 1000);
     return () => clearInterval(timer);
-  }, [screen, paused, Boolean(current.winner), Boolean(online)]);
+  }, [screen, paused, rolling, Boolean(current.winner), Boolean(online)]);
   useEffect(() => {
     if (online || screen !== 'game' || paused || rolling || current.winner || !active.bot) return;
     const timer = setTimeout(() => dispatchRef.current(chooseBotAction(current)), 650);
     return () => clearTimeout(timer);
   }, [save, screen, paused, rolling, Boolean(online)]);
-  useEffect(
-    () => () => {
-      if (rollTimer.current) clearTimeout(rollTimer.current);
-    },
-    [],
-  );
   const start = () => {
-    if (rollTimer.current) clearTimeout(rollTimer.current);
-    setRolling(false);
     const next = newLocal({
       players: Array.from({ length: count }, (_, i) => ({
         id: `p${i + 1}`,
@@ -247,6 +233,7 @@ export default function App() {
       mode: mode === 'teams' ? 'teams' : 'free-for-all',
       durationMs: minutes * 60000,
     });
+    cinema.reset(next.state);
     setSave(next);
     setHistory(['Bon voyage ! Trois villes accueillent un festival : leurs loyers sont doublés.']);
     setNotice('');
@@ -338,7 +325,14 @@ export default function App() {
           <Logo />
         </button>
         <nav>
-          <button onClick={() => setModal('online')}>Salon en ligne</button>
+          <button
+            onClick={() => {
+              setCreateSalon(false);
+              setModal('online');
+            }}
+          >
+            Rejoindre un salon
+          </button>
           <button onClick={() => setModal('rules')}>
             Comment jouer <span>↗</span>
           </button>
@@ -445,13 +439,25 @@ export default function App() {
                   </div>
                 ))}
               </div>
-              <button className="primary launch" onClick={start} disabled={!!online}>
+              <button
+                className="primary launch"
+                onClick={() => {
+                  setCreateSalon(true);
+                  setModal('online');
+                }}
+                disabled={!!online}
+              >
                 Embarquer <span>→</span>
+              </button>
+              <button className="secondary local-launch" onClick={start} disabled={!!online}>
+                Jouer sur cet appareil · solo / local
               </button>
               {save && (
                 <button
                   className="resume"
+                  disabled={!!online}
                   onClick={() => {
+                    cinema.reset(save.state);
                     setScreen('game');
                     setPaused(false);
                   }}
@@ -473,7 +479,9 @@ export default function App() {
               <br />
               <b>∞ POSSIBILITÉS</b>
             </span>
-            <Board state={demo} onTile={setSelected} reducedMotion demo />
+            <Suspense fallback={<div className="board-shell">Préparation de l’archipel…</div>}>
+              <Board state={demo} onTile={setSelected} reducedMotion demo />
+            </Suspense>
             <div className="map-caption">
               <span>✦ Créé pour les bons moments</span>
               <span>2–4 voyageurs · dès maintenant</span>
@@ -565,18 +573,34 @@ export default function App() {
           </div>
           <section className={`board-area ${zoom ? 'zoomed' : ''}`}>
             <div className="board-viewport">
-              <Board state={current} onTile={setSelected} reducedMotion={reduced} />
+              <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
+                <Board
+                  state={display}
+                  cue={cinema.frame.cue}
+                  choices={interactionDisabled ? [] : options.map((a) => a.tile)}
+                  onTile={(id) => {
+                    const action = options.find((a) => a.tile === id);
+                    if (action && !interactionDisabled) act(action);
+                    else if (!rolling) setSelected(id);
+                  }}
+                  reducedMotion={reduced}
+                />
+              </Suspense>
             </div>
-            <div className="board-center">
-              <div className="dice-pair">
-                <Dice value={current.dice[0] ?? 1} rolling={rolling} />
-                <Dice value={current.dice[1] ?? 1} rolling={rolling} />
-              </div>
-              <span>
-                {current.dice.length
-                  ? `${current.dice.reduce((a, b) => a + b, 0)} cases`
-                  : 'Le voyage commence'}
-              </span>
+            <div className="roll-status" role="status">
+              {cinema.frame.cue.kind === 'dice'
+                ? 'Les dés roulent…'
+                : rolling
+                  ? cinema.frame.cue.kind === 'hop'
+                    ? 'En route…'
+                    : 'Votre aventure continue…'
+                  : display.dice.length
+                    ? 'Dés : ' +
+                      display.dice.join(' + ') +
+                      ' · ' +
+                      display.dice.reduce((a, b) => a + b, 0) +
+                      ' cases'
+                    : 'À vous de lancer les dés'}
             </div>
             <div className="board-controls">
               <button onClick={() => setModal('tiles')}>Explorer les cases</button>
@@ -603,7 +627,7 @@ export default function App() {
                   }}
                 />
               </div>
-              {current.lastCard && (
+              {current.lastCard && !rolling && (
                 <div className="chance-card">
                   <small>✦ LA BONNE ÉTOILE</small>
                   <strong>
@@ -613,24 +637,10 @@ export default function App() {
                 </div>
               )}
               {options.length > 0 && (
-                <label className="destination-label">
-                  Destination
-                  <select
-                    disabled={interactionDisabled}
-                    value=""
-                    onChange={(e) => {
-                      const action = options.find((a) => String(a.tile) === e.target.value);
-                      if (action) act(action);
-                    }}
-                  >
-                    <option value="">Choisissez une ville…</option>
-                    {options.map((a) => (
-                      <option key={a.tile} value={a.tile}>
-                        {current.config.board[a.tile]!.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <p className="board-choice-hint">
+                  Cliquez directement sur une case dorée du plateau pour{' '}
+                  {current.phase === 'travel' ? 'vous y déplacer' : 'y placer le championnat'}.
+                </p>
               )}
               <div className="actions">
                 {available.map((a, i) => (
@@ -680,7 +690,7 @@ export default function App() {
                 Carnet de voyage <span>EN DIRECT</span>
               </h3>
               <ol aria-live="polite">
-                {history.slice(0, 7).map((entry, i) => (
+                {(rolling ? [] : history.slice(0, 7)).map((entry, i) => (
                   <li key={`${current.seq}-${i}`}>{entry}</li>
                 ))}
               </ol>
@@ -721,8 +731,9 @@ export default function App() {
             </p>
             <h3>2. Construisez votre fortune</h3>
             <p>
-              Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux maisons avant le
-              premier passage Départ. Chaque passage rapporte 300 k. Après le loyer, une ville
+              Possédez d’abord toutes les villes du groupe de couleur, puis construisez sur votre
+              ville. Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux maisons avant
+              le premier passage Départ. Chaque passage rapporte 300 k. Après le loyer, une ville
               adverse sans hôtel peut être rachetée au double de sa valeur foncière.
             </p>
             <h3>3. Plusieurs façons de gagner</h3>
@@ -919,10 +930,27 @@ export default function App() {
           </button>
         </Modal>
       )}
-      <Suspense fallback={null}>
+      {screen === 'game' && cinema.frame.cue.kind === 'card' && (
+        <Modal title="La bonne étoile" onClose={cinema.advance}>
+          <div className="chance-reveal">
+            <img
+              src={import.meta.env.BASE_URL + 'textures/chance.webp'}
+              alt="Une enveloppe pleine de surprises"
+            />
+            <h2>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.title}</h2>
+            <p>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description}</p>
+            <button className="primary" onClick={cinema.advance}>
+              C’est parti !
+            </button>
+          </div>
+        </Modal>
+      )}
+      <Suspense fallback={<div className="notice">Ouverture du salon…</div>}>
         {(modal === 'online' || online) && (
           <OnlineLobby
             open={modal === 'online'}
+            autoCreate={createSalon}
+            defaults={{ name: names[0]!, count, teams: mode === 'teams', minutes }}
             onClose={() => {
               setModal(null);
               if (online?.state) setScreen('game');
@@ -941,28 +969,24 @@ export default function App() {
               setOnline(view);
               if (view.state && view.state.seq !== onlineSeq.current) {
                 if (onlineSeq.current < 0) {
+                  cinema.reset(view.state);
                   setScreen('game');
                   setModal(null);
                   setPaused(false);
                 }
                 onlineSeq.current = view.state.seq;
-                sound.current?.events(view.events);
+                cinema.present(view.state, view.events);
                 const messages = view.events
                   .map((event) => eventText(event, view.state!))
                   .filter(Boolean);
                 if (messages.length)
                   setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
-                if (view.events.some((event) => event.type === 'dice')) {
-                  setRolling(!reduced);
-                  if (rollTimer.current) clearTimeout(rollTimer.current);
-                  rollTimer.current = setTimeout(() => setRolling(false), reduced ? 0 : 550);
-                }
               }
             }}
           />
         )}
       </Suspense>
-      {screen === 'game' && current.winner && (
+      {screen === 'game' && current.winner && !rolling && (
         <Modal title="Une fortune à célébrer !" onClose={() => setScreen('menu')}>
           <div className="victory-art">
             ✦<span>♜</span>✦

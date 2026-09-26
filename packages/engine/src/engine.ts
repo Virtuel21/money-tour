@@ -210,6 +210,15 @@ export function createGame(
 function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
   const property = state.properties[tile.id];
   if (tile.type !== 'city' || property?.ownerId !== player.id) return false;
+  if (
+    state.config.board.some(
+      (other) =>
+        other.type === 'city' &&
+        other.group === tile.group &&
+        state.properties[other.id]?.ownerId !== player.id,
+    )
+  )
+    return false;
   const cap = player.laps > 0 ? state.config.hotelLevel : state.config.initialMaxLevel;
   return property.level < cap && player.cash >= (tile.buildCosts?.[property.level + 1] ?? Infinity);
 }

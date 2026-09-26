@@ -33,6 +33,7 @@ import {
   type Member,
 } from './schema';
 import type { Transport } from './transport';
+import { presentationMs } from '../game/presentation';
 
 const ZERO = '0'.repeat(64);
 class NeedsRandom extends Error {}
@@ -744,6 +745,7 @@ export class Session {
     )
       this.exclusions.delete(frame.command.action.playerId);
     this.events = result.events;
+    if (live && result.events.length) this.lastBot = this.now() + presentationMs(result.events);
     this.head = frame.result;
     this.frames.push(frame);
     this.round = null;

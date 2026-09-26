@@ -32,13 +32,15 @@ const melodies: Record<string, number[]> = {
   victory: [523, 659, 784, 1047, 784, 1047],
   bankruptcy: [440, 392, 330, 220],
 };
-/** Original synthesized instruments and melody; no recorded samples. */
+/** User-supplied music, CC0 interface samples and original synthesis for remaining effects. */
 export class Soundscape {
+  private track: HTMLAudioElement | null = null;
+  private scene: 'menu' | 'game' = 'menu';
+  private unlocked = false;
+  private samples = new Map<string, AudioBuffer>();
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
   private musicBus: GainNode | null = null;
-  private timer: ReturnType<typeof setInterval> | null = null;
-  private step = 0;
   private prefs: AudioPreferences = loadAudio();
   async unlock(): Promise<void> {
     if (!this.prefs.effects && !this.prefs.music) return;
@@ -49,8 +51,23 @@ export class Soundscape {
         this.master.connect(this.context.destination);
         this.musicBus = this.context.createGain();
         this.musicBus.connect(this.master);
+        for (const [type, file] of Object.entries({
+          dice: 'switch_001',
+          move: 'drop_001',
+          card: 'select_001',
+          build: 'confirmation_001',
+        })) {
+          void fetch(`${import.meta.env.BASE_URL}audio/${file}.ogg`)
+            .then((r) => r.arrayBuffer())
+            .then((data) => this.context?.decodeAudioData(data))
+            .then((buffer) => {
+              if (buffer) this.samples.set(type, buffer);
+            })
+            .catch(() => {});
+        }
       }
       if (this.context.state === 'suspended') await this.context.resume();
+      this.unlocked = true;
       this.configure(this.prefs);
     } catch {
       /* Audio is optional; blocked autoplay must never stop a game. */
@@ -67,14 +84,27 @@ export class Soundscape {
       this.master.gain.setTargetAtTime(prefs.volume, this.context.currentTime, 0.04);
     if (this.musicBus && this.context)
       this.musicBus.gain.setTargetAtTime(prefs.music ? 0.22 : 0, this.context.currentTime, 0.15);
-    if (prefs.music && this.context && !this.timer) {
-      this.timer = setInterval(() => this.musicStep(), 360);
-      this.musicStep();
+    this.syncMusic();
+  }
+  setScene(scene: 'menu' | 'game'): void {
+    if (scene === this.scene) return;
+    this.scene = scene;
+    if (this.track) {
+      this.track.pause();
+      this.track.src = `${import.meta.env.BASE_URL}audio/${scene}.mp3`;
     }
-    if (!prefs.music && this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
+    this.syncMusic();
+  }
+  private syncMusic(): void {
+    if (!this.unlocked) return;
+    if (!this.track) {
+      this.track = new Audio(`${import.meta.env.BASE_URL}audio/${this.scene}.mp3`);
+      this.track.loop = true;
+      this.track.preload = 'none';
     }
+    this.track.volume = this.prefs.volume * 0.45;
+    if (this.prefs.music) void this.track.play().catch(() => {});
+    else this.track.pause();
   }
   private tone(
     frequency: number,
@@ -104,6 +134,15 @@ export class Soundscape {
   }
   effect(type: string): void {
     if (!this.prefs.effects || !this.context || !this.master) return;
+    const sample = this.samples.get(type);
+    if (sample) {
+      const source = this.context.createBufferSource();
+      source.buffer = sample;
+      source.connect(this.master);
+      source.start();
+      source.onended = () => source.disconnect();
+      return;
+    }
     const notes = melodies[type];
     if (!notes) return;
     const now = this.context.currentTime;
@@ -124,22 +163,9 @@ export class Soundscape {
     const type = order.find((type) => events.some((event) => event.type === type));
     if (type) this.effect(type);
   }
-  private musicStep(): void {
-    if (!this.context || !this.musicBus || document.hidden) return;
-    const score = [
-      60, 67, 64, 72, 69, 64, 67, 62, 57, 64, 60, 69, 67, 60, 64, 59, 53, 60, 57, 65, 64, 57, 60,
-      55, 55, 62, 59, 67, 65, 59, 62, 67,
-    ];
-    const note = score[this.step % score.length]!;
-    const time = this.context.currentTime;
-    this.tone(440 * 2 ** ((note - 69) / 12), time, 0.65, 0.17, 'sine', this.musicBus);
-    if (this.step % 8 === 0)
-      this.tone(440 * 2 ** ((note - 81) / 12), time, 2.6, 0.13, 'triangle', this.musicBus);
-    this.step++;
-  }
   close(): void {
-    if (this.timer) clearInterval(this.timer);
-    this.timer = null;
+    this.track?.pause();
+    this.track = null;
     void this.context?.close();
     this.context = null;
   }

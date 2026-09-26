@@ -1,36 +1,14 @@
-# Money Tour — direction artistique
+# Direction artistique — Money Tour 3D
 
-## Univers et palette
+Cartoon low-poly, inspiré des trois artworks fournis par Julien : formes de jouets à arêtes adoucies, personnages à grande tête, archipel turquoise, maisons crème à toiture terracotta et hôtels corail à toiture bleue. Palette : marine #163d4b, turquoise #2dc9cf, crème #fff6df, terracotta #ef5a32, ardoise #315879, or #f5b83c, feuillage #70a84b. Typographie système Trebuchet MS/Arial, titres épais.
 
-Un archipel de villes imaginaires, illustré en formes originales. Papier crème `#FFF6DF`, encre marine `#142D3D`, lagon `#2BA8BC`, corail `#E8725B`, miel `#E6B94A`, sauge `#70A88B`, lavande `#9683C5` et ardoise `#637E94`. Titres Georgia, texte Trebuchet MS/Arial ; aucune police téléchargée.
+- Plateau, 32 tuiles, quatre personnages, dés à points, maisons, hôtel, palmiers et quatre îlots : créés dans Blender 5.2 par scripts/models.py, export apps/web/public/models/money-tour.glb. Les géométries sont regroupées par matériau à l’import pour réduire les appels de dessin.
+- Océan : texture originale créée avec le générateur d’images ChatGPT, textures/ocean.webp.
+- Carte Chance : illustration originale du même générateur, textures/chance.webp ; texte du moteur affiché en HTML au centre de l’écran.
+- Propriété : bordure extérieure continue par case de la couleur du propriétaire, parcelle de couleur, nom du propriétaire au survol et dans la fiche.
+- Déplacements : bonds successifs sur chaque case ; dés 3D en rotation et rebond avant révélation ; constructions qui sortent du sol.
+- Audio : menu.mp3 sur l’accueil/salon, game.mp3 pendant la partie, musiques fournies par Julien ; quatre bruitages Kenney CC0 et synthèse originale pour les autres événements. Réglages musique, effets, volume persistants.
 
-Le plateau compte neuf positions par bord, coins partagés : 32 cases uniques. Les propriétaires sont identifiés par numéro et couleur ; les pions ont quatre silhouettes différentes. Les fiches accessibles et le catalogue des cases complètent le plateau sur petit écran. Mise en page adaptative, contrôles clavier natifs, focus des dialogues et réduction des animations.
+La réduction des animations est prise en charge. Les cases sont accessibles au clavier ; sur petit écran on peut agrandir le plateau. Les textures sont WebP, le GLB environ 1,1 Mo. Budget public total : 12 Mo, incluant les 6,3 Mo de musique fournie.
 
-## Inventaire livré
-
-| Asset                                     | Emplacement effectif                               | Statut et méthode                                                            |
-| ----------------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Nom, logo, favicon                        | `src/App.tsx`, `public/favicon.svg`                | Livré, emblème voilier SVG original                                          |
-| Plateau et décor central                  | `src/board/Board.tsx`                              | Livré, mer, îles et façades PixiJS                                           |
-| 20 villes                                 | `src/board/Board.tsx`                              | Livré, façades déclinées par groupe et détails                               |
-| 4 stations, 4 coins, Chance et Taxe       | `src/board/Board.tsx`                              | Livré, palmier, boussole, coupe, avion, enveloppe et guichet                 |
-| 4 pions                                   | `src/board/Board.tsx`                              | Livré, voilier, montgolfière, phare, cerf-volant                             |
-| Dés et avatars                            | `src/App.tsx`, `src/styles.css`                    | Livré, points CSS, roulis et médaillons de joueur                            |
-| 5 niveaux de construction                 | `src/board/Board.tsx`                              | Livré, terrain, indicateurs de maisons, hôtel marqué H                       |
-| Festivals et championnats                 | `src/board/Board.tsx`                              | Livré, fanions, compteur du multiplicateur                                   |
-| 14 cartes Chance                          | `src/App.tsx`, configuration moteur                | Livré, carte papier commune, étoile et texte original                        |
-| Icônes HUD                                | `src/App.tsx`                                      | Livré, SVG et caractères Unicode rendus par le système                       |
-| Menus, salon, résultat, tutoriel, crédits | `src/App.tsx`, `src/network/OnlineLobby.tsx`       | Livré, composants HTML/CSS originaux                                         |
-| Image de partage 1200 × 630               | `public/social-card.png`, `public/social-card.svg` | Livré, SVG original rasterisé par `scripts/social-card.mjs`                  |
-| 8 effets sonores                          | `src/audio/synth.ts`                               | Livré, dés, mouvement, achat, loyer, construction, carte, victoire, faillite |
-| Musique en boucle                         | `src/audio/synth.ts`                               | Livré, mélodie et basse originales synthétisées                              |
-
-Les chemins `src` et `public` sont relatifs à `apps/web`. Les motifs communs sont volontairement réutilisés. La page Crédits importe le fichier racine `CREDITS.md`.
-
-## Mouvement et son
-
-Les pions suivent les cases et les dés roulent brièvement. Le mode mouvement réduit supprime ces transitions. Les effets Web Audio démarrent après un geste ; la musique est désactivée par défaut. Musique, effets et volume sont réglables, le silence persiste après actualisation. Aucun enregistrement ni échantillon externe : OGG/MP3 inutiles pour cette synthèse.
-
-## Licences et poids
-
-Aucun asset artistique externe. Créations originales sous MIT, crédits et dépendances documentés dans `CREDITS.md`. Le script `scripts/check-assets.mjs` contrôle le budget de 5 Mo pour `apps/web/public`. Les illustrations et les sons procéduraux sont inclus dans le code, sans requête externe.
+Les prompts exacts de génération sont archivés dans docs/IMAGE_PROMPTS.md. Les crédits et licences sont dans CREDITS.md.
