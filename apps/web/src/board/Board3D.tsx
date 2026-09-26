@@ -151,7 +151,9 @@ export default function Board({
         ground.receiveShadow = true;
         resources.add(ground);
         const loader = new GLTFLoader();
-        const gltf = await loader.loadAsync(`${import.meta.env.BASE_URL}models/money-tour.glb`);
+        const gltf = await loader.loadAsync(
+          `${import.meta.env.BASE_URL}models/money-tour.glb?v=${import.meta.env.VITE_MODEL_REVISION}`,
+        );
         if (disposed) {
           disposePending(gltf.scene);
           return;
