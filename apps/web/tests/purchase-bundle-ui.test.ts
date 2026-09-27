@@ -34,28 +34,28 @@ it('shows rent on each tier and buys exactly the chosen three houses with their 
   await act(() => root.render(createElement(PurchaseDetails, { state, onBuy, onPass: vi.fn() })));
   const cards = [...host.querySelectorAll<HTMLButtonElement>('.purchase-levels button')];
   expect(cards.map((card) => card.querySelector('.level-rent')!.textContent)).toEqual([
-    'Loyer 15 k 💵',
-    'Loyer 30 k 💵',
-    'Loyer 60 k 💵',
-    'Loyer 105 k 💵',
-    'Loyer 180 k 💵',
+    'Loyer 15 💵',
+    'Loyer 30 💵',
+    'Loyer 60 💵',
+    'Loyer 105 💵',
+    'Loyer 180 💵',
   ]);
   expect(cards[4]!.disabled).toBe(true);
   await act(() => cards[3]!.click());
   expect(cards[3]!.getAttribute('aria-pressed')).toBe('true');
   expect(cards[3]!.querySelector('.level-check svg')).not.toBeNull();
-  expect(host.querySelector('.purchase-wallet')!.textContent).toContain('Après achat 1125 k');
+  expect(host.querySelector('.purchase-wallet')!.textContent).toContain('Après achat 1 125 💵');
   const buy = host.querySelector<HTMLButtonElement>('.purchase-cta')!;
-  expect(buy.textContent).toContain('Acheter avec 3 maisons · 375 k');
+  expect(buy.textContent).toContain('Acheter avec 3 maisons · 375');
   await act(() => buy.click());
   expect(onBuy).toHaveBeenCalledWith(3);
   expect(state.properties[5]).toMatchObject({ ownerId: 'a', level: 3 });
-  expect(state.players[0]!.cash).toBe(1125000);
+  expect(state.players[0]!.cash).toBe(1125);
 });
 it('allows an unlocked hotel but prevents a bundle exceeding the balance', async () => {
   const state = game();
   state.players[0]!.laps = 5;
-  state.players[0]!.cash = 400000;
+  state.players[0]!.cash = 400;
   const onBuy = vi.fn();
   const host = document.createElement('div');
   document.body.append(host);
@@ -65,9 +65,9 @@ it('allows an unlocked hotel but prevents a bundle exceeding the balance', async
   expect(hotel.disabled).toBe(false);
   await act(() => hotel.click());
   const buy = host.querySelector<HTMLButtonElement>('.purchase-cta')!;
-  expect(buy.textContent).toContain('450 k');
+  expect(buy.textContent).toContain('450');
   expect(buy.disabled).toBe(true);
-  expect(host.querySelector('[role=status]')!.textContent).toContain('Il manque 50 k');
+  expect(host.querySelector('[role=status]')!.textContent).toContain('Il manque 50');
   await act(() => buy.click());
   expect(onBuy).not.toHaveBeenCalled();
   await act(() => host.querySelectorAll<HTMLButtonElement>('.purchase-levels button')[2]!.click());

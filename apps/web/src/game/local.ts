@@ -20,6 +20,7 @@ import {
 } from '@money-tour/engine';
 
 export interface LocalSave {
+  history?: string[];
   version: 1;
   seed: string;
   state: GameState;
@@ -67,6 +68,9 @@ export function loadLocal(): LocalSave | null {
     }
     if (
       save.version !== 1 ||
+      (save.history !== undefined &&
+        (!Array.isArray(save.history) ||
+          save.history.some((entry) => typeof entry !== 'string'))) ||
       typeof save.seed !== 'string' ||
       !(
         sameRules(save.state.config, config) ||
@@ -96,9 +100,7 @@ export function persistLocal(save: LocalSave): boolean {
 }
 
 export const money = (value: number, compact = false): string =>
-  compact
-    ? `${Math.round(value / 1000)} k 💵`
-    : `${new Intl.NumberFormat('fr-FR').format(value)} 💵`;
+  new Intl.NumberFormat('fr-FR', { maximumFractionDigits: compact ? 0 : 2 }).format(value) + ' 💵';
 export const duration = (ms: number): string =>
   `${Math.floor(ms / 60000)
     .toString()

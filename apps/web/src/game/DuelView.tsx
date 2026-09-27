@@ -1,3 +1,4 @@
+import { scaledAmount } from '@money-tour/engine';
 import { useRef, useState } from 'react';
 import {
   duelCommitment,
@@ -27,7 +28,7 @@ export function DuelView({
   const d = state.duel!;
   const actor = state.players.find((p) => p.id === getDecisionPlayerId(state))!;
   const canPlay = !disabled && !actor.bot && (!self || self === actor.id);
-  const [amount, setAmount] = useState('50000');
+  const [amount, setAmount] = useState(String(scaledAmount(state.config, 50000)));
   const [error, setError] = useState('');
   const secrets = useRef<Record<string, { choice: DuelChoice; salt: string }>>({});
   const key = (id: string) => `money-tour.duel.${d.id}.${id}`;
@@ -106,7 +107,7 @@ export function DuelView({
                   type="number"
                   min="1"
                   max={actor.cash}
-                  step="1000"
+                  step={scaledAmount(state.config, 1000)}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />

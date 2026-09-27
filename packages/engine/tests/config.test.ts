@@ -45,8 +45,10 @@ describe('published board and economic data', () => {
       expect(city.buildCosts).toHaveLength(5);
       expect(city.rents!.every(Number.isSafeInteger)).toBe(true);
       expect(city.buildCosts!.every(Number.isSafeInteger)).toBe(true);
-      expect(city.rents).toEqual([1, 2, 4, 7, 12].map((factor) => (city.price! * factor) / 10));
-      expect(city.buildCosts).toEqual([0, ...Array(4).fill(city.price! / 2)]);
+      expect(city.rents).toEqual(
+        [1, 2, 4, 7, 12].map((factor) => Math.round((city.price! * factor) / 10)),
+      );
+      expect(city.buildCosts).toEqual([0, ...Array(4).fill(Math.round(city.price! / 2))]);
     }
   });
 

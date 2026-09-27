@@ -1,6 +1,6 @@
 # Money Tour — inventaire des règles et probabilités
 
-Édition v12 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes v11 et antérieures conservent leurs anciennes règles. Montants en monnaie du jeu ; 1 k = 1 000.
+Édition v12 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes v11 et antérieures conservent leurs anciennes règles. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
 
 ## 1. Ce qui change dans cette édition
 
@@ -9,7 +9,7 @@
 - Deux rues ont trois villes, six rues ont deux villes. Seules des rues de même longueur peuvent échanger leurs emplacements. Les prix restent strictement croissants dans le sens horaire.
 - Voyage sur un double : proposé dès l’action supplémentaire, avant de relancer les dés. Le joueur peut payer le voyage ou refuser et lancer normalement.
 - Duel : soldes visibles ; égalité = nouvelle manche sans nouveau débit, même pot jusqu’à un vainqueur.
-- Casino : tout résultat gagnant verse au moins 50 k, avant l’éventuel partage d’alliance. Une défaite rapporte zéro.
+- Casino : tout résultat gagnant verse au moins 50, avant l’éventuel partage d’alliance. Une défaite rapporte zéro.
 - Le paquet contient déjà **23 cartes distinctes**, toutes listées ci-dessous. Aucune nouvelle carte monétaire ajoutée.
 
 ## 2. Paramètres généraux et victoire
@@ -17,8 +17,8 @@
 | Paramètre         | Valeur / fonctionnement                                                                    |
 | ----------------- | ------------------------------------------------------------------------------------------ |
 | Joueurs           | 2 à 4 ; chacun pour soi ou deux équipes de deux                                            |
-| Argent initial    | 1 500 k par joueur                                                                         |
-| Prime Départ      | 300 k par passage en avant ; aucune prime en reculant                                      |
+| Argent initial    | 1 500 par joueur                                                                           |
+| Prime Départ      | 300 par passage en avant ; aucune prime en reculant                                        |
 | Durée             | 20 minutes par défaut, durées prédéfinies ou personnalisées de 1 à 180 minutes             |
 | Décision          | 30 secondes, suspendues pendant les présentations ; une action par défaut évite le blocage |
 | Victoire par rues | Posséder trois rues complètes (toutes leurs villes), seul ou en équipe                     |
@@ -36,34 +36,35 @@ Les indices ci-dessous commencent à 0 sur Départ, puis augmentent dans le sens
 
 | Position | Ville     | Rue | Terrain | Chaque construction | Loyer terrain | 1 maison | 2 maisons | 3 maisons | Hôtel |
 | -------- | --------- | --- | ------- | ------------------- | ------------- | -------- | --------- | --------- | ----- |
-| 1        | Lisbonne  | g1  | 100 k   | 50 k                | 10 k          | 20 k     | 40 k      | 70 k      | 120 k |
-| 2        | Porto     | g1  | 125 k   | 62,5 k              | 12,5 k        | 25 k     | 50 k      | 87,5 k    | 150 k |
-| 3        | Coimbra   | g1  | 137,5 k | 68,75 k             | 13,75 k       | 27,5 k   | 55 k      | 96,25 k   | 165 k |
-| 5        | Madrid    | g2  | 150 k   | 75 k                | 15 k          | 30 k     | 60 k      | 105 k     | 180 k |
-| 6        | Barcelone | g2  | 175 k   | 87,5 k              | 17,5 k        | 35 k     | 70 k      | 122,5 k   | 210 k |
-| 9        | Rome      | g3  | 200 k   | 100 k               | 20 k          | 40 k     | 80 k      | 140 k     | 240 k |
-| 10       | Venise    | g3  | 225 k   | 112,5 k             | 22,5 k        | 45 k     | 90 k      | 157,5 k   | 270 k |
-| 13       | Paris     | g4  | 250 k   | 125 k               | 25 k          | 50 k     | 100 k     | 175 k     | 300 k |
-| 14       | Lyon      | g4  | 275 k   | 137,5 k             | 27,5 k        | 55 k     | 110 k     | 192,5 k   | 330 k |
-| 17       | Berlin    | g5  | 300 k   | 150 k               | 30 k          | 60 k     | 120 k     | 210 k     | 360 k |
-| 18       | Munich    | g5  | 325 k   | 162,5 k             | 32,5 k        | 65 k     | 130 k     | 227,5 k   | 390 k |
-| 19       | Hambourg  | g5  | 337,5 k | 168,75 k            | 33,75 k       | 67,5 k   | 135 k     | 236,25 k  | 405 k |
-| 21       | Londres   | g6  | 350 k   | 175 k               | 35 k          | 70 k     | 140 k     | 245 k     | 420 k |
-| 22       | Édimbourg | g6  | 375 k   | 187,5 k             | 37,5 k        | 75 k     | 150 k     | 262,5 k   | 450 k |
-| 25       | Tokyo     | g7  | 400 k   | 200 k               | 40 k          | 80 k     | 160 k     | 280 k     | 480 k |
-| 26       | Kyoto     | g7  | 425 k   | 212,5 k             | 42,5 k        | 85 k     | 170 k     | 297,5 k   | 510 k |
-| 29       | New York  | g8  | 450 k   | 225 k               | 45 k          | 90 k     | 180 k     | 315 k     | 540 k |
-| 30       | Boston    | g8  | 475 k   | 237,5 k             | 47,5 k        | 95 k     | 190 k     | 332,5 k   | 570 k |
+| 1        | Lisbonne  | g1  | 100     | 50                  | 10            | 20       | 40        | 70        | 120   |
+| 2        | Porto     | g1  | 125     | 63                  | 13            | 25       | 50        | 88        | 150   |
+| 3        | Coimbra   | g1  | 140     | 70                  | 14            | 28       | 56        | 98        | 168   |
+| 5        | Madrid    | g2  | 150     | 75                  | 15            | 30       | 60        | 105       | 180   |
+| 6        | Barcelone | g2  | 175     | 88                  | 18            | 35       | 70        | 123       | 210   |
+| 9        | Rome      | g3  | 200     | 100                 | 20            | 40       | 80        | 140       | 240   |
+| 10       | Venise    | g3  | 225     | 113                 | 23            | 45       | 90        | 158       | 270   |
+| 13       | Paris     | g4  | 250     | 125                 | 25            | 50       | 100       | 175       | 300   |
+| 14       | Lyon      | g4  | 275     | 138                 | 28            | 55       | 110       | 193       | 330   |
+| 17       | Berlin    | g5  | 300     | 150                 | 30            | 60       | 120       | 210       | 360   |
+| 18       | Munich    | g5  | 325     | 163                 | 33            | 65       | 130       | 228       | 390   |
+| 19       | Hambourg  | g5  | 340     | 170                 | 34            | 68       | 136       | 238       | 408   |
+| 21       | Londres   | g6  | 350     | 175                 | 35            | 70       | 140       | 245       | 420   |
+| 22       | Édimbourg | g6  | 375     | 188                 | 38            | 75       | 150       | 263       | 450   |
+| 25       | Tokyo     | g7  | 400     | 200                 | 40            | 80       | 160       | 280       | 480   |
+| 26       | Kyoto     | g7  | 425     | 213                 | 43            | 85       | 170       | 298       | 510   |
+| 29       | New York  | g8  | 450     | 225                 | 45            | 90       | 180       | 315       | 540   |
+| 30       | Boston    | g8  | 475     | 238                 | 48            | 95       | 190       | 333       | 570   |
 
-Les deux nouveaux tarifs sont 137,5 k et 337,5 k. Tous les anciens tarifs sont conservés ; le plus cher reste 475 k. Une construction coûte 50 % du terrain ; les loyers valent respectivement 10 %, 20 %, 40 %, 70 % et 120 % de son prix.
+Les deux nouveaux tarifs sont 140 et 340. Les anciens tarifs sont divisés par 1 000 ; le plus cher reste 475. Une construction coûte 50 % du terrain, arrondis à l’entier le plus proche ; les loyers valent respectivement 10 %, 20 %, 40 %, 70 % et 120 % de son prix, arrondis à l’entier le plus proche.
 
-- Achat groupé : terrain + somme des constructions jusqu’au niveau sélectionné. Trois maisons coûtent donc 2,5 fois le terrain ; l’hôtel coûte 3 fois le terrain. Rien n’est débité si le total dépasse le cash.
+- Achat groupé : terrain + somme des constructions jusqu’au niveau sélectionné. Trois maisons ajoutent trois coûts unitaires au terrain ; l’hôtel en ajoute quatre. Rien n’est débité si le total dépasse le cash.
+- Un seul achat ou chantier par visite. Après validation, seule la fin de visite est proposée. Revenir sur sa ville rouvre la même fenêtre : choisir le niveau total souhaité, payer uniquement les constructions manquantes. Hôtel toujours verrouillé avant cinq tours complets.
 - Les maisons ne nécessitent pas la rue entière. L’hôtel n’est disponible qu’après cinq tours complets du plateau effectués par son propriétaire.
 - Rachat hostile : deux fois la valeur du terrain et de ses constructions, payé au propriétaire. Un hôtel empêche ce rachat. L’assurance peut le bloquer une fois.
 - Vente à la banque pour régler une dette : 50 % de la valeur terrain + bâtiments ; le bien redevient libre. La vente consomme une assurance attachée à ce bien.
 - Les loyers sont transférés, pas créés. Squatteur permet d’éviter un loyer. Le loyer affiché inclut les bonus et malus actifs.
-- Îles : chacune coûte 200 k. Posséder 1 / 2 / 3 / 4 îles donne un loyer de 50 / 100 / 200 / 500 k pour chacune. Aucune construction sur les îles.
-- Taxe : 50 k + 10 % de la valeur des propriétés et constructions. En présence d’une dette de fraude, celle-ci remplace la taxe normale puis disparaît.
+- Îles : chacune coûte 200. Posséder 1 / 2 / 3 / 4 îles donne un loyer de 50 / 100 / 200 / 500 pour chacune. Aucune construction sur les îles.
+- Taxe : 50 + 10 % de la valeur des propriétés et constructions. En présence d’une dette de fraude, celle-ci remplace la taxe normale puis disparaît.
 
 ## 4. Déplacement et cases spéciales
 
@@ -85,17 +86,17 @@ Deux dés indépendants et uniformes à six faces. Un double donne une action su
 
 Un double vaut 6/36 = 16,67 % par lancer. Trois doubles sur trois lancers indépendants valent 1/216 = 0,463 % ; ce n’est pas la probabilité d’aller en prison par tour, car cartes et déplacements modifient les parcours.
 
-| Case            | Mécanique                                                                                                                                                                                                                                                                     |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Départ (0)      | Prime de 300 k en passant en avant                                                                                                                                                                                                                                            |
-| Île perdue (8)  | Sortie payante 200 k, carte de sortie gratuite ou tentative de double ; au plus trois tentatives. Le double de sortie ne donne pas de relance                                                                                                                                 |
-| Mondial (16)    | 50 k pour doubler le loyer d’une ville possédée pendant quatre retours de son propriétaire ; renouvellement sans empilement                                                                                                                                                   |
-| Voyage (24)     | 50 k à la place des dés au prochain tour, ou dès la relance obtenue par un double. Choix d’une destination légale libre ou alliée ; pas de propriété adverse. Déplacement en avant, prime Départ si franchi, résolution normale de la destination. Refuser conserve le lancer |
-| Assurance (11)  | Reçoit un jeton s’il n’en a pas. Pose unique sur son propre bien ; bloque une destruction, expropriation ou rachat hostile puis disparaît. Ne protège aucun autre bien. Une nouvelle visite après consommation peut redonner un jeton                                         |
-| Casino (7)      | Roulette ou machine à sous, 50 % chacune à l’arrivée ; règles détaillées ci-dessous                                                                                                                                                                                           |
-| Duel (23)       | Pierre-feuille-ciseaux à mise acceptée ; aucune carte Chance Duel                                                                                                                                                                                                             |
-| Chance (15, 27) | Tire une carte du paquet commun, sans remise                                                                                                                                                                                                                                  |
-| Taxe (31)       | Prélèvement de la banque selon la formule ci-dessus                                                                                                                                                                                                                           |
+| Case            | Mécanique                                                                                                                                                                                                                                                                   |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Départ (0)      | Prime de 300 en passant en avant                                                                                                                                                                                                                                            |
+| Île perdue (8)  | Sortie payante 200, carte de sortie gratuite ou tentative de double ; au plus trois tentatives. Le double de sortie ne donne pas de relance                                                                                                                                 |
+| Mondial (16)    | 50 pour doubler le loyer d’une ville possédée pendant quatre retours de son propriétaire ; renouvellement sans empilement                                                                                                                                                   |
+| Voyage (24)     | 50 à la place des dés au prochain tour, ou dès la relance obtenue par un double. Choix d’une destination légale libre ou alliée ; pas de propriété adverse. Déplacement en avant, prime Départ si franchi, résolution normale de la destination. Refuser conserve le lancer |
+| Assurance (11)  | Reçoit un jeton s’il n’en a pas. Pose unique sur son propre bien ; bloque une destruction, expropriation ou rachat hostile puis disparaît. Ne protège aucun autre bien. Une nouvelle visite après consommation peut redonner un jeton                                       |
+| Casino (7)      | Roulette ou machine à sous, 50 % chacune à l’arrivée ; règles détaillées ci-dessous                                                                                                                                                                                         |
+| Duel (23)       | Pierre-feuille-ciseaux à mise acceptée ; aucune carte Chance Duel                                                                                                                                                                                                           |
+| Chance (15, 27) | Tire une carte du paquet commun, sans remise                                                                                                                                                                                                                                |
+| Taxe (31)       | Prélèvement de la banque selon la formule ci-dessus                                                                                                                                                                                                                         |
 
 Les deux cases Chance représentent 2/32 du plateau et le casino 1/32. **Ces fractions ne sont pas des probabilités de visite par lancer** : dés, prison, doubles et déplacements spéciaux empêchent une répartition uniforme. Aucun taux global de passage n’est garanti.
 
@@ -105,12 +106,12 @@ Au premier tirage d’un paquet complet, chaque carte a exactement **1/23 = 4,34
 
 | Carte               | Effet                                                                                                                                            | Probabilité initiale |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
-| Prime de quartier   | Recevez 200 000.                                                                                                                                 | 1/23 (4,35 %)        |
-| Marché du dimanche  | Recevez 100 000.                                                                                                                                 | 1/23 (4,35 %)        |
-| Belle saison        | Recevez 150 000.                                                                                                                                 | 1/23 (4,35 %)        |
-| Réparation urgente  | Payez 100 000.                                                                                                                                   | 1/23 (4,35 %)        |
-| Assurance annuelle  | Payez 150 000.                                                                                                                                   | 1/23 (4,35 %)        |
-| Travaux de voirie   | Payez 200 000.                                                                                                                                   | 1/23 (4,35 %)        |
+| Prime de quartier   | Recevez 200.                                                                                                                                     | 1/23 (4,35 %)        |
+| Marché du dimanche  | Recevez 100.                                                                                                                                     | 1/23 (4,35 %)        |
+| Belle saison        | Recevez 150.                                                                                                                                     | 1/23 (4,35 %)        |
+| Réparation urgente  | Payez 100.                                                                                                                                       | 1/23 (4,35 %)        |
+| Assurance annuelle  | Payez 150.                                                                                                                                       | 1/23 (4,35 %)        |
+| Travaux de voirie   | Payez 200.                                                                                                                                       | 1/23 (4,35 %)        |
 | Retour en fanfare   | Avancez jusqu'au Départ et recevez sa prime.                                                                                                     | 1/23 (4,35 %)        |
 | Courant contraire   | Rejoignez directement l'Île perdue sans prime.                                                                                                   | 1/23 (4,35 %)        |
 | Vent favorable      | Avancez de trois cases et résolvez l'arrivée.                                                                                                    | 1/23 (4,35 %)        |
@@ -119,10 +120,10 @@ Au premier tirage d’un paquet complet, chaque carte a exactement **1/23 = 4,34
 | Billet d'horizon    | Avancez jusqu'au Tour du monde.                                                                                                                  | 1/23 (4,35 %)        |
 | Retour au continent | Conservez cette carte pour quitter l'île gratuitement.                                                                                           | 1/23 (4,35 %)        |
 | Chantier contrarié  | Une maison adverse est retirée. Les hôtels sont protégés.                                                                                        | 1/23 (4,35 %)        |
-| Raid sur la banque  | Prenez jusqu’à 100 000 au rival le plus riche. Ses réserves ne peuvent pas devenir négatives.                                                    | 1/23 (4,35 %)        |
-| Coup de filet       | Prenez jusqu’à 50 000 à chaque adversaire. Vos coéquipiers sont épargnés.                                                                        | 1/23 (4,35 %)        |
-| Contrôle fiscal     | Payez 120 000 à la banque.                                                                                                                       | 1/23 (4,35 %)        |
-| Bourse de voyage    | Recevez 180 000.                                                                                                                                 | 1/23 (4,35 %)        |
+| Raid sur la banque  | Prenez jusqu’à 100 au rival le plus riche. Ses réserves ne peuvent pas devenir négatives.                                                        | 1/23 (4,35 %)        |
+| Coup de filet       | Prenez jusqu’à 50 à chaque adversaire. Vos coéquipiers sont épargnés.                                                                            | 1/23 (4,35 %)        |
+| Contrôle fiscal     | Payez 120 à la banque.                                                                                                                           | 1/23 (4,35 %)        |
+| Bourse de voyage    | Recevez 180.                                                                                                                                     | 1/23 (4,35 %)        |
 | Squatteur           | Gardez cette carte. Lors d’une prochaine visite chez un adversaire, utilisez-la pour ne payer aucun loyer.                                       | 1/23 (4,35 %)        |
 | Expropriation       | Choisissez une ville adverse : elle redevient libre, ses bâtiments disparaissent. Une assurance peut bloquer cette attaque.                      | 1/23 (4,35 %)        |
 | Invasion de cafards | Choisissez un hôtel adverse. Son loyer est réduit de moitié pendant deux retours du propriétaire.                                                | 1/23 (4,35 %)        |
@@ -141,26 +142,26 @@ Distribution initiale du paquet :
 | Cartes conservées (sortie, Squatteur, Fraude) | 3      | 13,04 %              |
 | Attaques / transferts / Alliance              | 6      | 26,09 %              |
 
-Les huit cartes de cash direct versent +630 k et prélèvent −570 k sur un paquet complet : solde net +60 k, soit +2,609 k par tirage initial en moyenne pour ces seuls effets. Ce chiffre exclut primes de déplacement, fraudes, loyers et attaques ; il ne décrit pas l’espérance totale d’une carte.
+Les huit cartes de cash direct versent +630 et prélèvent −570 sur un paquet complet : solde net +60, soit +2,609 par tirage initial en moyenne pour ces seuls effets. Ce chiffre exclut primes de déplacement, fraudes, loyers et attaques ; il ne décrit pas l’espérance totale d’une carte.
 
 ## 6. Casino : probabilités et gains
 
 Entrée gratuite, aucune mise et aucune perte. Le compteur est commun aux visites de tous les joueurs sur ce casino. À la visite n depuis le dernier jackpot : j = min(2n, 50) %. Donc 2 %, 4 %, 6 %… 50 % à partir de la 25e visite. Un jackpot remet le compteur à zéro. Passer son tour ne tire aucun gain, mais l’arrivée a déjà incrémenté les visites.
 
-Le jackpot est tiré indépendamment des couleurs et symboles. Il **remplace** le petit gain, sans cumul. Les formules utilisent le cash avant gain, arrondissent à l’unité inférieure, puis appliquent le plancher 50 k. L’alliance partage ensuite ce montant si elle est active.
+Le jackpot est tiré indépendamment des couleurs et symboles. Il **remplace** le petit gain, sans cumul. Les formules utilisent le cash avant gain, arrondissent à l’unité inférieure, puis appliquent le plancher 50. L’alliance partage ensuite ce montant si elle est active.
 
-| Résultat                                                | Probabilité finale, j en fraction de 0 à 1 | Gain                    |
-| ------------------------------------------------------- | ------------------------------------------ | ----------------------- |
-| Jackpot, les deux jeux                                  | j                                          | max(50 k, 10 % du cash) |
-| Roulette, bonne couleur hors jackpot                    | (1−j) × 1/2                                | max(50 k, 2 % du cash)  |
-| Roulette, mauvaise couleur hors jackpot                 | (1−j) × 1/2                                | 0                       |
-| Slots, exactement deux symboles identiques hors jackpot | (1−j) × 36/64                              | max(50 k, 2 % du cash)  |
-| Slots, trois symboles identiques hors jackpot           | (1−j) × 4/64                               | max(50 k, 5 % du cash)  |
-| Slots, trois symboles différents hors jackpot           | (1−j) × 24/64                              | 0                       |
+| Résultat                                                | Probabilité finale, j en fraction de 0 à 1 | Gain                  |
+| ------------------------------------------------------- | ------------------------------------------ | --------------------- |
+| Jackpot, les deux jeux                                  | j                                          | max(50, 10 % du cash) |
+| Roulette, bonne couleur hors jackpot                    | (1−j) × 1/2                                | max(50, 2 % du cash)  |
+| Roulette, mauvaise couleur hors jackpot                 | (1−j) × 1/2                                | 0                     |
+| Slots, exactement deux symboles identiques hors jackpot | (1−j) × 36/64                              | max(50, 2 % du cash)  |
+| Slots, trois symboles identiques hors jackpot           | (1−j) × 4/64                               | max(50, 5 % du cash)  |
+| Slots, trois symboles différents hors jackpot           | (1−j) × 24/64                              | 0                     |
 
 Quatre symboles équiprobables, trois rouleaux indépendants : 64 combinaisons. À j = 2 %, la roulette gagne quelque chose dans 51 % des parties de roulette ; les slots dans 63,25 % des parties de slots. Le choix du mini-jeu à l’arrivée reste 50/50.
 
-Repère économique avec 1 500 k de cash et j = 2 % : gain moyen 27,5 k en roulette, 35,156 k aux slots, soit **31,328 k par visite jouée** en moyenne avant alliance. Ces valeurs sont analytiques, pas une fréquence mesurée sur des joueurs. Un seul casino remplace les deux précédents ; aucun taux de jackpot n’a été augmenté.
+Repère économique avec 1 500 de cash et j = 2 % : gain moyen 27,5 en roulette, 35,156 aux slots, soit **31,328 par visite jouée** en moyenne avant alliance. Ces valeurs sont analytiques, pas une fréquence mesurée sur des joueurs. Un seul casino remplace les deux précédents ; aucun taux de jackpot n’a été augmenté.
 
 ## 7. Duel et conservation de l’argent
 
@@ -183,9 +184,9 @@ Une règle spéciale est choisie uniformément au lancement, 20 % chacune :
 | Festivals        | Trois villes distinctes tirées au hasard ; loyers ×2 pendant toute la partie. Avec 18 villes, chaque ville a 3/18 = 16,67 % de chance conditionnelle d’être choisie |
 | Héritage         | Chaque joueur reçoit une ville différente parmi les moins chères, sans débit ; aucun cash distribué                                                                 |
 | Marché flottant  | Une ville tirée parmi les 18 est réservée pour une enchère au tour de table 10 ; 1/18 chacune au choix initial                                                      |
-| Capitale mystère | Une ville cachée choisie parmi les 18 rapporte 200 k à son propriétaire à la fin ; aucun bonus si elle est libre                                                    |
+| Capitale mystère | Une ville cachée choisie parmi les 18 rapporte 200 à son propriétaire à la fin ; aucun bonus si elle est libre                                                      |
 
-Un objectif secret est attribué à chaque joueur uniformément parmi cinq objectifs (20 % chacun, doublons entre joueurs possibles). Prime unique de 100 k : posséder trois îles ; obtenir trois doubles cumulés ; réaliser trois constructions ; passer deux fois Départ ; posséder quatre villes. La prime respecte l’alliance. L’objectif reste masqué jusqu’au clic du propriétaire.
+Un objectif secret est attribué à chaque joueur uniformément parmi cinq objectifs (20 % chacun, doublons entre joueurs possibles). Prime unique de 100 : posséder trois îles ; obtenir trois doubles cumulés ; réaliser trois constructions ; passer deux fois Départ ; posséder quatre villes. La prime respecte l’alliance. L’objectif reste masqué jusqu’au clic du propriétaire.
 
 Appel d’offres : un tour de table choisi uniformément entre 3 et 7 (20 % chacun). Une ville neutre éligible est tirée uniformément. Chacun propose secrètement un montant dans la limite de son cash ; plus haute offre strictement positive gagnante, seule elle est débitée. Égalité entre N meilleures offres : 1/N pour chacune. Aucun gagnant si toutes les offres sont nulles, absentes ou invalides. Annulation si aucune ville disponible. Le marché flottant peut ajouter sa propre enchère au tour 10.
 

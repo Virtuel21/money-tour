@@ -1,3 +1,4 @@
+export { scaledAmount } from './economy.js';
 export { config } from './config.js';
 export { createRng } from './rng.js';
 export {
@@ -10,6 +11,7 @@ export {
   getPropertyValue,
   getRent,
   getPurchaseQuote,
+  getConstructionQuote,
   validateState,
 } from './engine.js';
 export type * from './types.js';

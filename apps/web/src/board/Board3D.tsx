@@ -1,3 +1,4 @@
+import { scaledAmount } from '@money-tour/engine';
 import { cameraBounds, followPlayer } from './camera';
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
@@ -729,14 +730,19 @@ export default function Board({
           wealth.forEach((units, i) => {
             const target = game.players[i]?.eliminated ? 0 : (game.players[i]?.cash ?? 0);
             shownWealth[i] = reduced ? target : THREE.MathUtils.lerp(shownWealth[i]!, target, 0.12);
-            const amount = Math.min(24, shownWealth[i]! / 100000);
+            const amount = Math.min(24, shownWealth[i]! / scaledAmount(state.config, 100000));
             units.children.forEach((unit, k) => {
               const fill = THREE.MathUtils.clamp(amount - k, 0, 1);
               unit.visible = fill > 0.01;
               unit.scale.y = Math.max(0.01, fill);
             });
             units.scale.setScalar(
-              1 + Math.max(0, Math.log2(Math.max(1, shownWealth[i]! / 2400000))) * 0.1,
+              1 +
+                Math.max(
+                  0,
+                  Math.log2(Math.max(1, shownWealth[i]! / scaledAmount(state.config, 2400000))),
+                ) *
+                  0.1,
             );
           });
           dice.forEach((die, i) => {
@@ -985,9 +991,9 @@ export default function Board({
                   {state.properties[t.id]?.ownerId && (
                     <strong className="tile-rent" title="Loyer actuel">
                       {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
-                        getRent(state, t.id) / 1000,
+                        getRent(state, t.id),
                       )}
-                      <small> k</small>
+                      <small> 💵</small>
                     </strong>
                   )}
                   {!!state.properties[t.id]?.championships && (

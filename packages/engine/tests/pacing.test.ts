@@ -24,6 +24,7 @@ it('builds three houses without the matching city, but never on another playerâ€
   state.properties[1]!.ownerId = 'a';
   state.properties[2]!.ownerId = 'b';
   for (let level = 1; level <= 3; level++) {
+    state.phase = 'property'; // Separate visits.
     const result = reduceGame(state, { type: 'upgrade', playerId: 'a' });
     expect(result.error).toBeUndefined();
     state = result.state;

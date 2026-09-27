@@ -159,6 +159,11 @@ function validateConfig(config: GameConfig): void {
     (!Number.isSafeInteger(config.championshipDuration) || config.championshipDuration < 1)
   )
     throw new Error('Invalid championship duration.');
+  if (
+    config.moneyDivisor !== undefined &&
+    (!Number.isSafeInteger(config.moneyDivisor) || config.moneyDivisor < 1)
+  )
+    throw new Error('Invalid money divisor.');
   if (positive.some((key) => !Number.isSafeInteger(config[key]) || config[key] <= 0))
     throw new Error('Invalid positive integer configuration.');
   if (
@@ -340,6 +345,40 @@ export function getPurchaseQuote(state: GameState, level = 0, fraud = false) {
     rent,
     available,
     canBuy: available && player.cash >= total,
+  };
+}
+
+/** Quote only the additional buildings on an already owned city. */
+export function getConstructionQuote(state: GameState, level: number) {
+  const player = activePlayer(state),
+    tile = tileAt(state, player.position);
+  const property = state.properties[tile.id];
+  const base = getPurchaseQuote(state, level);
+  if (!base || tile.type !== 'city' || !property) return null;
+  const buildings = (tile.buildCosts ?? [])
+    .slice(property.level + 1, level + 1)
+    .reduce((sum, value) => sum + value, 0);
+  const available =
+    !state.winner &&
+    state.phase === 'property' &&
+    property.ownerId === player.id &&
+    level > property.level &&
+    level <= buildingCap(state, player) &&
+    (state.config.singlePropertyDecision === true || level === property.level + 1) &&
+    (state.config.buildingRequiresGroup === false ||
+      !state.config.board.some(
+        (other) =>
+          other.type === 'city' &&
+          other.group === tile.group &&
+          state.properties[other.id]?.ownerId !== player.id,
+      ));
+  return {
+    ...base,
+    land: 0,
+    buildings,
+    total: buildings,
+    available,
+    canBuy: available && player.cash >= buildings,
   };
 }
 
@@ -1193,6 +1232,7 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
           amount: tile.buildCosts![level],
         });
       }
+      if (state.config.singlePropertyDecision) state.phase = 'end';
       break;
     }
     case 'pay_rent': {
@@ -1248,20 +1288,25 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       credit(state, property.ownerId, price, events, 'buyout');
       property.ownerId = player.id;
       events.push({ type: 'buyout', playerId: player.id, tile: player.position, amount: price });
+      if (state.config.singlePropertyDecision) state.phase = 'end';
       break;
     }
     case 'upgrade': {
       const property = state.properties[player.position]!;
-      property.level += 1;
-      const price = tileAt(state, player.position).buildCosts![property.level]!;
-      player.cash -= price;
-      events.push({
-        type: 'build',
-        playerId: player.id,
-        tile: player.position,
-        amount: price,
-        level: property.level,
-      });
+      const target = action.level ?? property.level + 1;
+      const quote = getConstructionQuote(state, target)!;
+      player.cash -= quote.total;
+      for (let level = property.level + 1; level <= target; level++) {
+        property.level = level;
+        events.push({
+          type: 'build',
+          playerId: player.id,
+          tile: player.position,
+          amount: tileAt(state, player.position).buildCosts![level],
+          level,
+        });
+      }
+      if (state.config.singlePropertyDecision) state.phase = 'end';
       break;
     }
     case 'place_championship':
@@ -1337,6 +1382,14 @@ export function isLegalPlayerAction(state: GameState, action: GameAction): boole
     )?.canBuy
   )
     return false;
+  if (
+    action.type === 'upgrade' &&
+    !getConstructionQuote(
+      state,
+      action.level ?? (state.properties[activePlayer(state).position]?.level ?? 0) + 1,
+    )?.canBuy
+  )
+    return false;
   if (action.type.startsWith('auction_')) return legalAuction(state, action);
   if (action.type.startsWith('duel_')) return isLegalDuelAction(state, action);
   return getLegalActions(state).some(
@@ -1394,6 +1447,8 @@ export function reduceGame(
     debt: state.debt ? { ...state.debt } : null,
   };
   const events: GameEvent[] = [];
+  if ('playerId' in action && action.type !== 'set_control')
+    events.push({ type: 'player_action', playerId: action.playerId, actionType: action.type });
   next.seq += 1;
   if (action.type === 'tick') {
     next.elapsedMs = Math.min(next.durationMs, next.elapsedMs + action.elapsedMs);

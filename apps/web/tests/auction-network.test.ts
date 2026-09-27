@@ -60,20 +60,20 @@ it('keeps signed bids sealed until everyone commits and resolves the same winnin
     await send(host, {
       type: 'auction_commit',
       playerId: host.user.id,
-      hash: auctionCommitment('network-auction', host.user.id, 23456, a),
+      hash: auctionCommitment('network-auction', host.user.id, 234, a),
     });
-    expect(JSON.stringify(host.frames.at(-1)!.command)).not.toContain('23456');
+    expect(JSON.stringify(host.frames.at(-1)!.command)).not.toContain('234');
     expect(host.state!.auction!.bids).toEqual({});
     await send(guest, {
       type: 'auction_commit',
       playerId: guest.user.id,
-      hash: auctionCommitment('network-auction', guest.user.id, 34567, b),
+      hash: auctionCommitment('network-auction', guest.user.id, 345, b),
     });
-    await send(host, { type: 'auction_reveal', playerId: host.user.id, amount: 23456, salt: a });
-    await send(guest, { type: 'auction_reveal', playerId: guest.user.id, amount: 34567, salt: b });
+    await send(host, { type: 'auction_reveal', playerId: host.user.id, amount: 234, salt: a });
+    await send(guest, { type: 'auction_reveal', playerId: guest.user.id, amount: 345, salt: b });
     expect(host.state!.properties[5]!.ownerId).toBe(guest.user.id);
-    expect(host.state!.players.map((p) => p.cash)).toEqual([before[0], before[1]! - 34567]);
-    expect(host.events.find((e) => e.type === 'auction_result')!.message).not.toContain('34567');
+    expect(host.state!.players.map((p) => p.cash)).toEqual([before[0], before[1]! - 345]);
+    expect(host.events.find((e) => e.type === 'auction_result')!.message).not.toContain('345');
   } finally {
     sessions.forEach((s) => s.close());
   }

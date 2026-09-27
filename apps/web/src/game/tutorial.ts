@@ -32,21 +32,21 @@ export const lessons = [
   {
     id: 'build',
     title: 'Construire dès votre premier achat',
-    text: 'Vous pouvez construire sur Madrid sans posséder Barcelone. Chaque clic ajoute une maison, jusqu’à trois. L’hôtel se débloque après cinq tours complets du plateau. Les rues complètes servent toujours à gagner la partie.',
+    text: 'Vous pouvez construire sur Madrid sans posséder Barcelone. À chaque visite, la fenêtre vous laisse choisir le niveau final, jusqu’à trois maisons. Validez une seule fois : seuls les bâtiments manquants sont facturés. Il faut revenir sur la ville pour construire à nouveau. L’hôtel se débloque après cinq tours complets du plateau. Les rues complètes servent toujours à gagner la partie.',
     task: 'Construisez une maison à Madrid.',
     target: 'action',
   },
   {
     id: 'start',
     title: 'La prime de Départ',
-    text: 'Chaque passage en avant par Départ rapporte 300 k. Les comptes se mettent à jour pendant le déplacement. Gardez du cash pour payer les loyers et les taxes : votre patrimoine comprend aussi vos biens, mais il ne remplace pas l’argent disponible.',
+    text: 'Chaque passage en avant par Départ rapporte 300. Les comptes se mettent à jour pendant le déplacement. Gardez du cash pour payer les loyers et les taxes : votre patrimoine comprend aussi vos biens, mais il ne remplace pas l’argent disponible.',
     task: 'Franchissez Départ et observez votre compte.',
     target: 'action',
   },
   {
     id: 'resorts',
     title: 'Les îles privées',
-    text: 'Les îles s’achètent mais ne se construisent pas. Une, deux, trois ou quatre îles rapportent respectivement 50 k, 100 k, 200 k ou 500 k à chaque visite adverse. Posséder les quatre ne termine pas la partie.',
+    text: 'Les îles s’achètent mais ne se construisent pas. Une, deux, trois ou quatre îles rapportent respectivement 50, 100, 200 ou 500 à chaque visite adverse. Posséder les quatre ne termine pas la partie.',
     task: 'Achetez Bali.',
     target: 'action',
   },
@@ -74,7 +74,7 @@ export const lessons = [
   {
     id: 'casino',
     title: 'Une pause au casino',
-    text: 'La roulette et la machine à sous se jouent sans mise. Choisissez rouge ou noir, ou lancez les rouleaux. Chaque gain vaut au moins 50 k. Le jackpot vaut 10 % de votre solde (minimum 50 k) et ses chances augmentent avec les visites. Vous pouvez aussi passer.',
+    text: 'La roulette et la machine à sous se jouent sans mise. Choisissez rouge ou noir, ou lancez les rouleaux. Chaque gain vaut au moins 50. Le jackpot vaut 10 % de votre solde (minimum 50) et ses chances augmentent avec les visites. Vous pouvez aussi passer.',
     task: 'Essayez la roulette.',
     target: 'action',
   },
@@ -116,7 +116,7 @@ export const lessons = [
   {
     id: 'tax',
     title: 'Taxes et manque de cash',
-    text: 'Une case Taxe prélève 50 k plus 10 % du patrimoine immobilier, avec le risque fiscal éventuel en supplément. La fenêtre annonce le prélèvement. Si le cash manque, vendez des propriétés à la banque pour la moitié de leur valeur.',
+    text: 'Une case Taxe prélève 50 plus 10 % du patrimoine immobilier, avec le risque fiscal éventuel en supplément. La fenêtre annonce le prélèvement. Si le cash manque, vendez des propriétés à la banque pour la moitié de leur valeur.',
     task: 'Simulez un passage sur Taxe.',
     target: 'action',
   },
@@ -124,27 +124,27 @@ export const lessons = [
     id: 'debt',
     title: 'Régler une dette',
     text: 'Le jeu vous laisse choisir les biens à vendre. La vente rembourse la dette dès que le compte suffit. La faillite intervient si votre cash et la valeur totale de revente ne couvrent pas le paiement.',
-    task: 'Vendez Madrid pour rembourser les 100 k dus.',
+    task: 'Vendez Madrid pour rembourser les 100 dus.',
     target: 'board',
   },
   {
     id: 'island',
     title: 'Quitter l’Île perdue',
-    text: 'Ce coin vous retient jusqu’à trois tentatives. Essayez un double, payez 200 k ou utilisez un billet de sortie si vous en avez un. Le choix se fait dans les commandes de votre tour.',
+    text: 'Ce coin vous retient jusqu’à trois tentatives. Essayez un double, payez 200 ou utilisez un billet de sortie si vous en avez un. Le choix se fait dans les commandes de votre tour.',
     task: 'Payez le retour pour quitter l’île.',
     target: 'action',
   },
   {
     id: 'travel',
     title: 'Choisir votre destination',
-    text: 'Le Tour du monde propose un voyage au prochain tour, ou dès votre action supplémentaire sur un double : 50 k à la place des dés. Touchez une destination libre ou alliée parmi les cases éclairées. Vous pouvez aussi rester et lancer normalement.',
+    text: 'Le Tour du monde propose un voyage au prochain tour, ou dès votre action supplémentaire sur un double : 50 à la place des dés. Touchez une destination libre ou alliée parmi les cases éclairées. Vous pouvez aussi rester et lancer normalement.',
     task: 'Choisissez Madrid sur le plateau ou dans la liste.',
     target: 'board',
   },
   {
     id: 'championship',
     title: 'Organiser un Mondial',
-    text: 'Sur le coin Mondial, choisissez une de vos villes et payez 50 k. Son loyer double pendant quatre retours de votre tour. Les doubles ne raccourcissent pas la durée. Un nouveau Mondial renouvelle la durée sans cumuler le bonus.',
+    text: 'Sur le coin Mondial, choisissez une de vos villes et payez 50. Son loyer double pendant quatre retours de votre tour. Les doubles ne raccourcissent pas la durée. Un nouveau Mondial renouvelle la durée sans cumuler le bonus.',
     task: 'Organisez le Mondial à Madrid.',
     target: 'board',
   },
@@ -158,14 +158,14 @@ export const lessons = [
   {
     id: 'carnet',
     title: 'Votre carnet et votre objectif secret',
-    text: 'Le carnet regroupe vos villes, bonus, objectif secret et règle spéciale. Sur téléphone, utilisez ses onglets. Réaliser votre objectif secret rapporte 100 k. Vous pouvez le révéler puis le masquer ; les autres joueurs ne le voient pas sur leur écran.',
+    text: 'Le carnet regroupe vos villes, bonus, objectif secret et règle spéciale. Sur téléphone, utilisez ses onglets. Réaliser votre objectif secret rapporte 100. Vous pouvez le révéler puis le masquer ; les autres joueurs ne le voient pas sur leur écran.',
     task: 'Ouvrez Objectif puis révélez et masquez votre objectif.',
     target: 'action',
   },
   {
     id: 'adventure',
     title: 'Chaque voyage a sa règle',
-    text: 'Une règle spéciale est tirée : villes jumelles aux loyers doublés, festivals, héritage de départ, marché aux enchères au tour de table 10 ou capitale mystère rapportant 200 k en fin de partie. Une crise rare peut diviser les loyers par deux pendant un tour de table : jamais avant le sixième, au plus deux par partie et espacées de huit tours de table.',
+    text: 'Une règle spéciale est tirée : villes jumelles aux loyers doublés, festivals, héritage de départ, marché aux enchères au tour de table 10 ou capitale mystère rapportant 200 en fin de partie. Une crise rare peut diviser les loyers par deux pendant un tour de table : jamais avant le sixième, au plus deux par partie et espacées de huit tours de table.',
     task: 'Consultez la règle de cette simulation.',
     target: 'action',
   },
@@ -311,7 +311,7 @@ export function tutorialScene(id: LessonId): GameState {
     own(9, 'p2');
     player.position = 9;
     state.phase = 'rent';
-    state.pendingRent = { tile: 9, amount: 20000, creditorId: 'p2' };
+    state.pendingRent = { tile: 9, amount: 20, creditorId: 'p2' };
     hold('chance-19');
   }
   if (id === 'fraud') hold('chance-22');
@@ -323,7 +323,7 @@ export function tutorialScene(id: LessonId): GameState {
     state.debt = {
       playerId: 'p1',
       creditorId: 'p2',
-      amount: 100000,
+      amount: 100,
       reason: 'rent',
       continuation: 'property',
     };

@@ -62,6 +62,8 @@ export interface ChanceCard {
   salary?: boolean;
 }
 export interface GameConfig {
+  moneyDivisor?: number;
+  singlePropertyDecision?: boolean;
   adventures?: boolean;
   version: number;
   shuffleStreets?: boolean;
@@ -215,7 +217,6 @@ type PlayerActionType =
   | 'duel_cancel'
   | 'duel_bot'
   | 'buyout'
-  | 'upgrade'
   | 'finish'
   | 'pay_bail'
   | 'use_escape'
@@ -223,7 +224,7 @@ type PlayerActionType =
   | 'decline_travel'
   | 'quit';
 export type GameAction =
-  | { type: 'buy' | 'buy_fraud'; playerId: string; level?: number }
+  | { type: 'buy' | 'buy_fraud' | 'upgrade'; playerId: string; level?: number }
   | { type: 'auction_commit'; playerId: string; hash: string }
   | { type: 'auction_reveal'; playerId: string; amount: number; salt: string }
   | { type: 'auction_pass'; playerId: string }

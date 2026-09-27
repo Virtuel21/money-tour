@@ -73,3 +73,17 @@ Recette effectuée dans Chromium avec tailles mobiles simulées ; aucun téléph
 - Casino : tests des gains normaux, jackpot, paires et triplets avec plancher 50 k ; résultat perdant toujours nul, y compris avec un compte vide.
 
 417 tests réussis dans 37 fichiers, dont 1 000 parties de bots. Couverture moteur : 97,17 % des lignes, 93,39 % des branches. Typage, lint, formatage, build et contrôles assets/modèles réussis. Recette Chromium uniquement ; ni téléphone physique, ni Safari iOS, ni réseau 5G validés. Inventaire complet dans [Mécaniques et probabilités](MECANIQUES_ET_PROBABILITES.md).
+
+## Économie lisible et chantier par visite — finalisation v12
+
+Cette section remplace les montants de la recette v12 ci-dessus : compte initial 1 500, prime Départ 300, minimum casino 50. Les anciens comptes rendus v10/v11 décrivent leurs éditions historiques.
+
+- Économie divisée par 1 000 dans les terrains, constructions, loyers, taxes, frais, cartes, enchères, duel, objectifs et capitale. Montants immobiliers arrondis à l’entier le plus proche ; Coimbra 140 et Hambourg 340. Les sauvegardes anciennes conservent leur économie.
+- PC 1920 × 1080 : retour sur Lisbonne, sélection de trois maisons, coût 150 sans facturer à nouveau le terrain ; après achat, seule la fin du tour est proposée. Lecture de Squatteur depuis la fiche de Léa, propriétés et cartes visibles aux quatre coins.
+- Mobile 390 × 844 : Madrid avec trois maisons acheté pour 375 ; compte final 1 125, loyer 105, aucun second chantier accessible. Journal consulté avec achat et les trois constructions.
+- 320 × 568 : fenêtre de construction à défilement interne, choix horizontal des bâtiments et bouton de validation fixe accessible. Journal mesuré à 298 × 482. Page sans débordement.
+- Paysage 844 × 390 : fenêtre de construction 739 × 364 avec défilement interne ; validation de trois maisons effectuée. Page sans débordement.
+- Journal public complet pour la session, sans limite de 60 entrées ; conservé dans la sauvegarde locale. Les offres et gestes secrets ne sont jamais dévoilés par les annonces de participation. Le journal réseau commence à l’ouverture de la session sur cet appareil.
+- Bonus et malus consultables : assurance liée à son bien et consommée une fois, cartes conservées, billet de sortie, risque fiscal, alliance, Mondial, cafards et crise.
+
+424 tests réussis dans 39 fichiers. Couverture moteur : 97,14 % des lignes, 93,46 % des branches. Recette sur viewports Chromium uniquement : téléphone physique, Safari iOS et réseau 5G non validés.

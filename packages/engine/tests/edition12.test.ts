@@ -37,7 +37,7 @@ it('offers travel on the extra action after landing with a double, and consumes 
   expect(declined.phase).toBe('roll');
   expect(declined.players[0]!.travelPending).toBe(false);
   r = reduceGame(r.state, { type: 'travel', playerId: 'a', tile: 25 });
-  expect(r.state.players[0]!.cash).toBe(1450000);
+  expect(r.state.players[0]!.cash).toBe(1450);
   expect(r.state.players[0]!.position).toBe(25);
   expect(r.state.players[0]!.travelPending).toBe(false);
   expect(r.state.extraRoll).toBe(false);
@@ -69,7 +69,7 @@ it('keeps one escrow through repeated ties, rejects the old reveal and pays only
     commitments: {},
     reveals: {},
   };
-  s = reduceGame(s, { type: 'duel_offer', playerId: 'a', targetId: 'b', amount: 50000 }).state;
+  s = reduceGame(s, { type: 'duel_offer', playerId: 'a', targetId: 'b', amount: 50 }).state;
   s = reduceGame(s, { type: 'duel_accept', playerId: 'b' }).state;
   const salt = 'a'.repeat(32);
   for (let round = 1; round <= 3; round++) {
@@ -104,19 +104,19 @@ it('keeps one escrow through repeated ties, rejects the old reveal and pays only
         reveals: {},
       });
       expect(s.duel!.id).not.toBe(id);
-      expect(s.players.map((p) => p.cash)).toEqual([1450000, 1450000]);
+      expect(s.players.map((p) => p.cash)).toEqual([1450, 1450]);
       expect(result.events.some((e) => e.type === 'income' || e.type === 'payment')).toBe(false);
       expect(
         reduceGame(s, { type: 'duel_reveal', playerId: 'a', choice: 'rock', salt }).error,
       ).toBeTruthy();
       const forfeited = reduceGame(s, { type: 'duel_cancel', playerId: 'a' }).state;
-      expect(forfeited.players.map((p) => p.cash)).toEqual([1450000, 1550000]);
+      expect(forfeited.players.map((p) => p.cash)).toEqual([1450, 1550]);
     }
   }
   expect(s.duel).toBeUndefined();
-  expect(s.players.map((p) => p.cash)).toEqual([1550000, 1450000]);
+  expect(s.players.map((p) => p.cash)).toEqual([1550, 1450]);
 });
-it.each([0, 10000, 1500000])(
+it.each([0, 10, 1500])(
   'floors each casino win at 50k with cash %i, but never pays a loss',
   (cash) => {
     const s = game();
@@ -132,7 +132,7 @@ it.each([0, 10000, 1500000])(
     ] as const) {
       const r = reduceGame(s, { type: 'casino_red', playerId: 'a' }, sequence(...values));
       const amount = r.events.find((e) => e.type === 'casino_result')!.amount!;
-      expect(won ? amount >= 50000 : amount === 0).toBe(true);
+      expect(won ? amount >= 50 : amount === 0).toBe(true);
       expect(r.state.players[0]!.cash).toBe(cash + amount);
     }
     s.casino.game = 'slots';
@@ -144,7 +144,7 @@ it.each([0, 10000, 1500000])(
         reduceGame(s, { type: 'casino_spin', playerId: 'a' }, sequence(...values)).events.find(
           (e) => e.type === 'casino_result',
         )!.amount,
-      ).toBeGreaterThanOrEqual(50000);
+      ).toBeGreaterThanOrEqual(50);
   },
 );
 it('keeps both triples whole and their prices ascending over 100 seeds; rejects a split third city', () => {

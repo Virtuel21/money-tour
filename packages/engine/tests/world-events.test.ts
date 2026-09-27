@@ -48,7 +48,7 @@ function duel(s = game()) {
   return s;
 }
 function accepted(s = duel()) {
-  s = step(s, { type: 'duel_offer', playerId: 'a', targetId: 'b', amount: 50000 });
+  s = step(s, { type: 'duel_offer', playerId: 'a', targetId: 'b', amount: 50 });
   return step(s, { type: 'duel_accept', playerId: 'b' });
 }
 const saltA = 'a'.repeat(32),
@@ -109,8 +109,8 @@ it('shares rent and Start income without creating money, excludes sale capital a
   s = step(s, { type: 'finish', playerId: 'a' });
   s.players[1]!.position = 30;
   s = step(s, { type: 'roll', playerId: 'b' }, sequence(0, 0));
-  expect(s.players[0]!.cash).toBe(1650000);
-  expect(s.players[1]!.cash).toBe(1650000);
+  expect(s.players[0]!.cash).toBe(1650);
+  expect(s.players[1]!.cash).toBe(1650);
   s = step(s, { type: 'finish', playerId: 'b' });
   expect(s.alliance).toBeDefined();
   s.phase = 'end';
@@ -124,7 +124,7 @@ it('shares rent and Start income without creating money, excludes sale capital a
   rent.config.festivalCount = 0;
   rent.players[0]!.position = 30;
   const paid = step(rent, { type: 'roll', playerId: 'a' }, sequence(0, 0.2));
-  expect(paid.players.map((p) => p.cash)).toEqual([1790000, 1505000, 1505000]);
+  expect(paid.players.map((p) => p.cash)).toEqual([1790, 1505, 1505]);
   const sale = game();
   sale.alliance = { beneficiaryId: 'b', targetId: 'a' };
   sale.properties[1]!.ownerId = 'a';
@@ -132,12 +132,12 @@ it('shares rent and Start income without creating money, excludes sale capital a
   sale.debt = {
     playerId: 'a',
     creditorId: null,
-    amount: 1550000,
+    amount: 1550,
     reason: 'tax',
     continuation: 'end',
   };
   const sold = step(sale, { type: 'sell', playerId: 'a', tile: 1 });
-  expect(sold.players[1]!.cash).toBe(1500000);
+  expect(sold.players[1]!.cash).toBe(1500);
 });
 it('runs an economic crisis for every living player and all doubles, then restores city and island rents', () => {
   let s = game();
@@ -151,8 +151,8 @@ it('runs an economic crisis for every living player and all doubles, then restor
   s.config.festivalCount = 0;
   s = step(s, { type: 'finish', playerId: 'c' }, () => 0);
   expect(s.crisis?.remaining).toEqual(['a', 'b', 'c']);
-  expect(getRent(s, 1)).toBe(5000);
-  expect(getRent(s, 4)).toBe(25000);
+  expect(getRent(s, 1)).toBe(5);
+  expect(getRent(s, 4)).toBe(25);
   s.config.crisisChance = 0;
   s.extraRoll = true;
   s.phase = 'end';
@@ -163,8 +163,8 @@ it('runs an economic crisis for every living player and all doubles, then restor
     s = step(s, { type: 'finish', playerId });
   }
   expect(s.crisis).toBeUndefined();
-  expect(getRent(s, 1)).toBe(10000);
-  expect(getRent(s, 4)).toBe(50000);
+  expect(getRent(s, 1)).toBe(10);
+  expect(getRent(s, 4)).toBe(50);
 });
 it('binds hidden choices to the duel and player with SHA-256', () => {
   expect(duelCommitment('d', 'a', 'rock', saltA)).toBe(
@@ -178,21 +178,21 @@ it.each(duelChoices.flatMap((a) => duelChoices.map((b) => [a, b] as const)))(
   'settles %s versus %s with conserved stakes and rematches on draws',
   (a, b) => {
     let s = commits(accepted(), a, b);
-    expect(s.players.slice(0, 2).map((p) => p.cash)).toEqual([1450000, 1450000]);
+    expect(s.players.slice(0, 2).map((p) => p.cash)).toEqual([1450, 1450]);
     s = step(s, { type: 'duel_reveal', playerId: 'a', choice: a, salt: saltA });
     s = step(s, { type: 'duel_reveal', playerId: 'b', choice: b, salt: saltB });
     if (a === b) expect(s.duel).toMatchObject({ stage: 'commit', round: 2, escrow: true });
     else expect(s.duel).toBeUndefined();
     const winner = (duelChoices.indexOf(a) - duelChoices.indexOf(b) + 3) % 3;
     expect(s.players.slice(0, 2).map((p) => p.cash)).toEqual(
-      winner === 0 ? [1450000, 1450000] : winner === 1 ? [1550000, 1450000] : [1450000, 1550000],
+      winner === 0 ? [1450, 1450] : winner === 1 ? [1550, 1450] : [1450, 1550],
     );
   },
 );
 it('rejects unaffordable, forged, premature and off-seat duel actions', () => {
   let s = duel();
   expect(
-    reduceGame(s, { type: 'duel_offer', playerId: 'a', targetId: 'b', amount: 1500001 }).error,
+    reduceGame(s, { type: 'duel_offer', playerId: 'a', targetId: 'b', amount: 1501 }).error,
   ).toBeDefined();
   s = accepted(s);
   expect(getDecisionPlayerId(s)).toBe('a');
@@ -216,14 +216,14 @@ it('forfeits the missing player stake on abandonment but refunds at global clock
     let s = accepted();
     s = step(s, a);
     expect(s.duel).toBeUndefined();
-    expect(s.players[0]!.cash).toBe(a.type === 'tick' ? 1450000 : 1550000);
-    if (a.type === 'tick') expect(s.players[1]!.cash).toBe(1550000);
+    expect(s.players[0]!.cash).toBe(a.type === 'tick' ? 1450 : 1550);
+    if (a.type === 'tick') expect(s.players[1]!.cash).toBe(1550);
   }
   let s = accepted();
   s.elapsedMs = s.durationMs - 1;
   s = step(s, { type: 'tick', elapsedMs: 1 });
   expect(s.duel).toBeUndefined();
-  expect(s.players.every((p) => p.cash === 1500000)).toBe(true);
+  expect(s.players.every((p) => p.cash === 1500)).toBe(true);
 });
 it('waits for human commitment before using shared randomness against a bot', () => {
   let s = duel();
@@ -241,7 +241,7 @@ it('waits for human commitment before using shared randomness against a bot', ()
     }),
   ).toThrow('shared randomness required');
   s = step(s, { type: 'duel_reveal', playerId: 'a', choice: 'rock', salt: saltA }, () => 0.9);
-  expect(s.players[0]!.cash).toBe(1550000);
+  expect(s.players[0]!.cash).toBe(1550);
 });
 it('offers the alliance card when they are drawn and preserves the deck', () => {
   for (const [id, phase] of [['chance-23', 'alliance']] as const) {

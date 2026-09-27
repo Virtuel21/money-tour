@@ -1,3 +1,4 @@
+import { scaledAmount } from './economy.js';
 import { auctionActor } from './adventure.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { randomInt } from './rng.js';
@@ -55,7 +56,11 @@ export function duelActions(state: GameState): GameAction[] {
           type: 'duel_offer',
           playerId,
           targetId,
-          amount: Math.min(10000, player(state, playerId).cash, player(state, targetId).cash),
+          amount: Math.min(
+            scaledAmount(state.config, 10000),
+            player(state, playerId).cash,
+            player(state, targetId).cash,
+          ),
         }))
         .filter((a) => 'amount' in a && a.amount > 0),
       { type: 'duel_cancel', playerId },

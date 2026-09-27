@@ -1,3 +1,5 @@
+import { scaledAmount } from '@money-tour/engine';
+import { playerBonuses, type BonusInfo } from './bonuses';
 import { useState } from 'react';
 import {
   adventureText,
@@ -45,7 +47,8 @@ export function PrivateQuest({
             {rule.title}
           </strong>
           <span>
-            {Math.min(q.progress, rule.goal)} / {rule.goal} · Récompense 100 k
+            {Math.min(q.progress, rule.goal)} / {rule.goal} · Récompense{' '}
+            {money(scaledAmount(state.config, 100000))}
           </span>
           <button aria-expanded={true} onClick={() => setOpened(false)}>
             Masquer mon objectif
@@ -63,10 +66,12 @@ export function PlayerInventory({
   state,
   player,
   onTile,
+  onBonus,
 }: {
   state: GameState;
   player: Player;
   onTile: (id: number) => void;
+  onBonus?: (bonus: BonusInfo) => void;
 }) {
   const cities = state.config.board.filter((t) => state.properties[t.id]?.ownerId === player.id);
   return (
@@ -84,39 +89,17 @@ export function PlayerInventory({
               {t.type === 'resort' ? '🏝' : state.properties[t.id]!.level === 4 ? '▥' : '⌂'}
             </span>
             <b>{t.name}</b>
-            <small>{new Intl.NumberFormat('fr-FR').format(getRent(state, t.id) / 1000)} k</small>
+            <small>{money(getRent(state, t.id), true)}</small>
           </button>
         ))}
         {!cities.length && <small className="empty-estate">Aucune propriété pour le moment</small>}
       </div>
-      <div className="bonus-tokens" aria-label={`Bonus de ${player.name}`}>
-        {player.insurance && (
-          <span title="Bloque une expropriation, une destruction ou un rachat hostile">
-            🛡{' '}
-            {player.insurance.tile === null
-              ? 'Assurance disponible'
-              : state.config.board[player.insurance.tile]!.name}
-          </span>
-        )}
-        {player.escapeCards.map((id, i) => (
-          <span key={id + i}>🎫 Sortie de l’île</span>
+      <div className="bonus-tokens" aria-label={`Bonus et malus de ${player.name}`}>
+        {playerBonuses(state, player).map((bonus, index) => (
+          <button key={index} onClick={() => onBonus?.(bonus)} title={bonus.description}>
+            {bonus.title}
+          </button>
         ))}
-        {player.heldCards?.map((id, i) => {
-          const c = state.config.cards.find((c) => c.id === id);
-          return (
-            <span key={id + i} title={c?.description}>
-              ▣ {c?.title}
-            </span>
-          );
-        })}
-        {state.alliance?.beneficiaryId === player.id && <span>🤝 Alliance · 50 % des gains</span>}
-        {cities
-          .filter((t) => state.properties[t.id]!.championships)
-          .map((t) => (
-            <span key={t.id}>
-              🏆 {t.name} · {state.properties[t.id]!.championshipTurns} tours
-            </span>
-          ))}
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import {
   reservedCity,
   getLegalActions,
   getPurchaseQuote,
+  getConstructionQuote,
   type GameState,
 } from '@money-tour/engine';
 import { ActionClock } from './ActionClock';
@@ -19,7 +20,13 @@ export function purchaseOffer(state: GameState, self?: string) {
     (self !== undefined && self !== player.id) ||
     !tile.price ||
     reservedCity(state, tile.id) ||
-    state.properties[tile.id]?.ownerId
+    (state.properties[tile.id]?.ownerId &&
+      !(
+        state.config.singlePropertyDecision &&
+        state.properties[tile.id]?.ownerId === player.id &&
+        tile.type === 'city' &&
+        state.properties[tile.id]!.level < state.config.hotelLevel
+      ))
   )
     return null;
   return { player, tile, canBuy: getLegalActions(state).some((a) => a.type === 'buy') };
@@ -36,8 +43,12 @@ export function PurchaseDetails({
   onPass: () => void;
 }) {
   const { player, tile } = purchaseOffer(state)!;
-  const [level, setLevel] = useState(0);
-  const quote = getPurchaseQuote(state, level)!;
+  const owned = state.properties[tile.id]?.ownerId === player.id;
+  const currentLevel = state.properties[tile.id]?.level ?? 0;
+  const [level, setLevel] = useState(owned ? currentLevel + 1 : 0);
+  const getQuote = (index: number) =>
+    owned ? getConstructionQuote(state, index) : getPurchaseQuote(state, index);
+  const quote = getQuote(level)!;
   const fraudQuote = getPurchaseQuote(state, level, true)!;
   const canBuy = quote.canBuy;
   const hotelLocked = player.laps < (state.config.hotelUnlockLaps ?? 1);
@@ -50,7 +61,13 @@ export function PurchaseDetails({
     >
       <header className="purchase-title">
         <div>
-          <small>{tile.type === 'resort' ? 'ÎLE PRIVÉE' : 'VILLE DISPONIBLE'}</small>
+          <small>
+            {owned
+              ? 'AMÉLIORER MA VILLE'
+              : tile.type === 'resort'
+                ? 'ÎLE PRIVÉE'
+                : 'VILLE DISPONIBLE'}
+          </small>
           <h3>{tile.name}</h3>
         </div>
         <span>{money(quote.total, true)}</span>
@@ -62,15 +79,15 @@ export function PurchaseDetails({
               <button
                 key={index}
                 aria-pressed={level === index}
-                disabled={!getPurchaseQuote(state, index)?.available}
+                disabled={!getQuote(index)?.available}
                 className={index === 4 && hotelLocked ? 'level-locked' : ''}
-                aria-label={`${labels[index]} : loyer ${money(getPurchaseQuote(state, index)!.rent, true)}${index === 4 && hotelLocked ? ', hôtel verrouillé' : ''}`}
+                aria-label={`${labels[index]} : loyer ${money(getQuote(index)!.rent, true)}${index === 4 && hotelLocked ? ', hôtel verrouillé' : ''}`}
                 onClick={() => setLevel(index)}
               >
                 <BuildingIllustration level={index} />
                 <strong>{labels[index]}</strong>
                 <span className="level-rent">
-                  Loyer <b>{money(getPurchaseQuote(state, index)!.rent, true)}</b>
+                  Loyer <b>{money(getQuote(index)!.rent, true)}</b>
                 </span>
                 <span className="level-check" aria-hidden="true">
                   {level === index && (
@@ -96,11 +113,11 @@ export function PurchaseDetails({
           </div>
           <div className="purchase-preview" aria-live="polite">
             <span>
-              Loyer actuel <strong>{money(quote.rent, true)}</strong>
+              Loyer après achat <strong>{money(quote.rent, true)}</strong>
             </span>
             {level > 0 && (
               <span>
-                Bâtiments inclus <strong>+{money(quote.buildings, true)}</strong>
+                Construction <strong>+{money(quote.buildings, true)}</strong>
               </span>
             )}
           </div>
@@ -108,7 +125,9 @@ export function PurchaseDetails({
             {modern
               ? 'Maisons sans rue complète. Hôtel après 5 tours du plateau.'
               : 'Rue complète requise. Deux maisons maximum avant le premier passage Départ.'}{' '}
-            {level > 0 && 'Le prix comprend le terrain et tous les bâtiments sélectionnés.'}
+            {owned
+              ? `Vous possédez déjà ${currentLevel === 0 ? 'le terrain' : labels[currentLevel].toLowerCase()}. Seuls les nouveaux bâtiments sont facturés. Un chantier par visite.`
+              : 'Le prix comprend le terrain et les bâtiments sélectionnés. Un achat par visite.'}
             {!state.config.bundledPurchase && 'Cette sauvegarde conserve l’achat du terrain seul.'}
           </p>
         </>
@@ -128,17 +147,21 @@ export function PurchaseDetails({
         {canBuy && <span> · Après achat {money(player.cash - quote.total, true)}</span>}
       </p>
       {!canBuy && (
-        <p role="status">Il manque {money(Math.max(0, quote.total - player.cash), true)}.</p>
+        <p role="status">
+          {!quote.available
+            ? 'Ce niveau n’est pas encore disponible.'
+            : `Il manque ${money(Math.max(0, quote.total - player.cash), true)}.`}
+        </p>
       )}
       <div className="purchase-buttons">
         <button className="primary purchase-cta" disabled={!canBuy} onClick={() => onBuy(level)}>
           <span>
-            Acheter{' '}
+            {owned ? 'Passer à' : 'Acheter'}{' '}
             {tile.type === 'resort'
               ? 'l’île'
               : level === 0
                 ? 'le terrain'
-                : `avec ${level === 4 ? 'hôtel' : labels[level]}`}{' '}
+                : `${owned ? '' : 'avec '}${level === 4 ? 'hôtel' : labels[level]}`}{' '}
             · {money(quote.total, true)}
           </span>
           <ActionClock />
@@ -157,7 +180,13 @@ export function PurchaseDetails({
               Rachat par un adversaire :{' '}
               <strong>
                 {money(
-                  Math.floor((tile.price! + quote.buildings) * state.config.buyoutMultiplier),
+                  Math.floor(
+                    (tile.price! +
+                      (tile.buildCosts ?? [])
+                        .slice(1, level + 1)
+                        .reduce((sum, cost) => sum + cost, 0)) *
+                      state.config.buyoutMultiplier,
+                  ),
                   true,
                 )}
               </strong>

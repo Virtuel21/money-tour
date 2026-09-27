@@ -64,10 +64,10 @@ it('pays salary once across the new 32-space boundary and charges the fixed tax'
   state.players[0]!.position = 30;
   const salary = reduceGame(state, { type: 'roll', playerId: 'a' }, sequence(0, 0.2));
   expect(salary.state.players[0]!.position).toBe(1);
-  expect(salary.state.players[0]!.cash).toBe(1800000);
+  expect(salary.state.players[0]!.cash).toBe(1800);
   expect(salary.events.filter((e) => e.type === 'start_bonus')).toHaveLength(1);
   state.players[0]!.position = 29;
   const tax = reduceGame(state, { type: 'roll', playerId: 'a' }, sequence(0, 0));
   expect(tax.state.players[0]!.position).toBe(31);
-  expect(tax.state.players[0]!.cash).toBe(1450000);
+  expect(tax.state.players[0]!.cash).toBe(1450);
 });

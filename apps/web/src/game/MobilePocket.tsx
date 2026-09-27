@@ -1,3 +1,4 @@
+import { playerBonuses, type BonusInfo } from './bonuses';
 import { useState } from 'react';
 import { adventureText, getRent, type GameState } from '@money-tour/engine';
 import { PrivateQuest } from './AdventureHUD';
@@ -8,10 +9,12 @@ export function MobilePocket({
   state,
   self,
   onTile,
+  onBonus,
 }: {
   state: GameState;
   self?: string;
   onTile: (id: number) => void;
+  onBonus?: (bonus: BonusInfo) => void;
 }) {
   const viewer =
     state.players.find((p) => p.id === self) ??
@@ -24,32 +27,7 @@ export function MobilePocket({
   const [page, setPage] = useState(0);
   const player = state.players.find((p) => p.id === owner) ?? state.players[0]!;
   const cities = state.config.board.filter((t) => state.properties[t.id]?.ownerId === owner);
-  const bonuses = [
-    ...(player.insurance
-      ? [
-          '🛡 Assurance · ' +
-            (player.insurance.tile === null
-              ? 'À poser une fois sur un de vos biens'
-              : state.config.board[player.insurance.tile]!.name),
-        ]
-      : []),
-    ...player.escapeCards.map(() => '🎫 Sortie de l’île · Vous libère sans payer'),
-    ...(player.heldCards ?? []).map((id) => {
-      const card = state.config.cards.find((c) => c.id === id);
-      return `${card?.title} · ${card?.description}`;
-    }),
-    ...(player.fraudLiability
-      ? ['⚠ Risque fiscal · ' + money(player.fraudLiability) + ' jusqu’au prochain passage Départ']
-      : []),
-    ...(state.alliance?.beneficiaryId === owner
-      ? ['🤝 Alliance · Vous recevez 50 % des gains du joueur allié']
-      : []),
-    ...cities
-      .filter((t) => state.properties[t.id]!.championships)
-      .map(
-        (t) => `🏆 ${t.name} · Mondial pendant ${state.properties[t.id]!.championshipTurns} tours`,
-      ),
-  ];
+  const bonuses = playerBonuses(state, player);
   const pages = Math.max(
     1,
     Math.ceil((tab === 'cities' ? cities.length : bonuses.length) / (tab === 'cities' ? 4 : 2)),
@@ -100,7 +78,10 @@ export function MobilePocket({
           ) : (
             <div className="pocket-bonuses">
               {bonuses.slice(index * 2, index * 2 + 2).map((b, i) => (
-                <p key={i}>{b}</p>
+                <button key={i} onClick={() => onBonus?.(b)}>
+                  <strong>{b.title}</strong>
+                  <span>{b.description}</span>
+                </button>
               ))}
               {!bonuses.length && <p>Les cartes conservées et les jetons apparaîtront ici.</p>}
             </div>

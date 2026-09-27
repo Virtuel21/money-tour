@@ -52,7 +52,7 @@ it('accepts the invited seat, keeps choices concealed in signed frames, and agre
       type: 'duel_offer',
       playerId: host.user.id,
       targetId: guest.user.id,
-      amount: 23456,
+      amount: 234,
     });
     const seq = host.state!.seq;
     await send(host, { type: 'duel_accept', playerId: host.user.id });
@@ -70,7 +70,7 @@ it('accepts the invited seat, keeps choices concealed in signed frames, and agre
     for (const s of [host, guest])
       await send(s, { type: 'duel_reveal', playerId: s.user.id, choice: 'rock', salt: saltA });
     expect(host.state!.duel!.round).toBe(2);
-    expect(host.state!.players.map((p) => p.cash)).toEqual([1476544, 1476544]);
+    expect(host.state!.players.map((p) => p.cash)).toEqual([1266, 1266]);
     const rematchId = host.state!.duel!.id;
     expect(rematchId).not.toBe('network-duel');
     await send(host, {
@@ -94,7 +94,7 @@ it('accepts the invited seat, keeps choices concealed in signed frames, and agre
       salt: saltB,
     });
     expect(host.state!.duel).toBeUndefined();
-    expect(host.state!.players.map((p) => p.cash)).toEqual([1523456, 1476544]);
+    expect(host.state!.players.map((p) => p.cash)).toEqual([1734, 1266]);
   } finally {
     sessions.forEach((s) => s.close());
   }

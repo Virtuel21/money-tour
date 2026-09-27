@@ -75,6 +75,11 @@ export function previewScenario(): LocalSave | null {
     state.properties[1] = { ownerId: 'p1', level: 2, championships: 1, championshipTurns: 4 };
   }
   if (name === 'showcase') {
+    player.heldCards = ['squatter', 'fraud'].map(
+      (effect) => state.config.cards.find((c) => c.effect === effect)!.id,
+    );
+    player.insurance = { tile: 1 };
+    state.players[1]!.fraudLiability = 400;
     for (const tile of state.config.board.filter((t) => t.type === 'resort'))
       state.properties[tile.id]!.ownerId = 'p3';
     state.players.forEach((p, i) => {
@@ -154,7 +159,7 @@ export function previewScenario(): LocalSave | null {
   if (name === 'squatter') {
     hold('chance-19');
     player.position = 9;
-    state.pendingRent = { tile: 9, amount: 80000, creditorId: 'p2' };
+    state.pendingRent = { tile: 9, amount: 80, creditorId: 'p2' };
     state.phase = 'rent';
   }
   if (name === 'expropriate' || name === 'roaches') {
@@ -171,7 +176,7 @@ export function previewScenario(): LocalSave | null {
     state.debt = {
       playerId: 'p1',
       creditorId: 'p2',
-      amount: 100000,
+      amount: 100,
       reason: 'rent',
       continuation: 'property',
     };
