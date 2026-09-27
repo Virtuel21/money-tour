@@ -4,11 +4,11 @@ Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases con
 
 ## Plateau
 
-32 cases : carré de neuf cases par côté, coins inclus. Six rues de deux villes et deux rues de trois villes sont mélangées par graine partagée, uniquement entre rues de même taille. Les tarifs restent attachés aux emplacements : les villes augmentent de 100 k à 475 k avec les deux nouveaux emplacements à 137,5 k et 337,5 k dans le sens horaire depuis Départ. Loyers et coûts de construction suivent ce même rang économique ; les îles conservent leur tarif commun. Les sauvegardes v9 gardent leurs anciens tarifs et leur assurance déplaçable. Les quatre îles, les deux Chance, le casino, Assurance, Duel et les quatre coins restent fixes. La Taxe est en position 31, immédiatement avant Départ. Les sols identifient les rues ; seul le liseré extérieur identifie le propriétaire.
+32 cases : carré de neuf cases par côté, coins inclus. Six rues de deux villes et deux rues de trois villes sont mélangées par graine partagée, uniquement entre rues de même taille. Les tarifs restent attachés aux emplacements : les villes augmentent de 100 à 475 avec les deux nouveaux emplacements à 140 et 340 dans le sens horaire depuis Départ. Loyers et coûts de construction suivent ce même rang économique ; les îles conservent leur tarif commun. Les sauvegardes v9 gardent leurs anciens tarifs et leur assurance déplaçable. Les quatre îles, les deux Chance, le casino, Assurance, Duel et les quatre coins restent fixes. La Taxe est en position 31, immédiatement avant Départ. Les sols identifient les rues ; seul le liseré extérieur identifie le propriétaire.
 
 ## Casinos
 
-Chaque arrivée tire au sort roulette rouge/noir ou machine à sous (50 % chacune). Entrée offerte, sans mise ni perte. Roulette gagnante : 2 % du solde. Deux symboles identiques : 2 % ; trois : 5 %. Le jackpot remplace ce gain par **10 % du solde du joueur au moment où il joue**. Les montants sont arrondis à l’unité inférieure, avec un minimum de **50 k pour chaque résultat gagnant**, avant partage éventuel de l’alliance. Un résultat perdant rapporte toujours zéro.
+Chaque arrivée tire au sort roulette rouge/noir ou machine à sous (50 % chacune). Entrée offerte, sans mise ni perte. Roulette gagnante : 2 % du solde. Deux symboles identiques : 2 % ; trois : 5 %. Le jackpot remplace ce gain par **10 % du solde du joueur au moment où il joue**. Les montants sont arrondis à l’unité inférieure, avec un minimum de **50 pour chaque résultat gagnant**, avant partage éventuel de l’alliance. Un résultat perdant rapporte toujours zéro.
 
 Chaque casino possède son compteur de visites : première visite 2 %, puis +2 points par visite, plafond 50 %. Un jackpot remet le compteur de ce casino à zéro ; la visite suivante offre 2 %. Passer son tour au casino ne déclenche aucun tirage de gain. Le choix et le résultat utilisent le même protocole aléatoire partagé que les dés ; les autres joueurs ne peuvent pas jouer à votre place.
 
@@ -22,7 +22,7 @@ Chaque casino possède son compteur de visites : première visite 2 %, puis +2 p
 
 ## Fraude fiscale
 
-Carte conservée, utilisable à l’achat d’une ville libre : prix payé 50 %. Une dette fiscale égale à **deux fois le prix normal** reste active jusqu’au prochain passage Départ. Atterrir sur Taxe avant ce passage impose ce montant à la place de la taxe normale, puis efface le risque. Plusieurs achats frauduleux éventuels cumulent cette dette. Passer Départ efface le risque et verse la prime habituelle de 300 k.
+Carte conservée, utilisable à l’achat d’une ville libre : prix payé 50 %. Une dette fiscale égale à **deux fois le prix normal** reste active jusqu’au prochain passage Départ. Atterrir sur Taxe avant ce passage impose ce montant à la place de la taxe normale, puis efface le risque. Plusieurs achats frauduleux éventuels cumulent cette dette. Passer Départ efface le risque et verse la prime habituelle de 300.
 
 ## Duel et dettes
 
