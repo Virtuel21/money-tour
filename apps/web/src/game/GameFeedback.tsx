@@ -96,7 +96,7 @@ export function MoneyFlight({
                           : cue.reason === 'build'
                             ? 'CONSTRUCTION'
                             : cue.reason === 'championship'
-                              ? 'MONDIAL ORGANISÉ'
+                              ? 'FESTIVAL ORGANISÉ'
                               : cue.reason === 'start_bonus'
                                 ? 'PRIME DE DÉPART'
                                 : cue.reason === 'rent'

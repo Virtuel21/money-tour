@@ -1,8 +1,10 @@
 import type { GameEvent, GameState } from '@money-tour/engine';
 import { money } from './local';
+import { tileTitle, festivalText } from './tileTitle';
 export function eventText(event: GameEvent, state: GameState): string {
   const name = state.players.find((p) => p.id === event.playerId)?.name ?? 'La banque';
-  const tile = event.tile !== undefined ? state.config.board[event.tile]?.name : '';
+  const location = event.tile !== undefined ? state.config.board[event.tile] : undefined;
+  const tile = location ? tileTitle(location) : '';
   switch (event.type) {
     case 'move':
       return `${name} arrive sur ${tile}.`;
@@ -54,7 +56,7 @@ export function eventText(event: GameEvent, state: GameState): string {
         insure: 'pose son assurance',
         attack: 'choisit la cible de sa carte',
         alliance: 'choisit son partenaire d’alliance',
-        place_championship: 'organise un Mondial',
+        place_championship: 'organise un Festival',
         quit: 'abandonne la partie',
       };
       return labels[String(event.actionType)] ? `${name} ${labels[String(event.actionType)]}.` : '';
@@ -75,14 +77,14 @@ export function eventText(event: GameEvent, state: GameState): string {
     case 'duel_started':
     case 'duel_forfeit':
     case 'duel_cancelled':
-      return String(event.message);
+      return festivalText(String(event.message));
     case 'casino_result':
       return `${name} au casino : ${event.jackpot ? 'jackpot ! ' : ''}+${money(event.amount ?? 0, true)}.`;
     case 'insurance':
     case 'insured':
     case 'squatter':
     case 'karma':
-      return `${name} : ${event.message}`;
+      return `${name} : ${festivalText(event.message)}`;
     case 'expropriate':
       return `${tile} a été expropriée et redevient libre.`;
     case 'roaches':
@@ -98,7 +100,7 @@ export function eventText(event: GameEvent, state: GameState): string {
     case 'build':
       return `${name} construit à ${tile} : ${event.level === 4 ? 'hôtel' : event.level + ' maison(s)'} · ${money(event.amount ?? 0)}.`;
     case 'card':
-      return `${name} : ${event.message}`;
+      return `${name} : ${festivalText(event.message)}`;
     case 'payment':
       return `${event.reason === 'rent' ? 'Loyer payé' : event.reason === 'attack' ? 'Attaque' : 'Versement'} : ${state.players.find((p) => p.id === event.payerId)?.name ?? 'Banque'} → ${event.playerId ? name : 'Banque'} · ${money(event.amount ?? 0, true)}.`;
     case 'start_bonus':
@@ -112,9 +114,9 @@ export function eventText(event: GameEvent, state: GameState): string {
     case 'island_exit':
       return `${name} quitte l’île.`;
     case 'championship_expired':
-      return `Le Mondial de ${tile} est terminé.`;
+      return `Le Festival de ${tile} est terminé.`;
     case 'championship':
-      return `${name} organise un championnat à ${tile}.`;
+      return `${name} organise un festival à ${tile}.`;
     case 'travel':
       return `${name} s’envole vers ${tile}.`;
     case 'timeout':

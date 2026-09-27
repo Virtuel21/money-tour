@@ -124,3 +124,11 @@ Recette Chromium sur viewports simulés. Appareils physiques, Safari iOS et liai
 - 473 tests réussis. Couverture moteur : 97,31 % des lignes et 93,47 % des branches. Typage, lint, formatage, build et contrôles des assets/modèles validés.
 
 Recette Chromium sur tailles simulées ; téléphone physique et Safari iOS non testés.
+
+## Recette v15 — cases illustrées et Festival (27 septembre 2026)
+
+- Version compilée testée dans Chromium : PC 1920 × 1080, portraits 390 × 844 et 320 × 740, paysage 844 × 390. Textures complètes, transparence de l’avion et de la scène, libellés contrastés et nom Festival vérifiés. Aucun débordement de page dans ces formats.
+- Scène compilée sans erreur WebGL ; animation douce localisée sur les quatre membranes. La pause et le réglage de réduction des animations figent les enceintes.
+- 477 tests passent, dont conservation des règles v14, reprise d’une sauvegarde v14 sans modification de la séquence aléatoire, libellés compatibles et amplitude nulle en mouvement réduit. Couverture moteur : 97,31 % des lignes et 93,47 % des branches.
+- TypeScript, ESLint, build de production, budgets d’assets (19 731 095 / 20 000 000 octets) et bibliothèques de modèles validés.
+- Les dimensions Chromium ne remplacent pas une recette physique iOS/Safari ou Android ; celle-ci reste à faire.

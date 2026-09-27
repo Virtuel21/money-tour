@@ -1,5 +1,5 @@
 {
-  "version": 15,
+  "version": 14,
   "initialCash": 1500,
   "startBonus": 300,
   "durationMs": 1200000,
@@ -172,7 +172,7 @@
     },
     {
       "id": 16,
-      "name": "Festival",
+      "name": "Championnat du monde",
       "type": "championship",
       "line": 2
     },
@@ -391,8 +391,8 @@
     },
     {
       "id": "chance-11",
-      "title": "Pass festival",
-      "description": "Avancez jusqu'au Festival.",
+      "title": "Invitation sportive",
+      "description": "Avancez jusqu'au Championnat du monde.",
       "effect": "move_to",
       "target": 16,
       "salary": true

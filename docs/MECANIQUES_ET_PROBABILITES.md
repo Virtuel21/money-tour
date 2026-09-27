@@ -1,8 +1,12 @@
 # Money Tour — inventaire des règles et probabilités
 
-Édition v14 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes antérieures restent lisibles avec leurs montants d’origine. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
+Édition v15 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes antérieures restent lisibles avec leurs montants d’origine. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
 
 ## 1. Ce qui change dans cette édition
+
+- Mondial devient Festival : scène rock et membranes des enceintes animées, avion ensablé sur l’Île perdue, nouvelles illustrations Chance, Taxe et Assurance. Aucun changement économique : Festival coûte toujours 50, double le loyer et dure quatre retours du tour du propriétaire. Les anciennes sauvegardes conservent exactement leurs règles et leur séquence aléatoire.
+
+### Évolutions précédentes conservées
 
 - Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Hôtel toujours verrouillé avant cinq tours ; hôtel adverse non rachetable. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
 - Taunts accessibles pendant les tours et animations adverses. Affichage unique de l’illustration au-dessus du personnage, sans message central.
@@ -43,7 +47,7 @@
 
 ## 3. Plateau et économie immobilière
 
-32 cases : 18 villes, 4 îles privées, 2 Chance, 1 casino, 1 assurance, 1 duel, 1 taxe et 4 coins (Départ, Île perdue, Mondial, Voyage).
+32 cases : 18 villes, 4 îles privées, 2 Chance, 1 casino, 1 assurance, 1 duel, 1 taxe et 4 coins (Départ, Île perdue, Festival, Voyage).
 
 Les indices ci-dessous commencent à 0 sur Départ, puis augmentent dans le sens horaire. Les noms des rues sont mélangés à chaque partie ; les prix, loyers et coûts restent attachés aux positions. Tableau avant mélange :
 
@@ -103,7 +107,7 @@ Un double vaut 6/36 = 16,67 % par lancer. Trois doubles sur trois lancers indép
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Départ (0)      | Prime de 300 en passant en avant                                                                                                                                                                                                                                            |
 | Île perdue (8)  | Sortie payante 200, carte de sortie gratuite ou tentative de double ; au plus trois tentatives. Le double de sortie ne donne pas de relance                                                                                                                                 |
-| Mondial (16)    | 50 pour doubler le loyer d’une ville possédée pendant quatre retours de son propriétaire ; renouvellement sans empilement                                                                                                                                                   |
+| Festival (16)   | 50 pour doubler le loyer d’une ville possédée pendant quatre retours de son propriétaire ; renouvellement sans empilement                                                                                                                                                   |
 | Voyage (24)     | 50 à la place des dés au prochain tour, ou dès la relance obtenue par un double. Choix d’une destination légale libre ou alliée ; pas de propriété adverse. Déplacement en avant, prime Départ si franchi, résolution normale de la destination. Refuser conserve le lancer |
 | Assurance (11)  | Reçoit un jeton s’il n’en a pas. Pose unique sur son propre bien ; bloque une destruction, expropriation ou rachat hostile puis disparaît. Ne protège aucun autre bien. Une nouvelle visite après consommation peut redonner un jeton                                       |
 | Casino (7)      | Roulette ou machine à sous, 50 % chacune à l’arrivée ; règles détaillées ci-dessous                                                                                                                                                                                         |
@@ -209,7 +213,7 @@ Séisme : les limites et le tirage sont détaillés en section 1. L’éventuell
 
 Alliance temporaire : choisit un autre joueur vivant, prélève 50 % de ses nouveaux gains jusqu’à la fin de son prochain tour complet, doubles compris. S’applique aux loyers, primes, gains de cartes, casino et bénéfice du duel. Exclut la vente de patrimoine, les rachats de propriété et les remboursements. Une nouvelle alliance remplace l’ancienne ; sortie d’un participant = fin.
 
-Cumul des loyers : loyer du niveau × festival éventuel × Mondial éventuel × jumelage éventuel × 0,5 si cafards × 0,5 si crise, puis arrondi inférieur. Un nouveau Mondial renouvelle sa durée ; il ne rajoute pas de multiplicateur supplémentaire.
+Cumul des loyers : loyer du niveau × festival permanent éventuel × Festival organisé éventuel × jumelage éventuel × 0,5 si cafards × 0,5 si crise, puis arrondi inférieur. Un nouveau Festival renouvelle sa durée ; il ne rajoute pas de multiplicateur supplémentaire.
 
 ## 9. Contrôles d’équilibre et limites
 
