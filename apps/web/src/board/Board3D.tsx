@@ -1,6 +1,6 @@
 import { scaledAmount } from '@money-tour/engine';
 import { cameraBounds, followPlayer } from './camera';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -76,6 +76,7 @@ export default function Board({
   cue,
   choices = [],
   selecting = false,
+  insuranceFocus = false,
   mobile = false,
   overview = false,
   self,
@@ -88,6 +89,7 @@ export default function Board({
   cue?: Cue;
   choices?: number[];
   selecting?: boolean;
+  insuranceFocus?: boolean;
   mobile?: boolean;
   overview?: boolean;
   self?: string;
@@ -864,16 +866,43 @@ export default function Board({
       renderer?.domElement.remove();
     };
   }, []);
+  const maskId = useId().replace(/:/g, '');
   const visualKey = JSON.stringify([state.properties, state.festivals, choices]);
   useEffect(() => {
     update.current();
   }, [visualKey]);
   return (
-    <div className={`board-shell board-3d ${demo ? 'board-demo' : ''}`}>
+    <div
+      className={`board-shell board-3d ${demo ? 'board-demo' : ''} ${cue?.reason === 'earthquake' && !reducedMotion ? 'board-earthquake' : ''}`}
+    >
       <div ref={host} className="board-canvas" aria-label="Plateau 3D Money Tour" />
       {!ready && !error && <div className="board-loading">Construction de votre archipel…</div>}
       {ready && (
         <>
+          {insuranceFocus && choices.length > 0 && (
+            <svg
+              className="insurance-spotlight"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <defs>
+                <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+                  <rect width="100" height="100" fill="white" />
+                  {choices.map((id) => (
+                    <polygon key={id} points={anchors[id]?.points} fill="black" />
+                  ))}
+                </mask>
+              </defs>
+              <rect
+                width="100"
+                height="100"
+                fill="#071f2c"
+                fillOpacity="0.76"
+                mask={`url(#${maskId})`}
+              />
+            </svg>
+          )}
           {!demo && (
             <svg
               className="board-hit-polygons"
@@ -993,7 +1022,6 @@ export default function Board({
                       {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
                         getRent(state, t.id),
                       )}
-                      <small> 💵</small>
                     </strong>
                   )}
                   {!!state.properties[t.id]?.championships && (

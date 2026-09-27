@@ -1,8 +1,17 @@
 # Money Tour — inventaire des règles et probabilités
 
-Édition v12 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes v11 et antérieures conservent leurs anciennes règles. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
+Édition v13 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes v12 et antérieures conservent leurs anciennes règles. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
 
 ## 1. Ce qui change dans cette édition
+
+- Séisme : 3 % par nouveau tour de table éligible dès le quatrième ; aucun test sans bâtiment, pendant une crise, moins de six tours après un séisme ou après deux séismes dans la partie. Ce n’est pas une probabilité par partie.
+- Tirage uniforme parmi les joueurs vivants possédant au moins une ville construite, puis uniforme parmi les villes construites du joueur choisi. Un propriétaire ayant beaucoup de bâtiments n’est donc pas plus souvent ciblé qu’un autre propriétaire éligible.
+- Une maison est détruite ; un hôtel redevient trois maisons. Le terrain et les autres bâtiments sont conservés, aucun argent n’est prélevé ou créé. Les cafards cessent si l’hôtel disparaît. L’assurance liée à la ville absorbe le séisme puis disparaît ; le séisme compte malgré sa protection.
+- Le plateau tremble pendant 3,2 secondes avec un grondement synthétisé. Les secousses sont désactivées avec la préférence de réduction des animations ; les sons respectent le réglage des effets. Roulette et machine à sous ont leurs propres bruitages.
+- Assurance : voile sombre avec ouvertures sur les seules propriétés éligibles ; panneau PC centré sur l’eau pour ne pas masquer les villes du bas. Fiche de case centrée et agrandie sur PC ; tours d’île restants visibles dans les fiches joueurs ; BOT à côté du nom sur PC.
+- Tuiles élargies de 10 %, loyers du plateau sans emoji monétaire, Coimbra renommée Faro. Les prix et loyers restent inchangés.
+
+### Règles conservées depuis v12
 
 - PC : fiches agrandies aux quatre coins, propriétés et loyers directement visibles, bonus et objectif secret disponibles sur place. Le carnet paginé reste sur mobile.
 - La Chance en bas à gauche (position 3) devient la troisième ville de sa rue. Le casino en haut à droite (position 19) devient la troisième ville de sa rue. Le plateau garde 32 cases.
@@ -38,7 +47,7 @@ Les indices ci-dessous commencent à 0 sur Départ, puis augmentent dans le sens
 | -------- | --------- | --- | ------- | ------------------- | ------------- | -------- | --------- | --------- | ----- |
 | 1        | Lisbonne  | g1  | 100     | 50                  | 10            | 20       | 40        | 70        | 120   |
 | 2        | Porto     | g1  | 125     | 63                  | 13            | 25       | 50        | 88        | 150   |
-| 3        | Coimbra   | g1  | 140     | 70                  | 14            | 28       | 56        | 98        | 168   |
+| 3        | Faro      | g1  | 140     | 70                  | 14            | 28       | 56        | 98        | 168   |
 | 5        | Madrid    | g2  | 150     | 75                  | 15            | 30       | 60        | 105       | 180   |
 | 6        | Barcelone | g2  | 175     | 88                  | 18            | 35       | 70        | 123       | 210   |
 | 9        | Rome      | g3  | 200     | 100                 | 20            | 40       | 80        | 140       | 240   |
@@ -192,6 +201,8 @@ Appel d’offres : un tour de table choisi uniformément entre 3 et 7 (20 % chac
 
 Crise économique : test de 4 % au changement de tour de table à partir du sixième, seulement hors crise, au moins huit tours de table après le précédent déclenchement, maximum deux déclenchements par partie. Tous les loyers sont divisés par deux jusqu’à ce que chaque joueur vivant au déclenchement ait terminé son tour complet. Les doubles ne raccourcissent pas cet effet. **4 % est un taux par test éligible, pas par partie**.
 
+Séisme : les limites et le tirage sont détaillés en section 1. L’éventuelle crise est évaluée avant le séisme au changement de tour de table ; un déclenchement de crise empêche le test du séisme ce tour-là. Les doubles ne déclenchent aucun nouveau test.
+
 Alliance temporaire : choisit un autre joueur vivant, prélève 50 % de ses nouveaux gains jusqu’à la fin de son prochain tour complet, doubles compris. S’applique aux loyers, primes, gains de cartes, casino et bénéfice du duel. Exclut la vente de patrimoine, les rachats de propriété et les remboursements. Une nouvelle alliance remplace l’ancienne ; sortie d’un participant = fin.
 
 Cumul des loyers : loyer du niveau × festival éventuel × Mondial éventuel × jumelage éventuel × 0,5 si cafards × 0,5 si crise, puis arrondi inférieur. Un nouveau Mondial renouvelle sa durée ; il ne rajoute pas de multiplicateur supplémentaire.
@@ -202,4 +213,4 @@ Les anciens prix, le cash initial, la prime Départ, la taxe, les rapports loyer
 
 Les tests vérifient la conservation des mises, plusieurs égalités consécutives, la synchronisation réseau, Voyage avec et sans double, les gains gagnants/perdants, le mélange de rues complètes, les sauvegardes précédentes et 1 000 parties de bots terminées sans état invalide. Ces simulations vérifient la cohérence et la terminaison ; elles ne remplacent pas une étude d’équilibrage avec des joueurs humains. Aucun test sur réseau 5G ou téléphone physique n’est revendiqué ici.
 
-Sources du dépôt : packages/engine/src/game.config.json, engine.ts, layout.ts, duel.ts, expansion.ts, world-events.ts, adventure.ts ; apps/web/src/game/CasinoView.tsx et DuelView.tsx.
+Sources du dépôt : packages/engine/src/game.config.json, engine.ts, layout.ts, duel.ts, expansion.ts, world-events.ts, earthquake.ts, adventure.ts ; apps/web/src/game/CasinoView.tsx et DuelView.tsx.

@@ -72,6 +72,10 @@ export interface GameConfig {
   casinoMaxChance?: number;
   karmaAmount?: number;
   fraudDiscount?: number;
+  earthquakeChance?: number;
+  earthquakeMinRound?: number;
+  earthquakeCooldownRounds?: number;
+  earthquakeMaxCount?: number;
   crisisChance?: number;
   crisisMinRound?: number;
   crisisCooldownRounds?: number;
@@ -165,6 +169,7 @@ export interface Winner {
   netWorth: number;
 }
 export interface GameState {
+  earthquakeHistory?: { count: number; lastRound: number };
   crisisHistory?: { count: number; lastRound: number };
   adventure?: Adventure;
   quests?: Record<string, Quest>;

@@ -31,3 +31,5 @@ export { adventureText, questRules, auctionCommitment, reservedCity } from './ad
 export { default as legacyConfigV10 } from './legacy-v10.config.json';
 
 export { default as legacyConfigV11 } from './legacy-v11.config.json';
+
+export { default as legacyConfigV12 } from './legacy-v12.config.json';

@@ -2,8 +2,8 @@
 export function boardShape(count: number) {
   const short = count === 30 ? 6 : Math.floor(count / 4),
     long = count / 2 - short;
-  const step = 2.12,
-    depth = 3.3;
+  const step = (2.12 - 0.06) * 1.1 + 0.06,
+    depth = 3.3 * 1.1;
   return {
     short,
     long,
@@ -39,8 +39,8 @@ export function tilePoint(id: number, count = 26) {
 }
 export const wealthPoints = [
   // Same seat order as the HUD: top left, top right, bottom left, bottom right.
-  { x: -12.8, z: -4.4 },
-  { x: 4.4, z: -12.8 },
-  { x: -4.4, z: 12.8 },
-  { x: 12.8, z: 4.4 },
+  { x: -14.08, z: -4.84 },
+  { x: 4.84, z: -14.08 },
+  { x: -4.84, z: 14.08 },
+  { x: 14.08, z: 4.84 },
 ];

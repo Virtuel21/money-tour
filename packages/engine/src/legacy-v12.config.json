@@ -1,5 +1,5 @@
 {
-  "version": 13,
+  "version": 12,
   "initialCash": 1500,
   "startBonus": 300,
   "durationMs": 1200000,
@@ -57,7 +57,7 @@
     },
     {
       "id": 3,
-      "name": "Faro",
+      "name": "Coimbra",
       "type": "city",
       "group": "g1",
       "color": "#bc7051",
@@ -506,9 +506,5 @@
   "travelOnDouble": true,
   "casinoMinWin": 50,
   "moneyDivisor": 1000,
-  "singlePropertyDecision": true,
-  "earthquakeChance": 3,
-  "earthquakeMinRound": 4,
-  "earthquakeCooldownRounds": 6,
-  "earthquakeMaxCount": 2
+  "singlePropertyDecision": true
 }

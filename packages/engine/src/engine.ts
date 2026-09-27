@@ -1,3 +1,4 @@
+import { maybeEarthquake } from './earthquake.js';
 import {
   initAdventure,
   twinMultiplier,
@@ -103,6 +104,9 @@ export function getRent(state: GameState, tileId: number): number {
 function validateConfig(config: GameConfig): void {
   for (const field of [
     'hotelUnlockLaps',
+    'earthquakeMinRound',
+    'earthquakeCooldownRounds',
+    'earthquakeMaxCount',
     'crisisMinRound',
     'crisisCooldownRounds',
     'crisisMaxCount',
@@ -116,6 +120,13 @@ function validateConfig(config: GameConfig): void {
       config.crisisChance > 100)
   )
     throw new Error('Invalid crisis chance.');
+  if (
+    config.earthquakeChance !== undefined &&
+    (!Number.isSafeInteger(config.earthquakeChance) ||
+      config.earthquakeChance < 0 ||
+      config.earthquakeChance > 100)
+  )
+    throw new Error('Invalid earthquake chance.');
   const baseChance = config.casinoBaseChance ?? 2;
   if (
     config.casinoMinWin !== undefined &&
@@ -964,6 +975,7 @@ function nextTurn(state: GameState, events: GameEvent[], rng: Rng): void {
   if (state.currentPlayer <= current) {
     if (state.adventure) state.adventure.round += 1;
     maybeCrisis(state, rng, events);
+    maybeEarthquake(state, rng, events);
   }
   for (const [id, property] of Object.entries(state.properties)) {
     if (property.ownerId === activePlayer(state).id && property.roachTurns) {
@@ -1716,6 +1728,11 @@ export function validateState(state: GameState): string[] {
       state.crisis.remaining.some((id) => !state.players.some((p) => p.id === id)))
   )
     errors.push('Invalid crisis duration.');
+  if (
+    state.earthquakeHistory &&
+    (!safe(state.earthquakeHistory.count) || !safe(state.earthquakeHistory.lastRound))
+  )
+    errors.push('Invalid earthquake history.');
   if (
     state.crisisHistory &&
     (!safe(state.crisisHistory.count) || !safe(state.crisisHistory.lastRound))

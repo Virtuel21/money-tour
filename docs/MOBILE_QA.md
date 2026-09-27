@@ -87,3 +87,16 @@ Cette section remplace les montants de la recette v12 ci-dessus : compte initial
 - Bonus et malus consultables : assurance liée à son bien et consommée une fois, cartes conservées, billet de sortie, risque fiscal, alliance, Mondial, cafards et crise.
 
 424 tests réussis dans 39 fichiers. Couverture moteur : 97,14 % des lignes, 93,46 % des branches. Recette sur viewports Chromium uniquement : téléphone physique, Safari iOS et réseau 5G non validés.
+
+## Assurance, fiches centrées et séismes — édition v13
+
+- PC 1920 × 1080 : voile sombre sur le plateau, deux ouvertures correspondant exactement aux deux biens assurables. Panneau déplacé sur l’eau pour dégager les villes du bas. Sélection de Lisbonne au clavier : assurance posée, voile retiré, événement affiché dans le journal.
+- Inspection de Faro : dialogue 760 × 792, centré en (960, 540), fermeture accessible. Faro remplace Coimbra dans les nouvelles parties uniquement ; sauvegardes v12 conservées.
+- Séisme déclenché depuis une vraie fin de tour dans le scénario de recette : hôtel de Venise rétrogradé en trois maisons, loyer 270 → 158, journal explicite. Animation CSS de secousse observée derrière le dialogue sans flou. Mode de réduction des animations et estimation du temps réseau couverts par le code et les tests.
+- Sons originaux synthétisés pour le séisme, les rouleaux et la roulette. Tests du routage, de l’arrêt et de la désactivation des effets ; rendu acoustique non évalué sur des haut-parleurs physiques.
+- Île perdue : compteur de deux tentatives restantes visible dans la fiche de Léa ; BOT aligné sur le nom de Max sur PC. Portrait 390 × 844 : compteur sans chevauchement et quatre boutons sous le plateau sur une ligne.
+- Petit portrait : fiche avec défilement interne, largeur 300, centrée dans le viewport effectif 320 × 520. Paysage : compteur et actions séparés à 844 × 342 ; après navigation, assurance vérifiée à 844 × 390. Aucun débordement de page mesuré.
+- Tuiles et coins élargis de 10 % : tests de non-chevauchement pour 26, 28, 30 et 32 cases et alignement des piles d’argent avec les fiches joueurs. Loyers du plateau sans emoji ; monnaie conservée dans les fiches.
+- 444 tests réussis dans 40 fichiers, dont 1 000 parties de bots. Couverture moteur : 97,04 % des lignes, 93,30 % des branches ; séisme 100 % des lignes. Typage, lint, formatage, build, assets et modèles validés.
+
+Recette Chromium sur tailles simulées. Téléphones physiques, Safari iOS et réseau 5G non validés.

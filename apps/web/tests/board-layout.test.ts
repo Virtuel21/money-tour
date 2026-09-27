@@ -1,6 +1,13 @@
 import { expect, it } from 'vitest';
 import { tileFrame, boardShape, wealthPoints } from '../src/board/layout';
 import { OrthographicCamera, Vector3 } from 'three';
+it('widens property faces and square corners by ten percent', () => {
+  const city = tileFrame(1, 32),
+    corner = tileFrame(0, 32);
+  expect(city.width).toBeCloseTo((2.12 - 0.06) * 1.1);
+  expect(corner.width).toBeCloseTo(3.3 * 1.1);
+  expect(corner.depth).toBe(corner.width);
+});
 it('projects each cash pile into the same screen quadrant as its player card', () => {
   const camera = new OrthographicCamera(-20, 20, 15, -15, 0.1, 100);
   camera.position.set(18, 22, 18);

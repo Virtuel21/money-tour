@@ -11,6 +11,32 @@ const game = () =>
     ],
     seed: 1,
   });
+it('shows quake damage after the shake, with a bounded network clock and reduced presentation', () => {
+  const before = game(),
+    after = structuredClone(before);
+  before.properties[1] = { ownerId: 'a', level: 4, championships: 0 };
+  after.properties[1] = { ownerId: 'a', level: 3, championships: 0 };
+  const events = [{ type: 'earthquake', tile: 1, playerId: 'a', message: 'Séisme !' }];
+  const frames = presentation(before, after, events);
+  expect(frames[0]!.state.properties[1]!.level).toBe(4);
+  expect(frames[0]!.cue).toMatchObject({
+    reason: 'earthquake',
+    sound: 'earthquake',
+    duration: 3200,
+  });
+  expect(frames[1]!.state.properties[1]!.level).toBe(3);
+  expect(presentationMs(events)).toBe(3700);
+  expect(presentation(before, after, events, true)[0]!.cue.duration).toBeLessThan(3200);
+});
+it.each(['slots', 'roulette'])(
+  'uses the dedicated %s sound during the casino animation',
+  (gameType) => {
+    const state = game();
+    expect(
+      presentation(state, state, [{ type: 'casino_result', game: gameType }])[0]!.cue.sound,
+    ).toBe('casino-' + gameType);
+  },
+);
 it('shows the tax notice after arriving, before money leaves the payer account', () => {
   const before = game(),
     after = structuredClone(before);
