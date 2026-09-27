@@ -73,7 +73,7 @@ export function PurchaseDetails({
           </div>
           <div className="purchase-preview" aria-live="polite">
             <span>
-              Loyer par visite <strong>{money(tile.rents![level]!, true)}</strong>
+              Loyer de base <strong>{money(tile.rents![level]!, true)}</strong>
             </span>
             {level > 0 && (
               <span>
@@ -118,10 +118,12 @@ export function PurchaseDetails({
           <ActionClock />
         </button>
       </div>
-      <p className="purchase-buyout">
-        Rachat par un adversaire, terrain seul :{' '}
-        <strong>{money(Math.floor(tile.price! * state.config.buyoutMultiplier), true)}</strong>
-      </p>
+      {tile.type === 'city' && (
+        <p className="purchase-buyout">
+          Rachat par un adversaire, terrain seul :{' '}
+          <strong>{money(Math.floor(tile.price! * state.config.buyoutMultiplier), true)}</strong>
+        </p>
+      )}
       {onFraud && getLegalActions(state).some((a) => a.type === 'buy_fraud') && (
         <>
           <button className="secondary purchase-fraud" onClick={onFraud}>
