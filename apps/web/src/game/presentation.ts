@@ -173,6 +173,8 @@ export function presentation(
     }
     if (['purchase', 'buyout', 'sale', 'build'].includes(event.type) && event.tile !== undefined) {
       visual.properties[event.tile] = { ...next.properties[event.tile]! };
+      if ((event.type === 'purchase' || event.type === 'build') && typeof event.level === 'number')
+        visual.properties[event.tile]!.level = event.level;
       add({
         kind: event.type === 'build' ? 'build' : 'settle',
         sound: event.type === 'buyout' ? 'purchase' : event.type,

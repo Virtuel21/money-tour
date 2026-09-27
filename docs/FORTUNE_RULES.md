@@ -1,6 +1,6 @@
 # Casinos, assurance et Duel — édition 32 cases
 
-Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases conservent leur géographie et leurs cartes. Le protocole de salon v10 isole les éditions incompatibles.
+Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases conservent leur géographie et leurs cartes. Le protocole de salon v11 isole les éditions incompatibles.
 
 ## Plateau
 
@@ -52,6 +52,6 @@ Après acceptation, abandon, reprise par bot ou expiration du délai donne le po
 
 ## Construction et durée
 
-Une ville possédée peut recevoir trois maisons sans posséder la rue entière. Le propriétaire doit avoir terminé cinq tours du plateau pour construire l’hôtel (niveau 4). L’aperçu des bâtiments dans l’offre d’achat indique les loyers et coûts ; acheter acquiert seulement le terrain. Les maisons se construisent ensuite lors de la même décision si le compte le permet.
+Une ville possédée peut recevoir trois maisons sans posséder la rue entière. Le propriétaire doit avoir terminé cinq tours du plateau pour construire l’hôtel (niveau 4). Dans l’offre d’achat, chaque option affiche son loyer effectif, bonus compris. Choisir une, deux ou trois maisons, ou l’hôtel débloqué, puis acheter acquiert directement le terrain avec ces bâtiments. Le prix total additionne le terrain et chaque étape de construction ; aucun débit n’a lieu si le compte est insuffisant. La fraude fiscale réduit uniquement le terrain, jamais les bâtiments. Construire après l’achat reste possible. Les sauvegardes v10 et antérieures conservent l’achat du terrain seul.
 
 Les durées proposées sont 5, 10, 20 et 30 minutes, ou une durée personnalisée entière entre 1 et 180 minutes, en local comme en salon.

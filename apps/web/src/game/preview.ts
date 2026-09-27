@@ -18,6 +18,7 @@ export function previewScenario(): LocalSave | null {
       'rent',
       'attack',
       'purchase',
+      'hotel-purchase',
       'resort-purchase',
       'mondial',
       'tax',
@@ -106,9 +107,10 @@ export function previewScenario(): LocalSave | null {
     player.position = 4;
     state.phase = 'property';
   }
-  if (name === 'purchase') {
+  if (name === 'purchase' || name === 'hotel-purchase') {
     player.position = 5;
     state.phase = 'property';
+    if (name === 'hotel-purchase') player.laps = 5;
   }
   if (name === 'mondial') {
     player.position = 16;

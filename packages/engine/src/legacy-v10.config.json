@@ -1,5 +1,5 @@
 {
-  "version": 11,
+  "version": 10,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -490,6 +490,5 @@
   "crisisCooldownRounds": 8,
   "crisisMaxCount": 2,
   "pricesFollowPosition": true,
-  "insuranceSingleUse": true,
-  "bundledPurchase": true
+  "insuranceSingleUse": true
 }

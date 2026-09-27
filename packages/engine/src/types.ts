@@ -77,6 +77,7 @@ export interface GameConfig {
   buildingRequiresGroup?: boolean;
   pricesFollowPosition?: boolean;
   insuranceSingleUse?: boolean;
+  bundledPurchase?: boolean;
   hotelUnlockLaps?: number;
   lineVictory?: boolean;
   resortVictory?: boolean;
@@ -201,8 +202,6 @@ export interface GameOptions {
 }
 type PlayerActionType =
   | 'roll'
-  | 'buy'
-  | 'buy_fraud'
   | 'use_squatter'
   | 'pay_rent'
   | 'casino_red'
@@ -221,6 +220,7 @@ type PlayerActionType =
   | 'decline_travel'
   | 'quit';
 export type GameAction =
+  | { type: 'buy' | 'buy_fraud'; playerId: string; level?: number }
   | { type: 'auction_commit'; playerId: string; hash: string }
   | { type: 'auction_reveal'; playerId: string; amount: number; salt: string }
   | { type: 'auction_pass'; playerId: string }

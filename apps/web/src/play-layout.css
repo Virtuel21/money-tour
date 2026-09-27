@@ -110,6 +110,9 @@
   line-height: 1.15;
 }
 .purchase-simple .level-check {
+  box-sizing: border-box;
+  line-height: 1;
+  padding: 2px;
   position: absolute;
   right: 12px;
   bottom: 10px;
@@ -123,6 +126,22 @@
   color: #245331;
   font-size: 24px;
   font-weight: 900;
+}
+.purchase-simple .level-check svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.purchase-simple .level-rent {
+  display: grid;
+  gap: 3px;
+  font-size: 15px;
+  line-height: 1.2;
+  color: #294b53;
+}
+.purchase-simple .level-rent b {
+  font-size: 19px;
+  white-space: nowrap;
 }
 .purchase-simple .level-lock {
   margin-top: 2px;
@@ -344,6 +363,13 @@
   }
   .purchase-simple .island-rents .building-illustration {
     width: 120px;
+  }
+}
+@media (max-width: 480px) {
+  .modal .purchase-simple .purchase-buttons .purchase-pass {
+    flex: 0 0 76px;
+    flex-direction: column;
+    padding-inline: 6px;
   }
 }
 @media (max-height: 500px) and (max-width: 1000px) {

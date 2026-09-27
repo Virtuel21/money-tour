@@ -1321,8 +1321,8 @@ export default function App() {
           <Modal title={offer.tile.name} onClose={() => setDismissedOffer(offerKey)}>
             <PurchaseDetails
               state={current}
-              onBuy={() => act({ type: 'buy', playerId: active.id })}
-              onFraud={() => act({ type: 'buy_fraud', playerId: active.id })}
+              onBuy={(level) => act({ type: 'buy', playerId: active.id, level })}
+              onFraud={(level) => act({ type: 'buy_fraud', playerId: active.id, level })}
               onPass={() => act({ type: 'finish', playerId: active.id })}
             />
           </Modal>
