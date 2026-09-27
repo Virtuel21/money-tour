@@ -1,8 +1,11 @@
 # Money Tour — inventaire des règles et probabilités
 
-Édition v13 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes v12 et antérieures conservent leurs anciennes règles. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
+Édition v14 · 27 septembre 2026 · règles des nouvelles parties. Inventaire établi à partir du moteur, de sa configuration et des tests. Les sauvegardes antérieures restent lisibles avec leurs montants d’origine. Montants entiers en monnaie du jeu, sans milliers ni millions. Échelle divisée par 1 000.
 
 ## 1. Ce qui change dans cette édition
+
+- Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Hôtel toujours verrouillé avant cinq tours ; hôtel adverse non rachetable. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
+- Taunts accessibles pendant les tours et animations adverses. Affichage unique de l’illustration au-dessus du personnage, sans message central.
 
 - Séisme : 3 % par nouveau tour de table éligible dès le quatrième ; aucun test sans bâtiment, pendant une crise, moins de six tours après un séisme ou après deux séismes dans la partie. Ce n’est pas une probabilité par partie.
 - Tirage uniforme parmi les joueurs vivants possédant au moins une ville construite, puis uniforme parmi les villes construites du joueur choisi. Un propriétaire ayant beaucoup de bâtiments n’est donc pas plus souvent ciblé qu’un autre propriétaire éligible.
@@ -221,6 +224,6 @@ Une alerte publique apparaît lorsqu’une seule acquisition suffit à gagner : 
 
 La règle spéciale de partie est affichée en haut au centre. Les collections sont regroupées par rue ; le carnet mobile présente une rue entière par page. Un hôtel infesté porte un symbole cafard sur le plateau, dans sa fiche et dans la collection, avec le nombre de retours du tour du propriétaire restant et la réduction de loyer de 50 %.
 
-Taunts : cinq expressions pour chacun des quatre personnages (rire, loyer, fausse tristesse, bisou, couronne). Survol/focus d’un personnage : contour dans sa couleur ; clic/tap : menu. Cliquer un adversaire le désigne comme destinataire mais utilise toujours le visage du joueur qui envoie. Affichage public de cinq secondes, délai minimal de huit secondes par expéditeur en réseau. Messages signés, sans texte libre, sans coût, récompense, consommation du hasard ou effet sur la partie. Les personnages bots ne produisent pas de taunts automatiques.
+Taunts : cinq expressions pour chacun des quatre personnages (rire, loyer, fausse tristesse, bisou, couronne). Survol/focus : contour dans sa couleur ; clic/tap sur tout le personnage : menu, même hors de son tour. En ligne ou seul face aux bots, le visage est toujours celui du joueur qui envoie ; sur un appareil partagé, cliquer un personnage humain choisit ses réactions. L’expéditeur reste le même si le tour change pendant le choix. Une seule illustration publique au-dessus du personnage pendant cinq secondes, délai minimal de huit secondes par expéditeur en réseau. Messages signés, sans texte libre, sans coût, récompense, consommation du hasard ou effet sur la partie. Les bots ne produisent pas de taunts automatiques.
 
 Les probabilités des cartes et événements ainsi que les montants restent inchangés par cette mise à jour.

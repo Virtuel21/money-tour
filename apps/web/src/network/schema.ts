@@ -4,7 +4,7 @@ const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const actionSchema = z.union([
   z
     .object({
-      type: z.enum(['buy', 'buy_fraud', 'upgrade']),
+      type: z.enum(['buy', 'buy_fraud', 'upgrade', 'buyout']),
       playerId: id,
       level: z.number().int().min(0).max(4).optional(),
     })
@@ -62,7 +62,6 @@ export const actionSchema = z.union([
         'duel_decline',
         'duel_cancel',
         'duel_bot',
-        'buyout',
         'finish',
         'pay_bail',
         'use_escape',

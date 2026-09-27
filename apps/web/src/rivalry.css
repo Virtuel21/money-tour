@@ -79,7 +79,9 @@
 .game-layout .pawn-hit {
   position: absolute;
   z-index: 6;
-  transform: translate(-50%, -95%);
+  translate: -50% -95%;
+  transform: none;
+  transition: none;
   padding: 0;
   min-width: 0;
   min-height: 0;
@@ -88,6 +90,9 @@
   background: transparent;
   box-shadow: none;
   cursor: pointer;
+}
+.game-layout .pawn-hit:active:not(:disabled) {
+  transform: none;
 }
 .pawn-hit:disabled {
   pointer-events: none;
@@ -119,37 +124,6 @@
   transform: translate(-50%, -90%);
   filter: drop-shadow(0 4px 0 #fff8e5);
   pointer-events: none;
-}
-.taunt-toast {
-  position: absolute;
-  z-index: 28;
-  top: 160px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px 8px 5px;
-  max-width: min(420px, 90vw);
-  background: #fff9e9;
-  border: 3px solid #245b63;
-  border-radius: 22px;
-  box-shadow: 0 6px 0 #193f4b66;
-  pointer-events: none;
-}
-.taunt-toast img {
-  object-fit: contain;
-  width: 90px;
-  height: 90px;
-}
-.taunt-toast b,
-.taunt-toast span {
-  display: block;
-  color: #163c4b;
-}
-.taunt-toast span {
-  font-weight: 800;
-  margin-top: 5px;
 }
 .modal.taunt-modal {
   width: min(900px, calc(100vw - 30px));
@@ -233,15 +207,6 @@
   .victory-watch {
     font-size: 10px;
     padding: 4px 6px;
-  }
-  .taunt-toast {
-    top: 170px;
-    padding: 4px 10px 4px 2px;
-    font-size: 12px;
-  }
-  .taunt-toast img {
-    width: 64px;
-    height: 64px;
   }
   .pawn-taunt {
     width: 74px;
