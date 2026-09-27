@@ -113,3 +113,24 @@ it('opens while a bot animates, keeps the sender across turn changes and display
   expect(host.textContent).not.toContain('Merci pour le loyer !');
   expect(host.querySelector('.pawn-taunt')!.getAttribute('src')).toBe('a-cash');
 });
+it('collapses each desktop player independently, keeps the balance and restores the inventory after a turn change', async () => {
+  scene.state = game();
+  scene.busy = false;
+  scene.state.properties[1] = { ownerId: 'a', level: 0, championships: 0 };
+  const host = await mount();
+  const player = host.querySelector('[data-bank="a"]')!;
+  const other = host.querySelector('[data-bank="b"]')!;
+  expect(player.querySelector('.mini-property')).not.toBeNull();
+  await act(() => player.querySelector<HTMLButtonElement>('.player-collapse')!.click());
+  expect(player.querySelector('.player-collapse')!.getAttribute('aria-expanded')).toBe('false');
+  expect(player.querySelector('.player-inventory')).toBeNull();
+  expect(player.querySelector('.property-count')).toBeNull();
+  expect(player.querySelector('.player-summary')!.textContent).toContain('1 500');
+  expect(other.querySelector('.player-inventory')).not.toBeNull();
+  scene.state = { ...scene.state, currentPlayer: 1, turn: scene.state.turn + 1 };
+  await act(() => root.render(createElement(App)));
+  expect(player.querySelector('.player-inventory')).toBeNull();
+  await act(() => player.querySelector<HTMLButtonElement>('.player-collapse')!.click());
+  expect(player.querySelector('.mini-property')).not.toBeNull();
+  expect(player.querySelector('.player-collapse')!.getAttribute('aria-expanded')).toBe('true');
+});

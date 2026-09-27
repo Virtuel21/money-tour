@@ -6,6 +6,7 @@
 
 - Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Hôtel toujours verrouillé avant cinq tours ; hôtel adverse non rachetable. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
 - Taunts accessibles pendant les tours et animations adverses. Affichage unique de l’illustration au-dessus du personnage, sans message central.
+- Sur PC, chaque volet joueur peut être réduit au nom et au solde puis développé. Un objectif secret accompli disparaît du volet et du carnet mobile ; son gain reste acquis et sa réussite reste dans le journal.
 
 - Séisme : 3 % par nouveau tour de table éligible dès le quatrième ; aucun test sans bâtiment, pendant une crise, moins de six tours après un séisme ou après deux séismes dans la partie. Ce n’est pas une probabilité par partie.
 - Tirage uniforme parmi les joueurs vivants possédant au moins une ville construite, puis uniforme parmi les villes construites du joueur choisi. Un propriétaire ayant beaucoup de bâtiments n’est donc pas plus souvent ciblé qu’un autre propriétaire éligible.

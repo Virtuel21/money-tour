@@ -1,3 +1,41 @@
+@media (min-width: 1000px) {
+  .game-layout .player-card .player-summary {
+    padding-right: 30px;
+  }
+  .game-layout .player-card .player-collapse {
+    position: absolute;
+    z-index: 3;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
+    border: 1px solid #88a9a7;
+    border-radius: 10px;
+    background: #e7f1e9;
+    color: #173c48;
+    font-size: 24px;
+    line-height: 1;
+  }
+  .game-layout .players .player-card.player-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    width: clamp(200px, 17vw, 300px);
+    padding: 12px 16px;
+    overflow: visible;
+  }
+  .game-layout .players .player-collapsed .avatar,
+  .game-layout .players .player-collapsed .player-seat-label,
+  .game-layout .players .player-collapsed .inventory-token {
+    display: none;
+  }
+  .game-layout .player-collapsed .player-profile {
+    height: 100%;
+  }
+}
 .game-layout .player-card .mini-properties {
   display: flex;
   flex-direction: column;

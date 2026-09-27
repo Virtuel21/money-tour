@@ -62,7 +62,16 @@ it('keeps signed bids sealed until everyone commits and resolves the same winnin
       playerId: host.user.id,
       hash: auctionCommitment('network-auction', host.user.id, 234, a),
     });
-    expect(JSON.stringify(host.frames.at(-1)!.command)).not.toContain('234');
+    // Random hashes/signatures can contain the digits of the bid; only payload fields matter.
+    const commitment = host.frames.at(-1)!.command;
+    expect(commitment.type).toBe('action');
+    if (commitment.type !== 'action') throw new Error('Expected sealed auction command');
+    expect(commitment.action).toEqual({
+      type: 'auction_commit',
+      playerId: host.user.id,
+      hash: auctionCommitment('network-auction', host.user.id, 234, a),
+    });
+    expect(commitment.auth?.action).toEqual(commitment.action);
     expect(host.state!.auction!.bids).toEqual({});
     await send(guest, {
       type: 'auction_commit',

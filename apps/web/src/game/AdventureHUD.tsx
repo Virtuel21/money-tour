@@ -37,16 +37,13 @@ export function PrivateQuest({
 }) {
   const [opened, setOpened] = useState(false),
     q = state.quests?.[player.id];
-  if (!q || player.bot || (self && self !== player.id)) return null;
+  if (!q || q.completed || player.bot || (self && self !== player.id)) return null;
   const rule = questRules[q.kind];
   return (
     <section className="private-quest" aria-label="Mon objectif secret">
       {opened ? (
         <>
-          <strong>
-            {q.completed ? '✦ Objectif accompli · ' : '🔒 '}
-            {rule.title}
-          </strong>
+          <strong>🔒 {rule.title}</strong>
           <span>
             {Math.min(q.progress, rule.goal)} / {rule.goal} · Récompense{' '}
             {money(scaledAmount(state.config, 100000))}
