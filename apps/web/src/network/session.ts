@@ -128,6 +128,8 @@ export class Session {
   private lastHello = 0;
   private lastTick = 0;
   private lastBot = 0;
+  private presentationUntil = 0;
+  private joinWarningShown = false;
   private exclusions = new Set<string>();
   private failures = 0;
   private hostMissingSince: number | null = null;
@@ -191,6 +193,7 @@ export class Session {
   }
   async join(code: string, saved?: SavedSession, automatic = true): Promise<void> {
     this.room = await hash({ code, protocol: 1 });
+    if (this.stopped) return;
     this.identities.set(this.user.id, this.user.publicKey);
     if (saved && saved.room === this.room) {
       this.recovering = true;
@@ -219,7 +222,12 @@ export class Session {
     };
     this.transport.onError = (message) => this.incident(message);
     await this.transport.join(code);
+    if (this.stopped) {
+      this.transport.leave();
+      return;
+    }
     await this.hello();
+    if (this.stopped) return;
     this.lastTick = this.now();
     this.lastHello = this.now();
     this.status = this.isHost ? 'Salon prêt : invitez vos amis.' : 'Recherche de l’hôte…';
@@ -775,7 +783,11 @@ export class Session {
     )
       this.exclusions.delete(frame.command.action.playerId);
     this.events = result.events;
-    if (live && result.events.length) this.lastBot = this.now() + presentationMs(result.events);
+    if (live && result.events.length) {
+      this.presentationUntil =
+        Math.max(this.now(), this.presentationUntil) + presentationMs(result.events) + 100;
+      this.lastBot = this.presentationUntil;
+    }
     this.head = frame.result;
     this.frames.push(frame);
     this.round = null;
@@ -797,10 +809,12 @@ export class Session {
       await this.hello();
     }
     if (!this.host) {
-      if (now - this.lastTick > 25000)
+      if (now - this.lastTick > 25000 && !this.joinWarningShown) {
+        this.joinWarningShown = true;
         this.incident(
-          'Aucun hôte trouvé. Vérifiez le code, gardez les onglets ouverts ou essayez un autre réseau.',
+          'Connexion toujours en cours. Vérifiez que l’hôte garde son salon ouvert. Certains réseaux 4G/5G nécessitent un relais TURN ; vous pouvez réessayer ou changer de réseau.',
         );
+      }
       return;
     }
     if (!this.hostAlive()) {
@@ -853,6 +867,12 @@ export class Session {
       return;
     }
     if (!this.state || this.state.winner) return;
+    // Give humans their entire decision window after the shared presentation,
+    // just as local play already does. Heartbeats and recovery still run above.
+    if (now < this.presentationUntil) {
+      this.lastTick = now;
+      return;
+    }
     const absent = this.state.players.find(
       (p) =>
         !p.bot && !p.eliminated && (!this.connected().includes(p.id) || this.exclusions.has(p.id)),

@@ -12,6 +12,7 @@ import {
 import { MemoryNetwork, MemoryTransport } from '../src/network/transport';
 import { Session, type SavedSession } from '../src/network/session';
 import { getLegalActions } from '@money-tour/engine';
+import { presentationMs } from '../src/game/presentation';
 
 describe('shared randomness', () => {
   it('requires identical commitments before reveal and verifies every secret', async () => {
@@ -297,9 +298,14 @@ describe('network sessions', () => {
       const action = getLegalActions(state).find((a) => a.type !== 'quit');
       if (action) await active.intent(action);
       await flush();
-      advance(1100);
-      await host.pulse();
-      await flush();
+      // The browser waits for its presentation before the next decision.
+      // Keep both peers' heartbeats alive while advancing that same duration.
+      const wait = presentationMs(host.events) + 1100;
+      for (let elapsed = 0; elapsed < wait; elapsed += 1000) {
+        advance(Math.min(1000, wait - elapsed));
+        for (const session of sessions) await session.pulse();
+        await flush();
+      }
     }
     expect(host.state?.winner).not.toBeNull();
     expect(sessions[1]!.head).toBe(host.head);

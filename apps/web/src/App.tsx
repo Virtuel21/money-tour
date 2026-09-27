@@ -26,6 +26,7 @@ import { usePresentation } from './game/usePresentation';
 import { previewScenario } from './game/preview';
 import { Soundscape, loadAudio } from './audio/synth';
 const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
+const GuidedTutorial = lazy(() => import('./game/GuidedTutorial'));
 import type { Session, SessionView } from './network/session';
 import {
   applyLocal,
@@ -216,7 +217,7 @@ export default function App() {
     previewScenario() ? 'game' : 'menu',
   );
   const [modal, setModal] = useState<
-    'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | 'pocket' | null
+    'tutorial' | 'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | 'pocket' | null
   >(location.hash.includes('room=') ? 'online' : null);
   const [createSalon, setCreateSalon] = useState(false);
   const [online, setOnline] = useState<SessionView | null>(null);
@@ -238,6 +239,7 @@ export default function App() {
   const [minutes, setMinutes] = useState(20),
     [names, setNames] = useState(['Vous', 'Sacha', 'Lou', 'Noa']);
   const [bots, setBots] = useState([false, true, true, true]);
+  const tutorialPause = useRef(false);
   const [paused, setPaused] = useState(false),
     [zoom, setZoom] = useState(false);
   const [reduced, setReduced] = useState(
@@ -442,6 +444,8 @@ export default function App() {
   const options = legal.filter((a): a is Extract<GameAction, { tile: number }> =>
     ['travel', 'place_championship', 'insure', 'attack', 'sell'].includes(a.type),
   );
+  const cardPlayer = current.players.find((p) => p.id === cinema.frame.cue.playerId) ?? active;
+  const canCloseCard = !cardPlayer.bot && (!online || online.self === cardPlayer.id);
   const actionDescription =
     current.phase === 'auction'
       ? 'Une ville neutre attend vos offres secrètes. Suivez la fenêtre d’enchère.'
@@ -470,6 +474,18 @@ export default function App() {
                             ? `${current.config.board[active.position]!.name} · le loyer adverse est prélevé automatiquement. Vous pouvez poursuivre ou proposer un rachat.`
                             : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
                           : 'Deux dés. Une destination. Une nouvelle opportunité.';
+
+  if (modal === 'tutorial')
+    return (
+      <Suspense fallback={<p>Préparation de votre partie guidée…</p>}>
+        <GuidedTutorial
+          onClose={() => {
+            setPaused(tutorialPause.current);
+            setModal('rules');
+          }}
+        />
+      </Suspense>
+    );
 
   return (
     <GameClockContext.Provider
@@ -1076,74 +1092,95 @@ export default function App() {
           </Modal>
         )}
         {modal === 'rules' && (
-          <Modal title="Votre première escale" onClose={() => setModal(null)}>
-            <div className="rules">
-              <p className="lead">Un tour de plateau, beaucoup de possibilités.</p>
-              <h3>1. Lancez, voyagez, investissez</h3>
-              <p>
-                Lancez deux dés. Achetez une ville libre, améliorez une de vos villes ou payez le
-                loyer à votre arrivée chez un adversaire. Un double permet de rejouer ; trois
-                doubles vous envoient sur l’île.
-              </p>
-              <h3>2. Construisez votre fortune</h3>
-              <p>
-                Possédez d’abord toutes les villes du groupe de couleur, puis construisez sur votre
-                ville. Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux maisons
-                avant le premier passage Départ. Chaque passage rapporte 300 k. Après le loyer, une
-                ville adverse sans hôtel peut être rachetée au double de sa valeur foncière.
-              </p>
-              <h3>3. Plusieurs façons de gagner</h3>
-              <p>
-                Possédez toutes les propriétés achetables d’un côté, île comprise, ou complétez
-                trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k, sans
-                terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
-                fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
-              </p>
-              <h3>4. Des escales qui changent tout</h3>
-              <p>
-                32 cases : 8 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe, 2 casinos,
-                1 assurance, 1 karma et 4 coins spéciaux. Les loyers sont payés automatiquement par
-                le visiteur. Les cartes se résolvent pour leur destinataire uniquement.
-              </p>
-              <p>
-                Selon la règle tirée, trois festivals peuvent doubler les loyers. Le championnat
-                augmente encore le multiplicateur. L’île vous retient jusqu’à trois tours. Le Tour
-                du monde ouvre un voyage payant au prochain tour. Si votre cash manque, vendez des
-                biens à la banque à moitié de leur valeur.
-              </p>
-              <h3>5. Tentez votre chance, protégez vos biens</h3>
-              <p>
-                Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot
-                rapporte 10 % de votre solde ; ses chances augmentent à chaque visite du casino. Le
-                Karma offre 50 k au dernier patrimoine ou prélève 50 k au premier.
-              </p>
-              <p>
-                L’assurance donne un jeton unique à placer sur un bien : il bloque une destruction
-                ou une expropriation, puis disparaît. Squatteur se garde pour éviter un loyer.
-                Expropriation remet une ville adverse à la banque ; les cafards divisent le loyer
-                d’un hôtel par deux pendant deux tours de son propriétaire.
-              </p>
-              <p>
-                Fraude fiscale permet un achat à moitié prix. Jusqu’au prochain passage Départ,
-                tomber sur Taxe coûte deux fois le prix normal de cet achat. Une dette impose de
-                choisir les biens à vendre ; la faillite survient seulement si leur valeur totale de
-                revente et votre compte ne suffisent pas.
-              </p>
-              <p>
-                Alliance temporaire prélève la moitié des gains d’un joueur jusqu’à la fin de son
-                prochain tour. Une crise économique aléatoire divise tous les loyers par deux
-                pendant un tour complet de tous les joueurs. Le duel propose une mise identique
-                acceptée par les deux adversaires : pierre, feuille, ciseaux avec choix secrets ; le
-                gagnant remporte le pot, une égalité rembourse les mises.
-              </p>
-              <h3>À quatre, jouez en équipe</h3>
-              <p>
-                Les sièges 1 et 3 affrontent les sièges 2 et 4. Pas de loyer entre alliés ; les
-                collections se partagent pour la victoire. Le cash reste individuel.
-              </p>
-            </div>
-            <button className="primary" onClick={() => setModal(null)}>
-              C’est parti !
+          <Modal title="Comment jouer" onClose={() => setModal(null)}>
+            <p>
+              Apprenez en jouant : un guide éclaire les commandes et vous accompagne dans une partie
+              simulée, à votre rythme.
+            </p>
+            <button
+              className="primary"
+              disabled={Boolean(online)}
+              onClick={() => {
+                tutorialPause.current = paused;
+                setPaused(true);
+                setModal('tutorial');
+              }}
+            >
+              Démarrer le tutoriel interactif
+            </button>
+            {online && <p>Le tutoriel sera disponible après avoir quitté votre salon en ligne.</p>}
+            <details>
+              <summary>Lire toutes les règles</summary>
+              <div className="rules">
+                <p className="lead">Un tour de plateau, beaucoup de possibilités.</p>
+                <h3>1. Lancez, voyagez, investissez</h3>
+                <p>
+                  Lancez deux dés. Achetez une ville libre, améliorez une de vos villes ou payez le
+                  loyer à votre arrivée chez un adversaire. Un double permet de rejouer ; trois
+                  doubles vous envoient sur l’île.
+                </p>
+                <h3>2. Construisez votre fortune</h3>
+                <p>
+                  Possédez d’abord toutes les villes du groupe de couleur, puis construisez sur
+                  votre ville. Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux
+                  maisons avant le premier passage Départ. Chaque passage rapporte 300 k. Après le
+                  loyer, une ville adverse sans hôtel peut être rachetée au double de sa valeur
+                  foncière.
+                </p>
+                <h3>3. Plusieurs façons de gagner</h3>
+                <p>
+                  Possédez toutes les propriétés achetables d’un côté, île comprise, ou complétez
+                  trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k, sans
+                  terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
+                  fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
+                </p>
+                <h3>4. Des escales qui changent tout</h3>
+                <p>
+                  32 cases : 8 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe, 2
+                  casinos, 1 assurance, 1 karma et 4 coins spéciaux. Les loyers sont payés
+                  automatiquement par le visiteur. Les cartes se résolvent pour leur destinataire
+                  uniquement.
+                </p>
+                <p>
+                  Selon la règle tirée, trois festivals peuvent doubler les loyers. Le Mondial coûte
+                  50 k et double le loyer pendant quatre retours du propriétaire. L’île vous retient
+                  jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour. Si
+                  votre cash manque, vendez des biens à la banque à moitié de leur valeur.
+                </p>
+                <h3>5. Tentez votre chance, protégez vos biens</h3>
+                <p>
+                  Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot
+                  rapporte 10 % de votre solde ; ses chances augmentent à chaque visite du casino.
+                  Le Karma offre 50 k au dernier patrimoine ou prélève 50 k au premier.
+                </p>
+                <p>
+                  L’assurance donne un jeton unique à placer sur un bien : il bloque une destruction
+                  ou une expropriation, puis disparaît. Squatteur se garde pour éviter un loyer.
+                  Expropriation remet une ville adverse à la banque ; les cafards divisent le loyer
+                  d’un hôtel par deux pendant deux tours de son propriétaire.
+                </p>
+                <p>
+                  Fraude fiscale permet un achat à moitié prix. Jusqu’au prochain passage Départ,
+                  tomber sur Taxe coûte deux fois le prix normal de cet achat. Une dette impose de
+                  choisir les biens à vendre ; la faillite survient seulement si leur valeur totale
+                  de revente et votre compte ne suffisent pas.
+                </p>
+                <p>
+                  Alliance temporaire prélève la moitié des gains d’un joueur jusqu’à la fin de son
+                  prochain tour. Une crise économique aléatoire divise tous les loyers par deux
+                  pendant un tour complet de tous les joueurs. Le duel propose une mise identique
+                  acceptée par les deux adversaires : pierre, feuille, ciseaux avec choix secrets ;
+                  le gagnant remporte le pot, une égalité rembourse les mises.
+                </p>
+                <h3>À quatre, jouez en équipe</h3>
+                <p>
+                  Les sièges 1 et 3 affrontent les sièges 2 et 4. Pas de loyer entre alliés ; les
+                  collections se partagent pour la victoire. Le cash reste individuel.
+                </p>
+              </div>
+            </details>
+            <button className="secondary" onClick={() => setModal(null)}>
+              Fermer
             </button>
           </Modal>
         )}
@@ -1337,10 +1374,11 @@ export default function App() {
             >
               <AuctionView
                 key={current.auction.id}
+                gameKey={online?.self ?? save?.seed}
                 state={current}
                 self={online?.self}
                 act={act}
-                disabled={interactionDisabled}
+                disabled={Boolean(online?.busy || online?.blocked)}
               />
             </Modal>
           )}
@@ -1602,7 +1640,7 @@ export default function App() {
               'Carte de ' +
               (current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ?? active.name)
             }
-            onClose={!online && !active.bot ? cinema.advance : undefined}
+            onClose={canCloseCard ? cinema.advance : undefined}
           >
             <div className="chance-reveal">
               <img
@@ -1613,7 +1651,7 @@ export default function App() {
               <p>
                 {current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description}
               </p>
-              {!online && !active.bot ? (
+              {canCloseCard ? (
                 <button className="primary" onClick={cinema.advance}>
                   J’ai lu · continuer <ActionClock />
                 </button>

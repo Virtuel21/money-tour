@@ -22,3 +22,13 @@ Le carnet sépare les villes (quatre par page), bonus (deux par page), objectif 
 Captures dans le dossier de livraison : `mobile-camera-suivi.png`, `mobile-proprietes-joueur.png`, `mobile-achat-320.png`, `pc-controle-mobile-update.png`.
 
 316 tests passent, dont tests de cadrage sans distorsion, choix du siège suivi, transitions de vue et confidentialité initiale de l’objectif en ligne. Moteur inchangé. Aucun téléphone physique ni Safari iOS réel testé : les mesures portent sur les viewports Chromium ci-dessus. Les scènes de recette sont réservées au développement.
+
+## Tutoriel et connexions — 27 septembre 2026
+
+- Tutoriel interactif depuis « Comment jouer » : 27 leçons, plateau réel, commandes mises en lumière, navigation précédente/suivante et choix direct d'une leçon. Les scènes d'entraînement sont isolées des sauvegardes et du multijoueur.
+- Chromium : achat à 390 × 844 avec les deux CTA visibles ; enchère, duel et navigation du guide essayés ; contrôles de débordement à 320 × 568 et 844 × 390. Les panneaux longs défilent dans leur zone.
+- Invitation réelle entre deux onglets d'origines distinctes (`localhost` et `127.0.0.1`) : nom seul, rejoindre, deux voyageurs visibles chez l'hôte et l'invité via Trystero. Ce test s'effectue sur le même ordinateur et ne valide pas un réseau mobile.
+- Régression de saisie : focus et montant conservés pendant les mises à jour réseau, confidentialité entre sièges locaux et réutilisation de la même enveloppe lors d'un nouvel envoi. Le délai de décision ne s'écoule plus pendant la présentation réseau.
+- Fermeture anticipée d'une carte testée avec conservation de la présentation suivante. Nouvelle tentative et sortie vers l'aide testées pendant une connexion en attente.
+
+Validation : 374 tests dans 30 fichiers ; couverture moteur 97,76 % des lignes, 93,66 % des branches. Typage, lint, formatage, build de production et contrôles des assets/modèles passent. Le tutoriel est chargé à la demande. La recette sur téléphone physique, Safari iOS et deux réseaux dont une 5G reste à effectuer ; voir [Connexions mobiles](NETWORK_MOBILE.md).

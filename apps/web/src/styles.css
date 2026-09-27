@@ -3523,3 +3523,12 @@ footer a {
     white-space: nowrap;
   }
 }
+
+.online-modal form > .primary {
+  width: 100%;
+  margin-top: 12px;
+}
+.online-modal .connection-wait button {
+  width: 100%;
+  margin-top: 10px;
+}
