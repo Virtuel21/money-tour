@@ -29,10 +29,12 @@ export function MoneyFlight({
   cue,
   state,
   reduced,
+  onClose,
 }: {
   cue: Cue;
   state: GameState;
   reduced: boolean;
+  onClose: () => void;
 }) {
   const [path, setPath] = useState<CSSProperties | null>(null);
   useLayoutEffect(() => {
@@ -74,6 +76,13 @@ export function MoneyFlight({
           </span>
         ))}
       <div className="money-toast" role="status">
+        <button
+          className="icon-button money-close"
+          aria-label="Fermer l’information de paiement"
+          onClick={onClose}
+        >
+          ×
+        </button>
         <small>
           {cue.reason === 'duel_stake'
             ? 'MISE AU POT DU DUEL'

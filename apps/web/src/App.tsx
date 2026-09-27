@@ -436,8 +436,6 @@ export default function App() {
   const options = legal.filter((a): a is Extract<GameAction, { tile: number }> =>
     ['travel', 'place_championship', 'insure', 'attack', 'sell'].includes(a.type),
   );
-  const cardPlayer = current.players.find((p) => p.id === cinema.frame.cue.playerId) ?? active;
-  const canCloseCard = !cardPlayer.bot && (!online || online.self === cardPlayer.id);
   const actionDescription =
     current.phase === 'auction'
       ? 'Une ville neutre attend vos offres secrètes. Suivez la fenêtre d’enchère.'
@@ -691,7 +689,12 @@ export default function App() {
               />
             )}
             {!paused && cinema.frame.cue.kind === 'money' && (
-              <MoneyFlight cue={cinema.frame.cue} state={current} reduced={reduced} />
+              <MoneyFlight
+                cue={cinema.frame.cue}
+                state={current}
+                reduced={reduced}
+                onClose={cinema.advance}
+              />
             )}
             <div className="game-top">
               <div>
@@ -1523,17 +1526,21 @@ export default function App() {
           </Modal>
         )}
         {screen === 'game' && !paused && cinema.frame.cue.kind === 'casino' && (
-          <Modal title="Le casino joue pour vous">
+          <Modal title="Le casino joue pour vous" onClose={cinema.advance}>
             <CasinoView
               key={current.seq + '-casino'}
               state={current}
               cue={cinema.frame.cue}
               act={act}
             />
+            <button className="secondary" onClick={cinema.advance}>
+              Passer l’animation
+            </button>
           </Modal>
         )}
         {screen === 'game' && !paused && cinema.frame.cue.kind === 'notice' && (
           <Modal
+            onClose={cinema.advance}
             className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}
             title={
               cinema.frame.cue.reason === 'victory_warning'
@@ -1558,6 +1565,9 @@ export default function App() {
             }
           >
             <p className="event-notice">{cinema.frame.cue.message}</p>
+            <button className="primary" onClick={cinema.advance}>
+              Continuer
+            </button>
           </Modal>
         )}
         {screen === 'game' && !interactionDisabled && !modal && current.phase === 'rent' && (
@@ -1750,10 +1760,7 @@ export default function App() {
           </Modal>
         )}
         {screen === 'game' && cinema.frame.cue.kind === 'tax' && (
-          <Modal
-            title="Aïe… passage à la caisse !"
-            onClose={!online && !active.bot ? cinema.advance : undefined}
-          >
+          <Modal title="Aïe… passage à la caisse !" onClose={cinema.advance}>
             <div className="tax-reveal">
               <div className="tax-illustration" aria-hidden="true" />
               <small>LES ACTUALITÉS DÉCALÉES DE L’ARCHIPEL</small>
@@ -1781,13 +1788,9 @@ export default function App() {
                   </>
                 )}
               </p>
-              {!online && !active.bot ? (
-                <button className="primary" onClick={cinema.advance}>
-                  Aïe, j’ai compris ! <ActionClock />
-                </button>
-              ) : (
-                <p>Le trésor public s’en occupe… la partie reprend dans un instant.</p>
-              )}
+              <button className="primary" onClick={cinema.advance}>
+                Aïe, j’ai compris !
+              </button>
             </div>
           </Modal>
         )}
@@ -1797,7 +1800,7 @@ export default function App() {
               'Carte de ' +
               (current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ?? active.name)
             }
-            onClose={canCloseCard ? cinema.advance : undefined}
+            onClose={cinema.advance}
           >
             <div className="chance-reveal">
               <img
@@ -1814,18 +1817,9 @@ export default function App() {
                   current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description,
                 )}
               </p>
-              {canCloseCard ? (
-                <button className="primary" onClick={cinema.advance}>
-                  J’ai lu · continuer <ActionClock />
-                </button>
-              ) : (
-                <p className="card-readonly">
-                  Une surprise pour{' '}
-                  {current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ??
-                    active.name}{' '}
-                  · la partie reprend dans un instant
-                </p>
-              )}
+              <button className="primary" onClick={cinema.advance}>
+                J’ai lu · continuer
+              </button>
             </div>
           </Modal>
         )}

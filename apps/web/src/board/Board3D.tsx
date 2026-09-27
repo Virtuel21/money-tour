@@ -7,10 +7,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { reservedCity, getRent, type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
-import { streetSurface } from './surfaces';
+import { specialTileLabel, streetSurface } from './surfaces';
 import { colors } from '../game/local';
 import { tileTitle } from '../game/tileTitle';
-import { concertSprite, festivalBeat, illustratedSprite } from './specialArt';
+import { concertSprite, festivalBeat } from './specialArt';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
 const up = new THREE.Vector3(0, 1, 0);
@@ -461,9 +461,36 @@ export default function Board({
           resources.add(city);
           buildings.push(city);
           if (tile.type === 'island') {
-            const wreck = illustratedSprite(lostIslandArt, 2.65, 0.045);
-            wreck.position.set(p.x - p.normal.x * 0.35, 0.29, p.z - p.normal.z * 0.35);
+            // A decal belongs to the beach plane; a billboard stood upright over the pawns.
+            const wreck = new THREE.Mesh(
+              new THREE.PlaneGeometry(2.65, 2.65),
+              new THREE.MeshStandardMaterial({
+                map: lostIslandArt,
+                transparent: true,
+                alphaTest: 0.05,
+                depthWrite: false,
+                roughness: 0.95,
+              }),
+            );
+            wreck.rotation.set(-Math.PI / 2, 0, p.angle);
+            wreck.position.set(p.x - p.normal.x * 0.3, 0.286, p.z - p.normal.z * 0.3);
+            wreck.receiveShadow = true;
             resources.add(wreck);
+          }
+          if (!['city', 'resort', 'duel'].includes(tile.type)) {
+            const label = new THREE.Mesh(
+              new THREE.PlaneGeometry((p.corner ? shape.depth : shape.step) - 0.3, 0.48),
+              new THREE.MeshStandardMaterial({ map: specialTileLabel(tile), roughness: 0.95 }),
+            );
+            label.rotation.set(-Math.PI / 2, 0, p.angle);
+            const labelOffset = p.side < 2 ? 1.3 : -1.3;
+            label.position.set(
+              p.x + p.normal.x * labelOffset,
+              0.292,
+              p.z + p.normal.z * labelOffset,
+            );
+            label.receiveShadow = true;
+            resources.add(label);
           }
           if (tile.type === 'championship') {
             const concert = concertSprite(festivalArt, 3.1);
@@ -1102,26 +1129,7 @@ export default function Board({
               TOUR <span>✦</span>
             </div>
             {state.config.board.map((t, i) => {
-              const short =
-                t.type === 'chance'
-                  ? 'CHANCE'
-                  : t.type === 'championship'
-                    ? 'FESTIVAL'
-                    : t.type === 'travel'
-                      ? 'VOYAGE'
-                      : t.type === 'tax'
-                        ? 'TAXE'
-                        : t.type === 'casino'
-                          ? 'CASINO'
-                          : t.type === 'insurance'
-                            ? mobile
-                              ? 'ASSUR.'
-                              : 'ASSURANCE'
-                            : t.type === 'duel'
-                              ? 'DUEL'
-                              : t.type === 'karma'
-                                ? 'KARMA'
-                                : t.name;
+              if (!['city', 'resort'].includes(t.type)) return null;
               return (
                 <div
                   key={t.id}
@@ -1134,11 +1142,6 @@ export default function Board({
                         : selecting && !choices.includes(t.id)
                     )
                       ? ' label-dimmed'
-                      : '') +
-                    (['casino', 'insurance', 'karma', 'chance', 'tax', 'championship'].includes(
-                      t.type,
-                    )
-                      ? ' special-label'
                       : '')
                   }
                   style={
@@ -1150,7 +1153,7 @@ export default function Board({
                     } as React.CSSProperties
                   }
                 >
-                  <b>{short}</b>
+                  <b>{t.name}</b>
                   {reservedCity(state, t.id) && (
                     <small className="tile-condition">🔒 Enchère T10</small>
                   )}
