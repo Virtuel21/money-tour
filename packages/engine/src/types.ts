@@ -78,6 +78,9 @@ export interface GameConfig {
   pricesFollowPosition?: boolean;
   insuranceSingleUse?: boolean;
   bundledPurchase?: boolean;
+  duelReplayTies?: boolean;
+  travelOnDouble?: boolean;
+  casinoMinWin?: number;
   hotelUnlockLaps?: number;
   lineVictory?: boolean;
   resortVictory?: boolean;
@@ -238,6 +241,7 @@ export type GameAction =
   | { type: 'set_control'; playerId: string; bot: boolean };
 export type DuelChoice = 'rock' | 'paper' | 'scissors';
 export interface Duel {
+  round?: number;
   id: string;
   challengerId: string;
   targetId?: string;

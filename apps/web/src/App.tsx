@@ -806,11 +806,12 @@ export default function App() {
                       self={online?.self}
                     />
                   )}
+                  {!mobile && i === 0 && <AdventureBanner state={current} />}
                 </article>
               ))}
             </div>
             <section className="board-area">
-              <AdventureBanner state={current} />
+              {mobile && <AdventureBanner state={current} />}
               <div className="board-viewport">
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
@@ -883,7 +884,6 @@ export default function App() {
                 ) : (
                   <>
                     <button onClick={() => setInspectedOwner(null)}>Vue globale</button>
-                    <button onClick={() => setModal('pocket')}>Mon carnet</button>
                   </>
                 )}
               </div>
@@ -1146,21 +1146,24 @@ export default function App() {
                 </p>
                 <h3>4. Des escales qui changent tout</h3>
                 <p>
-                  32 cases : 8 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe, 2
-                  casinos, 1 assurance, 1 duel et 4 coins spéciaux. Les loyers sont payés
+                  32 cases : 6 rues de deux villes et 2 rues de trois villes, 4 îles privées, 2
+                  cases Chance, 1 taxe, 1 casino, 1 assurance, 1 duel et 4 coins spéciaux. Le paquet
+                  contient 23 cartes Chance différentes, tirées sans remise. Les loyers sont payés
                   automatiquement par le visiteur. Les cartes se résolvent pour leur destinataire
                   uniquement.
                 </p>
                 <p>
                   Selon la règle tirée, trois festivals peuvent doubler les loyers. Le Mondial coûte
                   50 k et double le loyer pendant quatre retours du propriétaire. L’île vous retient
-                  jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour. Si
-                  votre cash manque, vendez des biens à la banque à moitié de leur valeur.
+                  jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour, ou
+                  dès l’action supplémentaire si vous arrivez avec un double. Si votre cash manque,
+                  vendez des biens à la banque à moitié de leur valeur.
                 </p>
                 <h3>5. Tentez votre chance, protégez vos biens</h3>
                 <p>
                   Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot
-                  rapporte 10 % de votre solde ; ses chances augmentent à chaque visite du casino.
+                  rapporte 10 % de votre solde ; chaque résultat gagnant vaut au moins 50 k avant
+                  partage éventuel d’une alliance. Ses chances augmentent à chaque visite du casino.
                   La case Duel permet de défier un adversaire à pierre-feuille-ciseaux avec une mise
                   acceptée par les deux joueurs.
                 </p>
@@ -1182,7 +1185,7 @@ export default function App() {
                   huit tours de table) divise tous les loyers par deux pendant un tour complet de
                   tous les joueurs. Le duel propose une mise identique acceptée par les deux
                   adversaires : pierre, feuille, ciseaux avec choix secrets ; le gagnant remporte le
-                  pot, une égalité rembourse les mises.
+                  pot, une égalité relance les choix sans nouvelle mise jusqu’à un vainqueur.
                 </p>
                 <h3>À quatre, jouez en équipe</h3>
                 <p>

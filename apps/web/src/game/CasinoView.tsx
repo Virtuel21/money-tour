@@ -84,7 +84,10 @@ export function CasinoView({
           <p className="eyebrow">
             ENTRÉE OFFERTE · {game === 'roulette' ? 'ROULETTE ROUGE / NOIR' : 'MACHINE À SOUS'}
           </p>
-          <h3>Jackpot potentiel : {money(Math.floor(player.cash * 0.1), true)}</h3>
+          <h3>
+            Jackpot potentiel :{' '}
+            {money(Math.max(state.config.casinoMinWin ?? 0, Math.floor(player.cash * 0.1)), true)}
+          </h3>
           <p>
             {state.casino?.chance} % de chances de jackpot. La probabilité monte de{' '}
             {state.config.casinoChanceStep} points à chaque visite de ce casino, jusqu’à{' '}
@@ -96,6 +99,8 @@ export function CasinoView({
               ? 'Bonne couleur : +2 % de votre compte.'
               : 'Deux symboles identiques : +2 % ; trois : +5 %.'}{' '}
             Jackpot : +10 % de votre compte, sans cumul. Pas de mise ni de perte.
+            {!!state.config.casinoMinWin &&
+              ` Chaque résultat gagnant rapporte au moins ${money(state.config.casinoMinWin, true)}, avant partage éventuel de l’alliance.`}
           </p>
           <div className="casino-actions">
             {getLegalActions(state)

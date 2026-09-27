@@ -156,8 +156,18 @@ function finishDuel(state: GameState, rng: Rng, events: GameEvent[]): void {
     amount: d.amount * 2,
     message: winnerId
       ? `${player(state, winnerId).name} remporte le duel !`
-      : 'Égalité ! Chacun récupère sa mise.',
+      : state.config.duelReplayTies
+        ? 'Égalité ! Nouvelle manche, le pot reste en jeu sans nouvelle mise.'
+        : 'Égalité ! Chacun récupère sa mise.',
   });
+  if (!winnerId && state.config.duelReplayTies) {
+    d.round = (d.round ?? 1) + 1;
+    d.id = `duel:${d.challengerId}:${state.turn}:${state.seq}`;
+    d.stage = 'commit';
+    d.commitments = {};
+    d.reveals = {};
+    return;
+  }
   if (winnerId) {
     player(state, winnerId).cash += d.amount * 2;
     events.push({ type: 'income', playerId: winnerId, amount: d.amount * 2, reason: 'duel_prize' });
@@ -223,6 +233,7 @@ export function validateDuel(state: GameState): string[] {
     d.challengerId !== state.players[state.currentPlayer]?.id ||
     !['offer', 'accept', 'commit', 'reveal'].includes(d.stage) ||
     typeof d.id !== 'string' ||
+    (d.round !== undefined && (!Number.isSafeInteger(d.round) || d.round < 1)) ||
     !Number.isSafeInteger(d.amount) ||
     d.amount < 0 ||
     (d.stage !== 'offer' &&

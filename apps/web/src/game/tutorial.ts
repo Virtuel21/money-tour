@@ -67,21 +67,21 @@ export const lessons = [
   {
     id: 'duel',
     title: 'Défier un adversaire',
-    text: 'La case Duel remplace le Karma ; cette rencontre ne vient plus des cartes Chance. Proposez une mise à Sacha : chacun doit pouvoir payer la même somme. Après acceptation, choisissez secrètement pierre, feuille ou ciseaux, puis révélez. Le gagnant prend le pot ; une égalité rembourse les mises. Refuser avant de miser ne coûte rien.',
+    text: 'La case Duel remplace le Karma ; cette rencontre ne vient plus des cartes Chance. Proposez une mise à Sacha : chacun doit pouvoir payer la même somme. Après acceptation, choisissez secrètement pierre, feuille ou ciseaux, puis révélez. Le gagnant prend le pot ; une égalité relance les choix sans nouvelle mise jusqu’à un vainqueur. Refuser avant de miser ne coûte rien.',
     task: 'Proposez un duel, choisissez une main et révélez-la.',
     target: 'action',
   },
   {
     id: 'casino',
     title: 'Une pause au casino',
-    text: 'La roulette et la machine à sous se jouent sans mise. Choisissez rouge ou noir, ou lancez les rouleaux. Le jackpot vaut 10 % de votre solde et ses chances augmentent avec les visites. Vous pouvez aussi passer.',
+    text: 'La roulette et la machine à sous se jouent sans mise. Choisissez rouge ou noir, ou lancez les rouleaux. Chaque gain vaut au moins 50 k. Le jackpot vaut 10 % de votre solde (minimum 50 k) et ses chances augmentent avec les visites. Vous pouvez aussi passer.',
     task: 'Essayez la roulette.',
     target: 'action',
   },
   {
     id: 'slots',
     title: 'Les rouleaux de la fortune',
-    text: 'Le second casino propose une machine à sous. Son résultat et votre gain sont annoncés avant la reprise du tour. Les dés, cartes et casinos utilisent les mêmes règles en solo et entre amis.',
+    text: 'Le casino propose aussi une machine à sous, choisie au hasard à chaque visite. Son résultat et votre gain sont annoncés avant la reprise du tour. Les dés, cartes et casinos utilisent les mêmes règles en solo et entre amis.',
     task: 'Lancez les rouleaux.',
     target: 'action',
   },
@@ -137,7 +137,7 @@ export const lessons = [
   {
     id: 'travel',
     title: 'Choisir votre destination',
-    text: 'Le Tour du monde propose un voyage au prochain tour : 50 k à la place des dés. Touchez une destination libre ou alliée parmi les cases éclairées. Vous pouvez aussi rester et lancer normalement.',
+    text: 'Le Tour du monde propose un voyage au prochain tour, ou dès votre action supplémentaire sur un double : 50 k à la place des dés. Touchez une destination libre ou alliée parmi les cases éclairées. Vous pouvez aussi rester et lancer normalement.',
     task: 'Choisissez Madrid sur le plateau ou dans la liste.',
     target: 'board',
   },
@@ -259,7 +259,7 @@ export function tutorialScene(id: LessonId): GameState {
   }
   if (id === 'card') {
     state.deck = ['chance-01', ...state.deck.filter((c) => c !== 'chance-01')];
-    land(3);
+    land(15);
   }
   if (id === 'auction') {
     state.phase = 'auction';
@@ -289,7 +289,7 @@ export function tutorialScene(id: LessonId): GameState {
   }
   if (id === 'casino' || id === 'slots') {
     state.phase = 'casino';
-    player.position = id === 'casino' ? 7 : 19;
+    player.position = 7;
     state.casino = {
       tile: player.position,
       game: id === 'casino' ? 'roulette' : 'slots',

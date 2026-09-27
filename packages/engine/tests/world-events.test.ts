@@ -76,11 +76,11 @@ it('balances every square side and separates Chance, Duel and casinos after ever
     });
     for (let side = 0; side < 4; side++) {
       const b = s.config.board.slice(side * 8, side * 8 + 8);
-      expect(b.filter((t) => t.type === 'city')).toHaveLength(4);
+      expect(b.filter((t) => t.type === 'city')).toHaveLength(side % 2 === 0 ? 5 : 4);
       expect(b.filter((t) => t.type === 'resort')).toHaveLength(1);
       expect(
         b.filter((t) => ['chance', 'tax', 'casino', 'insurance', 'duel'].includes(t.type)),
-      ).toHaveLength(2);
+      ).toHaveLength(side % 2 === 0 ? 1 : 2);
     }
     s.config.board.forEach((t, i) => {
       if (['chance', 'duel', 'casino'].includes(t.type))
@@ -175,16 +175,17 @@ it('binds hidden choices to the duel and player with SHA-256', () => {
   expect(duelCommitment('d', 'b', 'rock', saltA)).not.toBe(duelCommitment('d', 'a', 'rock', saltA));
 });
 it.each(duelChoices.flatMap((a) => duelChoices.map((b) => [a, b] as const)))(
-  'settles %s versus %s with conserved stakes and draw refunds',
+  'settles %s versus %s with conserved stakes and rematches on draws',
   (a, b) => {
     let s = commits(accepted(), a, b);
     expect(s.players.slice(0, 2).map((p) => p.cash)).toEqual([1450000, 1450000]);
     s = step(s, { type: 'duel_reveal', playerId: 'a', choice: a, salt: saltA });
     s = step(s, { type: 'duel_reveal', playerId: 'b', choice: b, salt: saltB });
-    expect(s.duel).toBeUndefined();
+    if (a === b) expect(s.duel).toMatchObject({ stage: 'commit', round: 2, escrow: true });
+    else expect(s.duel).toBeUndefined();
     const winner = (duelChoices.indexOf(a) - duelChoices.indexOf(b) + 3) % 3;
     expect(s.players.slice(0, 2).map((p) => p.cash)).toEqual(
-      winner === 0 ? [1500000, 1500000] : winner === 1 ? [1550000, 1450000] : [1450000, 1550000],
+      winner === 0 ? [1450000, 1450000] : winner === 1 ? [1550000, 1450000] : [1450000, 1550000],
     );
   },
 );
@@ -245,7 +246,7 @@ it('waits for human commitment before using shared randomness against a bot', ()
 it('offers the alliance card when they are drawn and preserves the deck', () => {
   for (const [id, phase] of [['chance-23', 'alliance']] as const) {
     const s = game();
-    s.players[0]!.position = 0;
+    s.players[0]!.position = 12;
     const index = s.deck.indexOf(id);
     const r = step(
       s,

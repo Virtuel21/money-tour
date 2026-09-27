@@ -46,7 +46,8 @@ export function casinoPlay(state: GameState, choice: string, rng: Rng, events: G
         ? 0.05
         : 0.02
       : 0;
-  const amount = Math.floor(player.cash * rate);
+  const amount =
+    rate > 0 ? Math.max(state.config.casinoMinWin ?? 0, Math.floor(player.cash * rate)) : 0;
   if (jackpot) state.casinoVisits![casino.tile] = 0;
   events.push({
     type: 'casino_result',

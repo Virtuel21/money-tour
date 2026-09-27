@@ -75,6 +75,22 @@ export function DuelView({
       <p className="eyebrow">
         {canPlay ? `À vous, ${actor.name}` : `${actor.name} prépare son duel`}
       </p>
+      <div className="duel-balances" aria-label="Argent des joueurs">
+        {state.players
+          .filter((p) => !p.eliminated)
+          .map((p) => (
+            <div key={p.id}>
+              <span>{p.name}</span>
+              <strong>{money(p.cash)}</strong>
+              {d.escrow && [d.challengerId, d.targetId].includes(p.id) && (
+                <small>+ {money(d.amount, true)} déjà dans le pot</small>
+              )}
+            </div>
+          ))}
+      </div>
+      {(d.round ?? 1) > 1 && (
+        <p role="status">Manche {d.round} · égalité précédente, même pot, aucune nouvelle mise.</p>
+      )}
       {d.stage === 'offer' ? (
         <>
           <p>
@@ -116,6 +132,15 @@ export function DuelView({
                           onClick={() => act({ ...a, amount: Number(amount) })}
                         >
                           Défier {state.players.find((p) => p.id === a.targetId)!.name}
+                          <small>
+                            Maximum :{' '}
+                            {money(
+                              Math.min(
+                                actor.cash,
+                                state.players.find((p) => p.id === a.targetId)!.cash,
+                              ),
+                            )}
+                          </small>
                           <ActionClock />
                         </button>
                       ),
@@ -142,7 +167,11 @@ export function DuelView({
           </p>
           {d.stage === 'accept' && (
             <>
-              <p>Le gagnant remporte le pot. En cas d’égalité, chacun récupère sa mise.</p>
+              <p>
+                {state.config.duelReplayTies
+                  ? 'Le gagnant remporte le pot. En cas d’égalité, rejouez sans miser à nouveau jusqu’à un vainqueur.'
+                  : 'Le gagnant remporte le pot. En cas d’égalité, chacun récupère sa mise.'}
+              </p>
               {canPlay && (
                 <div className="decision-actions">
                   <button

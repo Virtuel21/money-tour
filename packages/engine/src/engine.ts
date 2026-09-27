@@ -117,6 +117,11 @@ function validateConfig(config: GameConfig): void {
   )
     throw new Error('Invalid crisis chance.');
   const baseChance = config.casinoBaseChance ?? 2;
+  if (
+    config.casinoMinWin !== undefined &&
+    (!Number.isSafeInteger(config.casinoMinWin) || config.casinoMinWin < 0)
+  )
+    throw new Error('Invalid minimum casino win.');
   const maxChance = config.casinoMaxChance ?? 50;
   const stepChance = config.casinoChanceStep ?? 2;
   if (
@@ -900,7 +905,8 @@ function beginTurn(state: GameState): void {
 function nextTurn(state: GameState, events: GameEvent[], rng: Rng): void {
   if (state.extraRoll && !activePlayer(state).eliminated) {
     state.extraRoll = false;
-    state.phase = 'roll';
+    state.phase =
+      state.config.travelOnDouble && activePlayer(state).travelPending ? 'travel' : 'roll';
     events.push({ type: 'extra_roll', playerId: activePlayer(state).id });
     return;
   }

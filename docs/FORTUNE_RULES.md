@@ -1,14 +1,14 @@
 # Casinos, assurance et Duel — édition 32 cases
 
-Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases conservent leur géographie et leurs cartes. Le protocole de salon v11 isole les éditions incompatibles.
+Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases conservent leur géographie et leurs cartes. Le protocole de salon v12 isole les éditions incompatibles.
 
 ## Plateau
 
-32 cases : carré de neuf cases par côté, coins inclus. Huit rues de deux villes réelles sont mélangées par graine partagée. Les tarifs restent attachés aux emplacements : les villes augmentent de 100 k à 475 k par pas de 25 k dans le sens horaire depuis Départ. Loyers et coûts de construction suivent ce même rang économique ; les îles conservent leur tarif commun. Les sauvegardes v9 gardent leurs anciens tarifs et leur assurance déplaçable. Les quatre îles, les trois Chance, les deux casinos, Assurance, Duel et les quatre coins restent fixes. La Taxe est en position 31, immédiatement avant Départ. Les sols identifient les rues ; seul le liseré extérieur identifie le propriétaire.
+32 cases : carré de neuf cases par côté, coins inclus. Six rues de deux villes et deux rues de trois villes sont mélangées par graine partagée, uniquement entre rues de même taille. Les tarifs restent attachés aux emplacements : les villes augmentent de 100 k à 475 k avec les deux nouveaux emplacements à 137,5 k et 337,5 k dans le sens horaire depuis Départ. Loyers et coûts de construction suivent ce même rang économique ; les îles conservent leur tarif commun. Les sauvegardes v9 gardent leurs anciens tarifs et leur assurance déplaçable. Les quatre îles, les deux Chance, le casino, Assurance, Duel et les quatre coins restent fixes. La Taxe est en position 31, immédiatement avant Départ. Les sols identifient les rues ; seul le liseré extérieur identifie le propriétaire.
 
 ## Casinos
 
-Chaque arrivée tire au sort roulette rouge/noir ou machine à sous. Entrée offerte, sans mise ni perte. Roulette gagnante : 2 % du solde. Deux symboles identiques : 2 % ; trois : 5 %. Le jackpot remplace ce gain par **10 % du solde du joueur au moment où il joue**. Les montants sont arrondis à l’unité inférieure.
+Chaque arrivée tire au sort roulette rouge/noir ou machine à sous (50 % chacune). Entrée offerte, sans mise ni perte. Roulette gagnante : 2 % du solde. Deux symboles identiques : 2 % ; trois : 5 %. Le jackpot remplace ce gain par **10 % du solde du joueur au moment où il joue**. Les montants sont arrondis à l’unité inférieure, avec un minimum de **50 k pour chaque résultat gagnant**, avant partage éventuel de l’alliance. Un résultat perdant rapporte toujours zéro.
 
 Chaque casino possède son compteur de visites : première visite 2 %, puis +2 points par visite, plafond 50 %. Un jackpot remet le compteur de ce casino à zéro ; la visite suivante offre 2 %. Passer son tour au casino ne déclenche aucun tirage de gain. Le choix et le résultat utilisent le même protocole aléatoire partagé que les dés ; les autres joueurs ne peuvent pas jouer à votre place.
 
@@ -46,7 +46,7 @@ Le bénéficiaire reçoit 50 % des nouveaux gains de la cible jusqu’à la fin 
 
 ## Duel pierre-feuille-ciseaux
 
-Le challenger choisit un adversaire hors équipe et une mise entière positive, au plus égale au plus petit des deux comptes. L’adversaire accepte ou refuse. L’acceptation dépose les deux mises dans le pot. Les humains verrouillent leurs choix par SHA-256 avec un secret local aléatoire ; chaque révélation est vérifiée. Les bots tirent leur main après le verrouillage humain, avec le hasard partagé. Pierre bat Ciseaux, Ciseaux bat Feuille, Feuille bat Pierre. Le gagnant reçoit les deux mises ; une égalité les rembourse.
+Le challenger choisit un adversaire hors équipe et une mise entière positive, au plus égale au plus petit des deux comptes. L’adversaire accepte ou refuse. L’acceptation dépose les deux mises dans le pot. Les humains verrouillent leurs choix par SHA-256 avec un secret local aléatoire ; chaque révélation est vérifiée. Les bots tirent leur main après le verrouillage humain, avec le hasard partagé. Pierre bat Ciseaux, Ciseaux bat Feuille, Feuille bat Pierre. Le gagnant reçoit les deux mises ; une égalité garde les mises dans le pot et relance les choix secrets jusqu’à un vainqueur, sans nouveau débit. Les comptes et plafonds de mise sont affichés.
 
 Après acceptation, abandon, reprise par bot ou expiration du délai donne le pot à l’adversaire : impossible d’annuler gratuitement après une révélation. L’expiration du temps total rembourse les mises avant le classement. En local, passez l’écran au joueur annoncé. Le secret est conservé en mémoire et dans le stockage de session ; sa perte nécessite l’abandon du duel. Les mises restent purement virtuelles.
 

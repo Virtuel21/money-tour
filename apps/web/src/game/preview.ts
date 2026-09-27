@@ -126,7 +126,7 @@ export function previewScenario(): LocalSave | null {
       createRng('visual-review:0'),
     );
     const dice = rolled.events.find((event) => event.type === 'dice')!.dice!;
-    const target = name === 'rent' ? 5 : name === 'tax' ? 31 : 3;
+    const target = name === 'rent' ? 5 : name === 'tax' ? 31 : 15;
     if (name === 'attack') state.deck = ['chance-15'];
     player.position = (target - dice.reduce((sum, value) => sum + value, 0) + 32) % 32;
   }

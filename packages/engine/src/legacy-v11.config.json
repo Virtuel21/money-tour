@@ -1,5 +1,5 @@
 {
-  "version": 12,
+  "version": 11,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -57,14 +57,9 @@
     },
     {
       "id": 3,
-      "name": "Coimbra",
-      "type": "city",
-      "group": "g1",
-      "color": "#bc7051",
-      "line": 0,
-      "price": 137500,
-      "rents": [13750, 27500, 55000, 96250, 165000],
-      "buildCosts": [0, 68750, 68750, 68750, 68750]
+      "name": "La bonne étoile",
+      "type": "chance",
+      "line": 0
     },
     {
       "id": 4,
@@ -199,15 +194,10 @@
       "buildCosts": [0, 162500, 162500, 162500, 162500]
     },
     {
+      "name": "Casino Royal",
+      "type": "casino",
       "id": 19,
-      "name": "Hambourg",
-      "type": "city",
-      "group": "g5",
-      "color": "#c2b2a0",
-      "line": 2,
-      "price": 337500,
-      "rents": [33750, 67500, 135000, 236250, 405000],
-      "buildCosts": [0, 168750, 168750, 168750, 168750]
+      "line": 2
     },
     {
       "id": 20,
@@ -501,8 +491,5 @@
   "crisisMaxCount": 2,
   "pricesFollowPosition": true,
   "insuranceSingleUse": true,
-  "bundledPurchase": true,
-  "duelReplayTies": true,
-  "travelOnDouble": true,
-  "casinoMinWin": 50000
+  "bundledPurchase": true
 }

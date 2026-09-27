@@ -1,3 +1,52 @@
+.duel-balances {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+.duel-balances > div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border: 2px solid #aac5c6;
+  border-radius: 12px;
+  background: #eff8f2;
+  color: #173943;
+  overflow-wrap: anywhere;
+}
+.duel-balances strong {
+  font-size: clamp(18px, 2vw, 26px);
+}
+.duel-balances small {
+  font-size: 12px;
+}
+.duel-view .decision-actions button {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+}
+.duel-view .decision-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+.duel-view .duel-hands {
+  font-size: 48px;
+  margin: 8px 0;
+}
+.duel-view .decision-actions button > small {
+  flex-basis: 100%;
+}
+@media (min-width: 1001px) {
+  .duel-balances {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .modal:has(.duel-view) {
+    width: min(880px, calc(100vw - 64px));
+    max-width: none;
+  }
+}
 .duration-picker {
   display: grid;
   gap: 6px;
@@ -484,13 +533,15 @@
   .game-layout .players .player-card {
     position: absolute;
     z-index: 12;
-    width: 232px;
+    width: clamp(260px, 23vw, 470px);
+    max-height: calc(50dvh - 28px);
+    overflow-y: auto;
     min-height: 98px;
-    padding: 12px;
+    padding: clamp(12px, 1vw, 22px);
     margin: 0;
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 58px minmax(0, 1fr);
     gap: 5px 10px;
     background: #fffaf0f5;
   }
@@ -511,19 +562,62 @@
     right: 16px;
   }
   .game-layout .players .player-card .avatar {
-    width: 48px;
-    height: 48px;
+    width: 58px;
+    height: 58px;
   }
   .game-layout .players .player-card strong {
-    font-size: 20px;
+    font-size: clamp(24px, 1.5vw, 32px);
   }
   .game-layout .players .player-card .property-count {
     grid-column: 1 / -1;
-    font-size: 11px;
+    font-size: 14px;
   }
   .game-layout .player-card .player-inventory,
   .game-layout .player-card .private-quest {
-    display: none;
+    display: block;
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  .game-layout .player-card .player-name {
+    font-size: clamp(18px, 1.2vw, 26px);
+    overflow-wrap: anywhere;
+  }
+  .game-layout .player-card .mini-properties {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+    overflow: visible;
+    gap: 7px;
+  }
+  .game-layout .mini-property {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr);
+    padding: 6px;
+    min-height: 58px;
+    text-align: left;
+  }
+  .game-layout .mini-property > span {
+    grid-row: span 2;
+    font-size: 22px;
+  }
+  .game-layout .mini-property b {
+    font-size: clamp(13px, 0.9vw, 18px);
+  }
+  .game-layout .mini-property small {
+    font-size: 13px;
+  }
+  .game-layout .empty-estate {
+    font-size: 13px;
+    padding: 8px 0;
+  }
+  .game-layout .bonus-tokens span {
+    font-size: 12px;
+  }
+  .game-layout .player-card .private-quest button {
+    font-size: 13px;
+    padding: 8px;
+  }
+  .game-layout .player-profile {
+    height: 82px;
   }
   .game-layout .board-area,
   .game-layout .board-area.zoomed {
@@ -551,22 +645,28 @@
     height: 100%;
   }
   .game-layout .adventure-banner {
-    position: absolute;
-    left: 16px;
-    top: 132px;
+    position: static;
+    grid-column: 1 / -1;
     transform: none;
-    width: 220px;
+    width: auto;
     z-index: 7;
     margin: 0;
     padding: 6px 12px;
     font-size: 11px;
   }
+  .game-layout .players .adventure-banner strong {
+    font-size: 14px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
   .game-layout .board-controls {
-    top: 130px;
+    top: 50%;
     right: 18px;
     left: auto;
     bottom: auto;
     display: grid;
+    transform: translateY(-50%);
     gap: 7px;
     width: 150px;
   }
@@ -591,7 +691,7 @@
     bottom: 14px;
     left: 50%;
     transform: translateX(-50%);
-    width: min(660px, calc(100% - 550px));
+    width: min(660px, calc(100% - 2 * clamp(260px, 23vw, 470px) - 48px));
     max-height: 30dvh;
     z-index: 15;
     overflow: auto;
