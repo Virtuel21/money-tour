@@ -166,7 +166,7 @@ describe('automatic decisions and presence', () => {
     state.players[0]!.position = 8;
     const next = step(state, 'tick', { elapsedMs: 30000 }, sequence(0.1, 0.2));
     expect(next.players[0]!.islandTurns).toBe(1);
-    expect(next.players[0]!.cash).toBe(config.initialCash);
+    expect(next.players[0]!.cash).toBe(state.config.initialCash);
   });
   it('declines an expired travel offer', () => {
     const state = game();

@@ -5,11 +5,11 @@ describe('published board and economic data', () => {
   it('contains exactly the 32 unique positions and requested board composition', () => {
     expect(config.board.map((tile) => tile.id)).toEqual(Array.from({ length: 32 }, (_, i) => i));
     const count = (type: string) => config.board.filter((tile) => tile.type === type).length;
-    expect(count('city')).toBe(16);
+    expect(count('city')).toBe(18);
     expect(count('resort')).toBe(4);
-    expect(count('chance')).toBe(3);
+    expect(count('chance')).toBe(2);
     expect(count('tax')).toBe(1);
-    expect(count('casino')).toBe(2);
+    expect(count('casino')).toBe(1);
     expect(count('insurance')).toBe(1);
     expect(count('duel')).toBe(1);
     expect([0, 8, 16, 24].map((i) => config.board[i]!.type)).toEqual([
@@ -20,21 +20,21 @@ describe('published board and economic data', () => {
     ]);
   });
 
-  it('defines eight complete pairs of cities', () => {
+  it('defines six pairs and two complete triples of cities', () => {
     const cities = config.board.filter((tile) => tile.type === 'city');
     const groups = Array.from(
       { length: 8 },
       (_, i) => cities.filter((tile) => tile.group === `g${i + 1}`).length,
     );
-    expect(groups).toEqual([2, 2, 2, 2, 2, 2, 2, 2]);
+    expect(groups).toEqual([3, 2, 2, 2, 3, 2, 2, 2]);
     expect(
       Array.from({ length: 4 }, (_, line) =>
         cities.filter((tile) => tile.line === line).map((tile) => tile.id),
       ),
     ).toEqual([
-      [1, 2, 5, 6],
+      [1, 2, 3, 5, 6],
       [9, 10, 13, 14],
-      [17, 18, 21, 22],
+      [17, 18, 19, 21, 22],
       [25, 26, 29, 30],
     ]);
   });
@@ -45,8 +45,10 @@ describe('published board and economic data', () => {
       expect(city.buildCosts).toHaveLength(5);
       expect(city.rents!.every(Number.isSafeInteger)).toBe(true);
       expect(city.buildCosts!.every(Number.isSafeInteger)).toBe(true);
-      expect(city.rents).toEqual([1, 2, 4, 7, 12].map((factor) => (city.price! * factor) / 10));
-      expect(city.buildCosts).toEqual([0, ...Array(4).fill(city.price! / 2)]);
+      expect(city.rents).toEqual(
+        [1, 2, 4, 7, 12].map((factor) => Math.round((city.price! * factor) / 10)),
+      );
+      expect(city.buildCosts).toEqual([0, ...Array(4).fill(Math.round(city.price! / 2))]);
     }
   });
 

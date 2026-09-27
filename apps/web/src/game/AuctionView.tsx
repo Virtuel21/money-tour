@@ -1,3 +1,4 @@
+import { scaledAmount } from '@money-tour/engine';
 import { useEffect, useRef, useState } from 'react';
 import {
   auctionCommitment,
@@ -25,7 +26,7 @@ export function AuctionView({
   // Network ticks briefly mark the session busy. Keep the form mounted so a
   // tick cannot steal keyboard focus or hide an offer while it is being typed.
   const canPlay = !actor.bot && (!self || self === actor.id);
-  const [amount, setAmount] = useState('50000');
+  const [amount, setAmount] = useState(String(scaledAmount(state.config, 50000)));
   const [opened, setOpened] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const secrets = useRef<Record<string, { amount: number; salt: string }>>({});
@@ -33,7 +34,7 @@ export function AuctionView({
   const key = (id: string) =>
     gameKey ? `money-tour.auction.${gameKey}.${a.id}.${id}` : legacyKey(id);
   useEffect(() => {
-    setAmount('50000');
+    setAmount(String(scaledAmount(state.config, 50000)));
     setOpened(false);
     setSubmitted(false);
   }, [a.id, actor.id]);
@@ -130,7 +131,7 @@ export function AuctionView({
                   readOnly={submitted}
                   min="1"
                   max={actor.cash}
-                  step="1000"
+                  step={scaledAmount(state.config, 1000)}
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                 />

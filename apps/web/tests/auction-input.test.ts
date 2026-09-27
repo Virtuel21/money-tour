@@ -33,14 +33,14 @@ it('keeps the typed offer and keyboard focus through repeated network busy/tick 
   const input = container.querySelector('input')!;
   input.focus();
   await act(() => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '73000');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '73');
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
   for (let i = 0; i < 5; i++) {
     await render(true);
     expect(container.querySelector('input')).toBe(input);
     expect(document.activeElement).toBe(input);
-    expect(input.value).toBe('73000');
+    expect(input.value).toBe('73');
     await render(false);
   }
   const seal = [...container.querySelectorAll('button')].find((b) =>

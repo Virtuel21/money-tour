@@ -1,3 +1,4 @@
+import { scaledAmount } from './economy.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { randomInt } from './rng.js';
 import { awardGain } from './world-events.js';
@@ -60,7 +61,7 @@ export function adventureText(s: GameState): string {
     case 'capital':
       return a.capitalPaid
         ? `Capitale mystère · ${name(a.capitalTile!)} a été révélée.`
-        : 'Capitale mystère · une ville cachée rapportera 200 k à son propriétaire en fin de partie.';
+        : `Capitale mystère · une ville cachée rapportera ${scaledAmount(s.config, 200000)} à son propriétaire en fin de partie.`;
   }
 }
 export function twinMultiplier(s: GameState, tile: number): number {
@@ -106,9 +107,9 @@ export function trackQuests(s: GameState, events: GameEvent[]): void {
       events.push({
         type: 'quest_completed',
         playerId: p.id,
-        message: `${p.name} a accompli « ${rule.title} » et remporte 100 k !`,
+        message: `${p.name} a accompli « ${rule.title} » et remporte ${scaledAmount(s.config, 100000)} !`,
       });
-      awardGain(s, p.id, 100000, events, 'quest');
+      awardGain(s, p.id, scaledAmount(s.config, 100000), events, 'quest');
     }
   }
 }
@@ -121,9 +122,9 @@ export function payCapital(s: GameState, events: GameEvent[]): void {
   events.push({
     type: 'capital_revealed',
     tile: a.capitalTile,
-    message: `La Capitale mystère était ${s.config.board[a.capitalTile!]!.name} ! ${p ? p.name + ' remporte 200 k.' : 'Sans propriétaire : aucun bonus versé.'}`,
+    message: `La Capitale mystère était ${s.config.board[a.capitalTile!]!.name} ! ${p ? p.name + ` remporte ${scaledAmount(s.config, 200000)}.` : 'Sans propriétaire : aucun bonus versé.'}`,
   });
-  if (p) awardGain(s, p.id, 200000, events, 'capital');
+  if (p) awardGain(s, p.id, scaledAmount(s.config, 200000), events, 'capital');
 }
 export function maybeAuction(s: GameState, rng: Rng, events: GameEvent[]): void {
   const a = s.adventure;

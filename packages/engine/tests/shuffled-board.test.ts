@@ -24,7 +24,7 @@ it('reproduces each layout from the seed and varies complete streets across game
     expect(cities.map((t) => [t.price, t.rents, t.buildCosts])).toEqual(
       reference.map((t) => [t.price, t.rents, t.buildCosts]),
     );
-    expect(board.filter((t) => t.type === 'chance')).toHaveLength(3);
+    expect(board.filter((t) => t.type === 'chance')).toHaveLength(2);
     expect(board.filter((t) => t.type === 'tax').map((t) => t.id)).toEqual([31]);
     expect([0, 8, 16, 24].map((i) => board[i]!.type)).toEqual([
       'start',
@@ -60,14 +60,14 @@ it('rejects corrupted shuffled saves without allowing economic changes or split 
   expect(sameRules(altered, config)).toBe(false);
 });
 it('pays salary once across the new 32-space boundary and charges the fixed tax', () => {
-  const state = createGame({ ...options, seed: 42 });
+  const state = createGame({ ...options, config: { ...config, adventures: false }, seed: 42 });
   state.players[0]!.position = 30;
   const salary = reduceGame(state, { type: 'roll', playerId: 'a' }, sequence(0, 0.2));
   expect(salary.state.players[0]!.position).toBe(1);
-  expect(salary.state.players[0]!.cash).toBe(1800000);
+  expect(salary.state.players[0]!.cash).toBe(1800);
   expect(salary.events.filter((e) => e.type === 'start_bonus')).toHaveLength(1);
   state.players[0]!.position = 29;
   const tax = reduceGame(state, { type: 'roll', playerId: 'a' }, sequence(0, 0));
   expect(tax.state.players[0]!.position).toBe(31);
-  expect(tax.state.players[0]!.cash).toBe(1450000);
+  expect(tax.state.players[0]!.cash).toBe(1450);
 });

@@ -35,6 +35,7 @@ it('blocks only the insured property and only the first hostile purchase', () =>
   expect(other.error).toBeUndefined();
   expect(other.state.properties[2]!.ownerId).toBe('b');
   expect(other.state.players[0]!.insurance).toEqual({ tile: 1 });
+  other.state.phase = 'property'; // A later visit.
   other.state.players[1]!.position = 1;
   const blocked = reduceGame(other.state, { type: 'buyout', playerId: 'b' });
   expect(blocked.error).toBeUndefined();
@@ -51,7 +52,7 @@ it('does not recycle a placed token when selling its protected property', () => 
   const s = reduceGame(game(), { type: 'insure', playerId: 'a', tile: 1 }).state;
   s.phase = 'debt';
   s.players[0]!.cash = 0;
-  s.debt = { playerId: 'a', creditorId: null, amount: 40000, reason: 'tax', continuation: 'end' };
+  s.debt = { playerId: 'a', creditorId: null, amount: 40, reason: 'tax', continuation: 'end' };
   const sold = reduceGame(s, { type: 'sell', playerId: 'a', tile: 1 });
   expect(sold.error).toBeUndefined();
   expect(sold.state.players[0]!.insurance).toBeUndefined();

@@ -1,7 +1,7 @@
 {
-  "version": 12,
-  "initialCash": 1500,
-  "startBonus": 300,
+  "version": 11,
+  "initialCash": 1500000,
+  "startBonus": 300000,
   "durationMs": 1200000,
   "actionTimeoutMs": 30000,
   "minPlayers": 2,
@@ -11,9 +11,9 @@
   "diceSides": 6,
   "doublesToIsland": 3,
   "maxIslandTurns": 3,
-  "islandFee": 200,
-  "championshipFee": 50,
-  "travelFee": 50,
+  "islandFee": 200000,
+  "championshipFee": 50000,
+  "travelFee": 50000,
   "festivalCount": 3,
   "festivalMultiplier": 2,
   "initialMaxLevel": 3,
@@ -21,11 +21,11 @@
   "buyoutMultiplier": 2,
   "resaleRate": 0.5,
   "taxRate": 0.1,
-  "taxBase": 50,
-  "resortRents": [50, 100, 200, 500],
+  "taxBase": 50000,
+  "resortRents": [50000, 100000, 200000, 500000],
   "maxResolutionDepth": 16,
   "simulationActionLimit": 5000,
-  "botReserve": 250,
+  "botReserve": 250000,
   "board": [
     {
       "id": 0,
@@ -40,9 +40,9 @@
       "group": "g1",
       "color": "#bc7051",
       "line": 0,
-      "price": 100,
-      "rents": [10, 20, 40, 70, 120],
-      "buildCosts": [0, 50, 50, 50, 50]
+      "price": 100000,
+      "rents": [10000, 20000, 40000, 70000, 120000],
+      "buildCosts": [0, 50000, 50000, 50000, 50000]
     },
     {
       "id": 2,
@@ -51,26 +51,21 @@
       "group": "g1",
       "color": "#bc7051",
       "line": 0,
-      "price": 125,
-      "rents": [13, 25, 50, 88, 150],
-      "buildCosts": [0, 63, 63, 63, 63]
+      "price": 125000,
+      "rents": [12500, 25000, 50000, 87500, 150000],
+      "buildCosts": [0, 62500, 62500, 62500, 62500]
     },
     {
       "id": 3,
-      "name": "Coimbra",
-      "type": "city",
-      "group": "g1",
-      "color": "#bc7051",
-      "line": 0,
-      "price": 140,
-      "rents": [14, 28, 56, 98, 168],
-      "buildCosts": [0, 70, 70, 70, 70]
+      "name": "La bonne étoile",
+      "type": "chance",
+      "line": 0
     },
     {
       "id": 4,
       "name": "Bali",
       "type": "resort",
-      "price": 200,
+      "price": 200000,
       "line": 0
     },
     {
@@ -80,9 +75,9 @@
       "group": "g2",
       "color": "#47735b",
       "line": 0,
-      "price": 150,
-      "rents": [15, 30, 60, 105, 180],
-      "buildCosts": [0, 75, 75, 75, 75]
+      "price": 150000,
+      "rents": [15000, 30000, 60000, 105000, 180000],
+      "buildCosts": [0, 75000, 75000, 75000, 75000]
     },
     {
       "id": 6,
@@ -91,9 +86,9 @@
       "group": "g2",
       "color": "#47735b",
       "line": 0,
-      "price": 175,
-      "rents": [18, 35, 70, 123, 210],
-      "buildCosts": [0, 88, 88, 88, 88]
+      "price": 175000,
+      "rents": [17500, 35000, 70000, 122500, 210000],
+      "buildCosts": [0, 87500, 87500, 87500, 87500]
     },
     {
       "name": "Casino Riviera",
@@ -114,9 +109,9 @@
       "group": "g3",
       "color": "#a9cb87",
       "line": 1,
-      "price": 200,
-      "rents": [20, 40, 80, 140, 240],
-      "buildCosts": [0, 100, 100, 100, 100]
+      "price": 200000,
+      "rents": [20000, 40000, 80000, 140000, 240000],
+      "buildCosts": [0, 100000, 100000, 100000, 100000]
     },
     {
       "id": 10,
@@ -125,9 +120,9 @@
       "group": "g3",
       "color": "#a9cb87",
       "line": 1,
-      "price": 225,
-      "rents": [23, 45, 90, 158, 270],
-      "buildCosts": [0, 113, 113, 113, 113]
+      "price": 225000,
+      "rents": [22500, 45000, 90000, 157500, 270000],
+      "buildCosts": [0, 112500, 112500, 112500, 112500]
     },
     {
       "name": "Assurance voyage",
@@ -139,7 +134,7 @@
       "id": 12,
       "name": "Malte",
       "type": "resort",
-      "price": 200,
+      "price": 200000,
       "line": 1
     },
     {
@@ -149,9 +144,9 @@
       "group": "g4",
       "color": "#8296a0",
       "line": 1,
-      "price": 250,
-      "rents": [25, 50, 100, 175, 300],
-      "buildCosts": [0, 125, 125, 125, 125]
+      "price": 250000,
+      "rents": [25000, 50000, 100000, 175000, 300000],
+      "buildCosts": [0, 125000, 125000, 125000, 125000]
     },
     {
       "id": 14,
@@ -160,9 +155,9 @@
       "group": "g4",
       "color": "#8296a0",
       "line": 1,
-      "price": 275,
-      "rents": [28, 55, 110, 193, 330],
-      "buildCosts": [0, 138, 138, 138, 138]
+      "price": 275000,
+      "rents": [27500, 55000, 110000, 192500, 330000],
+      "buildCosts": [0, 137500, 137500, 137500, 137500]
     },
     {
       "id": 15,
@@ -183,9 +178,9 @@
       "group": "g5",
       "color": "#c2b2a0",
       "line": 2,
-      "price": 300,
-      "rents": [30, 60, 120, 210, 360],
-      "buildCosts": [0, 150, 150, 150, 150]
+      "price": 300000,
+      "rents": [30000, 60000, 120000, 210000, 360000],
+      "buildCosts": [0, 150000, 150000, 150000, 150000]
     },
     {
       "id": 18,
@@ -194,26 +189,21 @@
       "group": "g5",
       "color": "#c2b2a0",
       "line": 2,
-      "price": 325,
-      "rents": [33, 65, 130, 228, 390],
-      "buildCosts": [0, 163, 163, 163, 163]
+      "price": 325000,
+      "rents": [32500, 65000, 130000, 227500, 390000],
+      "buildCosts": [0, 162500, 162500, 162500, 162500]
     },
     {
+      "name": "Casino Royal",
+      "type": "casino",
       "id": 19,
-      "name": "Hambourg",
-      "type": "city",
-      "group": "g5",
-      "color": "#c2b2a0",
-      "line": 2,
-      "price": 340,
-      "rents": [34, 68, 136, 238, 408],
-      "buildCosts": [0, 170, 170, 170, 170]
+      "line": 2
     },
     {
       "id": 20,
       "name": "Maurice",
       "type": "resort",
-      "price": 200,
+      "price": 200000,
       "line": 2
     },
     {
@@ -223,9 +213,9 @@
       "group": "g6",
       "color": "#e9b794",
       "line": 2,
-      "price": 350,
-      "rents": [35, 70, 140, 245, 420],
-      "buildCosts": [0, 175, 175, 175, 175]
+      "price": 350000,
+      "rents": [35000, 70000, 140000, 245000, 420000],
+      "buildCosts": [0, 175000, 175000, 175000, 175000]
     },
     {
       "id": 22,
@@ -234,9 +224,9 @@
       "group": "g6",
       "color": "#e9b794",
       "line": 2,
-      "price": 375,
-      "rents": [38, 75, 150, 263, 450],
-      "buildCosts": [0, 188, 188, 188, 188]
+      "price": 375000,
+      "rents": [37500, 75000, 150000, 262500, 450000],
+      "buildCosts": [0, 187500, 187500, 187500, 187500]
     },
     {
       "name": "Le grand duel",
@@ -257,9 +247,9 @@
       "group": "g7",
       "color": "#62bdb6",
       "line": 3,
-      "price": 400,
-      "rents": [40, 80, 160, 280, 480],
-      "buildCosts": [0, 200, 200, 200, 200]
+      "price": 400000,
+      "rents": [40000, 80000, 160000, 280000, 480000],
+      "buildCosts": [0, 200000, 200000, 200000, 200000]
     },
     {
       "id": 26,
@@ -268,9 +258,9 @@
       "group": "g7",
       "color": "#62bdb6",
       "line": 3,
-      "price": 425,
-      "rents": [43, 85, 170, 298, 510],
-      "buildCosts": [0, 213, 213, 213, 213]
+      "price": 425000,
+      "rents": [42500, 85000, 170000, 297500, 510000],
+      "buildCosts": [0, 212500, 212500, 212500, 212500]
     },
     {
       "id": 27,
@@ -282,7 +272,7 @@
       "id": 28,
       "name": "Santorin",
       "type": "resort",
-      "price": 200,
+      "price": 200000,
       "line": 3
     },
     {
@@ -290,9 +280,9 @@
       "type": "city",
       "group": "g8",
       "color": "#805965",
-      "price": 450,
-      "rents": [45, 90, 180, 315, 540],
-      "buildCosts": [0, 225, 225, 225, 225],
+      "price": 450000,
+      "rents": [45000, 90000, 180000, 315000, 540000],
+      "buildCosts": [0, 225000, 225000, 225000, 225000],
       "id": 29,
       "line": 3
     },
@@ -301,9 +291,9 @@
       "type": "city",
       "group": "g8",
       "color": "#805965",
-      "price": 475,
-      "rents": [48, 95, 190, 333, 570],
-      "buildCosts": [0, 238, 238, 238, 238],
+      "price": 475000,
+      "rents": [47500, 95000, 190000, 332500, 570000],
+      "buildCosts": [0, 237500, 237500, 237500, 237500],
       "id": 30,
       "line": 3
     },
@@ -318,44 +308,44 @@
     {
       "id": "chance-01",
       "title": "Prime de quartier",
-      "description": "Recevez 200.",
+      "description": "Recevez 200 000.",
       "effect": "cash",
-      "amount": 200
+      "amount": 200000
     },
     {
       "id": "chance-02",
       "title": "Marché du dimanche",
-      "description": "Recevez 100.",
+      "description": "Recevez 100 000.",
       "effect": "cash",
-      "amount": 100
+      "amount": 100000
     },
     {
       "id": "chance-03",
       "title": "Belle saison",
-      "description": "Recevez 150.",
+      "description": "Recevez 150 000.",
       "effect": "cash",
-      "amount": 150
+      "amount": 150000
     },
     {
       "id": "chance-04",
       "title": "Réparation urgente",
-      "description": "Payez 100.",
+      "description": "Payez 100 000.",
       "effect": "cash",
-      "amount": -100
+      "amount": -100000
     },
     {
       "id": "chance-05",
       "title": "Assurance annuelle",
-      "description": "Payez 150.",
+      "description": "Payez 150 000.",
       "effect": "cash",
-      "amount": -150
+      "amount": -150000
     },
     {
       "id": "chance-06",
       "title": "Travaux de voirie",
-      "description": "Payez 200.",
+      "description": "Payez 200 000.",
       "effect": "cash",
-      "amount": -200
+      "amount": -200000
     },
     {
       "id": "chance-07",
@@ -420,30 +410,30 @@
     {
       "id": "chance-15",
       "title": "Raid sur la banque",
-      "description": "Prenez jusqu’à 100 au rival le plus riche. Ses réserves ne peuvent pas devenir négatives.",
+      "description": "Prenez jusqu’à 100 000 au rival le plus riche. Ses réserves ne peuvent pas devenir négatives.",
       "effect": "steal",
-      "amount": 100
+      "amount": 100000
     },
     {
       "id": "chance-16",
       "title": "Coup de filet",
-      "description": "Prenez jusqu’à 50 à chaque adversaire. Vos coéquipiers sont épargnés.",
+      "description": "Prenez jusqu’à 50 000 à chaque adversaire. Vos coéquipiers sont épargnés.",
       "effect": "levy",
-      "amount": 50
+      "amount": 50000
     },
     {
       "id": "chance-17",
       "title": "Contrôle fiscal",
-      "description": "Payez 120 à la banque.",
+      "description": "Payez 120 000 à la banque.",
       "effect": "cash",
-      "amount": -120
+      "amount": -120000
     },
     {
       "id": "chance-18",
       "title": "Bourse de voyage",
-      "description": "Recevez 180.",
+      "description": "Recevez 180 000.",
       "effect": "cash",
-      "amount": 180
+      "amount": 180000
     },
     {
       "id": "chance-19",
@@ -490,7 +480,7 @@
   "casinoBaseChance": 2,
   "casinoChanceStep": 2,
   "casinoMaxChance": 50,
-  "karmaAmount": 50,
+  "karmaAmount": 50000,
   "fraudDiscount": 0.5,
   "crisisChance": 4,
   "adventures": true,
@@ -501,10 +491,5 @@
   "crisisMaxCount": 2,
   "pricesFollowPosition": true,
   "insuranceSingleUse": true,
-  "bundledPurchase": true,
-  "duelReplayTies": true,
-  "travelOnDouble": true,
-  "casinoMinWin": 50,
-  "moneyDivisor": 1000,
-  "singlePropertyDecision": true
+  "bundledPurchase": true
 }

@@ -88,7 +88,7 @@ describe('party rules and private milestones', () => {
     const owned = Object.entries(s.properties).filter(([, p]) => p.ownerId);
     expect(owned).toHaveLength(2);
     expect(new Set(owned.map(([, p]) => p.ownerId)).size).toBe(2);
-    expect(Math.max(...owned.map(([id]) => s.config.board[Number(id)]!.price!))).toBe(125000);
+    expect(Math.max(...owned.map(([id]) => s.config.board[Number(id)]!.price!))).toBe(125);
   });
   it('doubles twin rents only while one player owns both', () => {
     const s = game();
@@ -121,12 +121,12 @@ describe('party rules and private milestones', () => {
           .forEach((t) => (s.properties[t.id]!.ownerId = 'a'));
       trackQuests(s, events);
       expect(s.quests!.a.completed).toBe(true);
-      expect(s.players[0]!.cash).toBe(1600000);
+      expect(s.players[0]!.cash).toBe(1600);
       expect(events.some((e) => e.type === 'quest_completed' && e.message?.includes('Alice'))).toBe(
         true,
       );
       trackQuests(s, []);
-      expect(s.players[0]!.cash).toBe(1600000);
+      expect(s.players[0]!.cash).toBe(1600);
     },
   );
   it('does not reward partial or eliminated objectives and transfers an alliance share', () => {
@@ -134,24 +134,24 @@ describe('party rules and private milestones', () => {
     s.quests!.a = { kind: 'doubles', progress: 1, completed: false };
     s.players[1]!.eliminated = true;
     trackQuests(s, []);
-    expect(s.players[0]!.cash).toBe(1500000);
+    expect(s.players[0]!.cash).toBe(1500);
     s.players[1]!.eliminated = false;
     s.alliance = { targetId: 'a', beneficiaryId: 'b' };
     s.quests!.a.progress = 3;
     trackQuests(s, []);
-    expect(s.players.map((p) => p.cash)).toEqual([1550000, 1550000]);
+    expect(s.players.map((p) => p.cash)).toEqual([1550, 1550]);
   });
   it('reveals and credits the capital before the timeout ranking', () => {
     const s = game('capital');
     s.properties[s.adventure!.capitalTile!]!.ownerId = 'a';
-    s.players[1]!.cash = 1500000 + s.config.board[s.adventure!.capitalTile!]!.price! + 100000;
+    s.players[1]!.cash = 1500 + s.config.board[s.adventure!.capitalTile!]!.price! + 100;
     s.elapsedMs = s.durationMs - 1;
     const r = step(s, { type: 'tick', elapsedMs: 1 });
     expect(r.state.winner!.playerIds).toEqual(['a']);
     expect(r.events.some((e) => e.type === 'capital_revealed')).toBe(true);
-    expect(r.state.players[0]!.cash).toBe(1700000);
+    expect(r.state.players[0]!.cash).toBe(1700);
     payCapital(r.state, []);
-    expect(r.state.players[0]!.cash).toBe(1700000);
+    expect(r.state.players[0]!.cash).toBe(1700);
     expect(adventureText(r.state)).toContain('révélée');
   });
   it('announces an unowned capital without minting money', () => {
@@ -159,7 +159,7 @@ describe('party rules and private milestones', () => {
       events = [] as Parameters<typeof payCapital>[1];
     payCapital(s, events);
     expect(events[0]!.message).toContain('aucun bonus');
-    expect(s.players[0]!.cash).toBe(1500000);
+    expect(s.players[0]!.cash).toBe(1500);
   });
   it('reserves the market city and opens exactly at full round 10', () => {
     const s = game('market'),
@@ -198,40 +198,42 @@ describe('sealed one-off tenders', () => {
   it('accepts sealed bids, rejects early/wrong/oversized reveals, and charges only the highest', () => {
     let s = auction();
     expect(getDecisionPlayerId(s)).toBe('a');
-    s = commit(s, 'a', 123456);
+    s = commit(s, 'a', 123);
     expect(s.auction!.bids).toEqual({});
     expect(
-      legalAuction(s, { type: 'auction_reveal', playerId: 'a', amount: 123456, salt: salts.a }),
+      legalAuction(s, { type: 'auction_reveal', playerId: 'a', amount: 123, salt: salts.a }),
     ).toBe(false);
-    s = commit(s, 'b', 76543);
+    s = commit(s, 'b', 77);
     expect(
-      legalAuction(s, { type: 'auction_reveal', playerId: 'a', amount: 123457, salt: salts.a }),
+      legalAuction(s, { type: 'auction_reveal', playerId: 'a', amount: 124, salt: salts.a }),
     ).toBe(false);
     expect(
-      legalAuction(s, { type: 'auction_reveal', playerId: 'a', amount: 2000000, salt: salts.a }),
+      legalAuction(s, { type: 'auction_reveal', playerId: 'a', amount: 2000, salt: salts.a }),
     ).toBe(false);
-    s = reveal(s, 'a', 123456).state;
+    s = reveal(s, 'a', 123).state;
     const tile = s.auction!.tile;
-    const r = reveal(s, 'b', 76543);
-    expect(r.state.players.map((p) => p.cash)).toEqual([1376544, 1500000]);
+    const r = reveal(s, 'b', 77);
+    expect(r.state.players.map((p) => p.cash)).toEqual([1377, 1500]);
     expect(r.state.properties[tile]!.ownerId).toBe('a');
     expect(r.state.phase).toBe('roll');
-    expect(r.events[0]!.message).not.toContain('123456');
+    expect(r.events.find((e) => e.type === 'auction_result')!.message).not.toContain('123');
     expect(r.state.auction).toBeUndefined();
     maybeAuction(r.state, () => 0, []);
     expect(r.state.auction).toBeUndefined();
   });
   it('randomly breaks equal highest bids and zero bids do not purchase', () => {
     let s = auction();
-    s = commit(s, 'a', 10000);
-    s = commit(s, 'b', 10000);
-    s = reveal(s, 'a', 10000).state;
-    const r = reveal(s, 'b', 10000);
-    expect(r.events[0]!.message).toContain('tirage au sort');
+    s = commit(s, 'a', 10);
+    s = commit(s, 'b', 10);
+    s = reveal(s, 'a', 10).state;
+    const r = reveal(s, 'b', 10);
+    expect(r.events.find((e) => e.type === 'auction_result')!.message).toContain('tirage au sort');
     s = auction();
     s = commit(s, 'a', 0);
     s = step(s, { type: 'auction_pass', playerId: 'b' }).state;
-    expect(reveal(s, 'a', 0).events[0]!.message).toContain('Aucune offre');
+    expect(reveal(s, 'a', 0).events.find((e) => e.type === 'auction_result')!.message).toContain(
+      'Aucune offre',
+    );
   });
   it('passes timed out bidders, permits all to decline and cancels without debit at game expiry', () => {
     let s = auction();
@@ -240,11 +242,11 @@ describe('sealed one-off tenders', () => {
     s = step(s, { type: 'auction_pass', playerId: 'b' }).state;
     expect(s.auction).toBeUndefined();
     s = auction();
-    s = commit(s, 'a', 9000);
-    s = commit(s, 'b', 8000);
+    s = commit(s, 'a', 9);
+    s = commit(s, 'b', 8);
     const r = step(s, { type: 'tick', elapsedMs: s.durationMs });
     expect(r.state.auction).toBeUndefined();
-    expect(r.state.players.map((p) => p.cash)).toEqual([1500000, 1500000]);
+    expect(r.state.players.map((p) => p.cash)).toEqual([1500, 1500]);
     expect(r.events.some((e) => e.message?.includes('annulée'))).toBe(true);
   });
   it('bots complete both phases without inspecting competitors offers', () => {
@@ -328,8 +330,8 @@ it('runs each variant through deterministic bot play without corrupting saves', 
 
 it('withdraws a human envelope safely when a bot takes over after commitment', () => {
   let s = auction();
-  s = commit(s, 'a', 12345);
-  s = commit(s, 'b', 54321);
+  s = commit(s, 'a', 12);
+  s = commit(s, 'b', 54);
   s = step(s, { type: 'set_control', playerId: 'a', bot: true }).state;
   expect(chooseBotAction(s)).toEqual({ type: 'auction_pass', playerId: 'a' });
   s = step(s, chooseBotAction(s)).state;

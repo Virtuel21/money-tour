@@ -19,7 +19,7 @@ it('replays one selected building purchase identically on both peers and present
   const r = execute(state, command);
   expect(execute(JSON.parse(JSON.stringify(state)), command)).toEqual(r);
   expect(r.state.properties[5]!.level).toBe(3);
-  expect(r.state.players[0]!.cash).toBe(1125000);
+  expect(r.state.players[0]!.cash).toBe(1125);
   const frames = presentation(state, r.state, r.events);
   expect(
     frames.filter((f) => f.cue.kind === 'build').map((f) => f.state.properties[5]!.level),

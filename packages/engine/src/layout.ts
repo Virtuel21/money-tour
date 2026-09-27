@@ -4,6 +4,33 @@ import type { GameConfig, Rng } from './types.js';
 export function shuffleStreets(config: GameConfig, rng: Rng): void {
   const groups = [...new Set(config.board.filter((t) => t.type === 'city').map((t) => t.group!))];
   const streets = groups.map((group) => config.board.filter((t) => t.group === group));
+  if (new Set(streets.map((s) => s.length)).size > 1) {
+    // Streets may only trade places with another street of the same length.
+    for (const size of [...new Set(streets.map((s) => s.length))]) {
+      const slots = streets.filter((s) => s.length === size);
+      const shuffled = [...slots];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const value = rng();
+        if (!Number.isFinite(value) || value < 0 || value >= 1)
+          throw new Error('Invalid RNG output');
+        const j = Math.floor(value * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j]!, shuffled[i]!];
+      }
+      slots.forEach((street, index) =>
+        street.forEach((slot, offset) => {
+          config.board[slot.id] = {
+            ...shuffled[index]![offset]!,
+            id: slot.id,
+            line: slot.line,
+            ...(config.pricesFollowPosition
+              ? { price: slot.price, rents: slot.rents, buildCosts: slot.buildCosts }
+              : {}),
+          };
+        }),
+      );
+    }
+    return;
+  }
   for (let i = streets.length - 1; i > 0; i--) {
     const value = rng();
     if (!Number.isFinite(value) || value < 0 || value >= 1) throw new Error('Invalid RNG output');
@@ -58,8 +85,13 @@ export function sameRules(candidate: GameConfig, reference: GameConfig): boolean
         JSON.stringify(a[i]!.buildCosts) !== JSON.stringify(b[i]!.buildCosts))
     )
       return false;
-    if (b[i]!.type === 'city' && b[i - 1]?.type !== 'city' && a[i]!.group !== a[i + 1]?.group)
-      return false;
+    if (b[i]!.type === 'city') {
+      const expected = b
+        .filter((t) => t.type === 'city' && t.group === b[i]!.group)
+        .map((t) => t.id);
+      const actual = a.filter((t) => t.type === 'city' && t.group === a[i]!.group).map((t) => t.id);
+      if (JSON.stringify(expected) !== JSON.stringify(actual)) return false;
+    }
   }
   return true;
 }

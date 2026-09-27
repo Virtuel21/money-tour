@@ -1,3 +1,5 @@
+import { eventText } from './game/journal';
+import type { BonusInfo } from './game/bonuses';
 import { MobileTiles } from './game/MobileTiles';
 import { useMobile } from './game/useMobile';
 import { MobilePocket } from './game/MobilePocket';
@@ -18,8 +20,6 @@ import {
   adventureText,
   reservedCity,
   type GameAction,
-  type GameEvent,
-  type GameState,
 } from '@money-tour/engine';
 const Board = lazy(() => import('./board/Board3D'));
 import { usePresentation } from './game/usePresentation';
@@ -119,74 +119,6 @@ function Modal({
     </dialog>
   );
 }
-function eventText(event: GameEvent, state: GameState): string {
-  const name = state.players.find((p) => p.id === event.playerId)?.name ?? 'La banque';
-  const tile = event.tile !== undefined ? state.config.board[event.tile]?.name : '';
-  switch (event.type) {
-    case 'alliance':
-    case 'alliance_expired':
-    case 'crisis':
-    case 'crisis_expired':
-    case 'auction_started':
-    case 'auction_result':
-    case 'quest_completed':
-    case 'capital_revealed':
-    case 'duel_result':
-    case 'duel_started':
-    case 'duel_forfeit':
-    case 'duel_cancelled':
-      return String(event.message);
-    case 'casino_result':
-      return `${name} au casino : ${event.jackpot ? 'jackpot ! ' : ''}+${money(event.amount ?? 0, true)}.`;
-    case 'insurance':
-    case 'insured':
-    case 'squatter':
-    case 'karma':
-      return `${name} : ${event.message}`;
-    case 'expropriate':
-      return `${tile} a été expropriée et redevient libre.`;
-    case 'roaches':
-      return `${tile} : loyer divisé par deux pendant deux tours.`;
-    case 'insured_tile':
-      return `${name} assure ${tile}.`;
-    case 'dice':
-      return `${name} lance ${event.dice?.join(' + ')}.`;
-    case 'purchase':
-      return `${name} achète ${tile} pour ${money(event.amount ?? 0, true)}.`;
-    case 'buyout':
-      return `${name} rachète ${tile}.`;
-    case 'build':
-      return `${name} construit à ${tile}.`;
-    case 'card':
-      return `${name} : ${event.message}`;
-    case 'payment':
-      return `${event.reason === 'rent' ? 'Loyer payé' : event.reason === 'attack' ? 'Attaque' : 'Versement'} : ${state.players.find((p) => p.id === event.payerId)?.name ?? 'Banque'} → ${event.playerId ? name : 'Banque'} · ${money(event.amount ?? 0, true)}.`;
-    case 'start_bonus':
-      return `${name} passe Départ : +${money(event.amount ?? 0, true)}.`;
-    case 'bankruptcy':
-      return `${name} fait faillite.`;
-    case 'sale':
-      return `${name} vend ${tile}.`;
-    case 'island':
-      return `${name} fait escale sur l’île perdue.`;
-    case 'island_exit':
-      return `${name} quitte l’île.`;
-    case 'championship_expired':
-      return `Le Mondial de ${tile} est terminé.`;
-    case 'championship':
-      return `${name} organise un championnat à ${tile}.`;
-    case 'travel':
-      return `${name} s’envole vers ${tile}.`;
-    case 'timeout':
-      return `${name} : décision automatique après 30 secondes.`;
-    case 'quit':
-      return `${name} quitte la partie.`;
-    case 'victory':
-      return 'La partie est terminée !';
-    default:
-      return '';
-  }
-}
 const demo = createGame({
   config: { ...config, shuffleStreets: false },
   players: [
@@ -219,8 +151,23 @@ export default function App() {
     previewScenario() ? 'game' : 'menu',
   );
   const [modal, setModal] = useState<
-    'tutorial' | 'rules' | 'credits' | 'settings' | 'tiles' | 'leave' | 'online' | 'pocket' | null
+    | 'tutorial'
+    | 'rules'
+    | 'credits'
+    | 'settings'
+    | 'tiles'
+    | 'leave'
+    | 'online'
+    | 'pocket'
+    | 'bonus'
+    | 'journal'
+    | null
   >(location.hash.includes('room=') ? 'online' : null);
+  const [selectedBonus, setSelectedBonus] = useState<BonusInfo | null>(null);
+  const showBonus = (bonus: BonusInfo) => {
+    setSelectedBonus(bonus);
+    setModal('bonus');
+  };
   const [createSalon, setCreateSalon] = useState(false);
   const [online, setOnline] = useState<SessionView | null>(null);
   const onlineSession = useRef<Session | null>(null);
@@ -246,7 +193,7 @@ export default function App() {
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
-  const [history, setHistory] = useState<string[]>([]),
+  const [history, setHistory] = useState<string[]>(save?.history ?? []),
     [notice, setNotice] = useState('');
   const dispatchRef = useRef<(action: GameAction) => void>(() => {});
   const cinema = usePresentation(save?.state ?? demo, reduced, !!online);
@@ -302,9 +249,10 @@ export default function App() {
       return;
     }
     cinema.present(next.state, result.events);
-    setSave(next);
     const messages = result.events.map((e) => eventText(e, next.state)).filter(Boolean);
-    if (messages.length) setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
+    next.history = [...messages.slice().reverse(), ...history];
+    setSave(next);
+    if (messages.length) setHistory((old) => [...messages.reverse(), ...old]);
   };
   dispatchRef.current = act;
   useEffect(() => {
@@ -393,7 +341,9 @@ export default function App() {
       case 'buyout':
         return `Racheter · ${money(getPropertyValue(current, tile.id) * config.buyoutMultiplier, true)}`;
       case 'upgrade':
-        return `Construire · ${money(tile.buildCosts?.[(current.properties[tile.id]?.level ?? 0) + 1] ?? 0, true)}`;
+        return current.config.singlePropertyDecision
+          ? 'Choisir mes constructions'
+          : `Construire · ${money(tile.buildCosts?.[(current.properties[tile.id]?.level ?? 0) + 1] ?? 0, true)}`;
       case 'finish':
         if (current.phase === 'championship') return 'Ne pas organiser le Mondial';
         return current.extraRoll
@@ -797,7 +747,12 @@ export default function App() {
                       ⚠ Taxe : {money(p.fraudLiability, true)}
                     </small>
                   )}
-                  <PlayerInventory state={current} player={p} onTile={chooseTile} />
+                  <PlayerInventory
+                    state={current}
+                    player={p}
+                    onTile={chooseTile}
+                    onBonus={showBonus}
+                  />
                   {p.id === (online?.self ?? active.id) && (
                     <PrivateQuest
                       key={p.id + current.turn}
@@ -806,11 +761,12 @@ export default function App() {
                       self={online?.self}
                     />
                   )}
+                  {!mobile && i === 0 && <AdventureBanner state={current} />}
                 </article>
               ))}
             </div>
             <section className="board-area">
-              <AdventureBanner state={current} />
+              {mobile && <AdventureBanner state={current} />}
               <div className="board-viewport">
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
@@ -843,7 +799,7 @@ export default function App() {
                         : 'Votre aventure continue…'
                       : mobile && options.length && !interactionDisabled
                         ? current.phase === 'championship'
-                          ? 'Touchez une ville éclairée · Mondial 50 k'
+                          ? 'Touchez une ville éclairée · Mondial 50'
                           : 'Touchez une case éclairée pour la choisir'
                         : display.dice.length
                           ? 'Dés : ' +
@@ -859,6 +815,7 @@ export default function App() {
                 )}
               </div>
               <div className="board-controls">
+                <button onClick={() => setModal('journal')}>Journal des actions</button>
                 <button onClick={() => setModal('tiles')}>
                   {mobile && options.length && !interactionDisabled
                     ? 'Choisir une case'
@@ -883,7 +840,6 @@ export default function App() {
                 ) : (
                   <>
                     <button onClick={() => setInspectedOwner(null)}>Vue globale</button>
-                    <button onClick={() => setModal('pocket')}>Mon carnet</button>
                   </>
                 )}
               </div>
@@ -998,7 +954,8 @@ export default function App() {
                           disabled={interactionDisabled}
                           onClick={() => {
                             if (!interactionDisabled) {
-                              if (a.type === 'buy' && eligibleOffer) setDismissedOffer('');
+                              if ((a.type === 'buy' || a.type === 'upgrade') && eligibleOffer)
+                                setDismissedOffer('');
                               else act(a);
                             }
                           }}
@@ -1055,19 +1012,17 @@ export default function App() {
                   La règle spéciale de cette partie est affichée au-dessus du plateau.
                 </small>
               </section>
-              <section className="journal">
-                <h3>
-                  Carnet de voyage <span>EN DIRECT</span>
-                </h3>
+              <section className="live-actions" aria-label="Dernières actions">
+                <button onClick={() => setModal('journal')}>Toutes les actions ↗</button>
                 <ol aria-live="polite">
-                  {(rolling ? [] : history.slice(0, 7)).map((entry, i) => (
-                    <li key={`${current.seq}-${i}`}>{entry}</li>
+                  {history.slice(0, 3).map((entry, i) => (
+                    <li key={i}>{entry}</li>
                   ))}
                 </ol>
               </section>
               <div className="tip">
                 <b>Le saviez-vous ?</b>
-                <p>Les quatre îles réunies rapportent 500 k de loyer à chaque visite adverse.</p>
+                <p>Les quatre îles réunies rapportent 500 de loyer à chaque visite adverse.</p>
               </div>
             </aside>
           </main>
@@ -1089,9 +1044,32 @@ export default function App() {
             </button>
           </div>
         )}
+        {modal === 'bonus' && selectedBonus && (
+          <Modal title={selectedBonus.title} onClose={() => setModal(null)}>
+            <p className="bonus-description">{selectedBonus.description}</p>
+            <button className="primary" onClick={() => setModal(null)}>
+              Compris
+            </button>
+          </Modal>
+        )}
+        {modal === 'journal' && (
+          <Modal title="Journal des actions" onClose={() => setModal(null)}>
+            <p>
+              Les actions les plus récentes sont en haut. Les offres secrètes et les choix du duel
+              restent cachés jusqu’au résultat.
+            </p>
+            <ol className="action-history">
+              {history.map((entry, i) => (
+                <li key={i}>{entry}</li>
+              ))}
+            </ol>
+            {!history.length && <p>Les prochaines actions de cette session apparaîtront ici.</p>}
+          </Modal>
+        )}
         {modal === 'pocket' && (
           <Modal title="Mon carnet de voyage" onClose={() => setModal(null)}>
             <MobilePocket
+              onBonus={showBonus}
               key={current.turn}
               state={current}
               self={online?.self}
@@ -1134,33 +1112,36 @@ export default function App() {
                 <p>
                   Construisez sur une ville à vous sans attendre la rue complète : jusqu’à trois
                   maisons, puis un hôtel après cinq tours complets du plateau. Chaque passage
-                  rapporte 300 k. Après le loyer, une ville adverse sans hôtel peut être rachetée au
+                  rapporte 300. Après le loyer, une ville adverse sans hôtel peut être rachetée au
                   double de sa valeur foncière.
                 </p>
                 <h3>3. Plusieurs façons de gagner</h3>
                 <p>
                   Possédez toutes les propriétés achetables d’un côté, île comprise, ou complétez
-                  trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500 k, sans
+                  trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500, sans
                   terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
                   fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
                 </p>
                 <h3>4. Des escales qui changent tout</h3>
                 <p>
-                  32 cases : 8 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe, 2
-                  casinos, 1 assurance, 1 duel et 4 coins spéciaux. Les loyers sont payés
+                  32 cases : 6 rues de deux villes et 2 rues de trois villes, 4 îles privées, 2
+                  cases Chance, 1 taxe, 1 casino, 1 assurance, 1 duel et 4 coins spéciaux. Le paquet
+                  contient 23 cartes Chance différentes, tirées sans remise. Les loyers sont payés
                   automatiquement par le visiteur. Les cartes se résolvent pour leur destinataire
                   uniquement.
                 </p>
                 <p>
                   Selon la règle tirée, trois festivals peuvent doubler les loyers. Le Mondial coûte
-                  50 k et double le loyer pendant quatre retours du propriétaire. L’île vous retient
-                  jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour. Si
-                  votre cash manque, vendez des biens à la banque à moitié de leur valeur.
+                  50 et double le loyer pendant quatre retours du propriétaire. L’île vous retient
+                  jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour, ou
+                  dès l’action supplémentaire si vous arrivez avec un double. Si votre cash manque,
+                  vendez des biens à la banque à moitié de leur valeur.
                 </p>
                 <h3>5. Tentez votre chance, protégez vos biens</h3>
                 <p>
                   Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot
-                  rapporte 10 % de votre solde ; ses chances augmentent à chaque visite du casino.
+                  rapporte 10 % de votre solde ; chaque résultat gagnant vaut au moins 50 avant
+                  partage éventuel d’une alliance. Ses chances augmentent à chaque visite du casino.
                   La case Duel permet de défier un adversaire à pierre-feuille-ciseaux avec une mise
                   acceptée par les deux joueurs.
                 </p>
@@ -1182,7 +1163,7 @@ export default function App() {
                   huit tours de table) divise tous les loyers par deux pendant un tour complet de
                   tous les joueurs. Le duel propose une mise identique acceptée par les deux
                   adversaires : pierre, feuille, ciseaux avec choix secrets ; le gagnant remporte le
-                  pot, une égalité rembourse les mises.
+                  pot, une égalité relance les choix sans nouvelle mise jusqu’à un vainqueur.
                 </p>
                 <h3>À quatre, jouez en équipe</h3>
                 <p>
@@ -1321,7 +1302,14 @@ export default function App() {
           <Modal title={offer.tile.name} onClose={() => setDismissedOffer(offerKey)}>
             <PurchaseDetails
               state={current}
-              onBuy={(level) => act({ type: 'buy', playerId: active.id, level })}
+              onBuy={(level) =>
+                act({
+                  type:
+                    current.properties[active.position]?.ownerId === active.id ? 'upgrade' : 'buy',
+                  playerId: active.id,
+                  level,
+                })
+              }
               onFraud={(level) => act({ type: 'buy_fraud', playerId: active.id, level })}
               onPass={() => act({ type: 'finish', playerId: active.id })}
             />
@@ -1554,7 +1542,7 @@ export default function App() {
                   </div>
                 </div>
                 {tile.type === 'resort' && (
-                  <p>Collection d’îles : 1 → 50 k · 2 → 100 k · 3 → 200 k · 4 → 500 k de loyer.</p>
+                  <p>Collection d’îles : 1 → 50 · 2 → 100 · 3 → 200 · 4 → 500 de loyer.</p>
                 )}
                 {tile.rents && (
                   <div className="rent-table">
@@ -1584,15 +1572,15 @@ export default function App() {
             ) : (
               <p>
                 {tile.type === 'start'
-                  ? 'Chaque passage en avant rapporte 300 k.'
+                  ? 'Chaque passage en avant rapporte 300.'
                   : tile.type === 'island'
-                    ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200 k.'
+                    ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200.'
                     : tile.type === 'championship'
-                      ? 'Pour 50 k, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Mondial renouvelle la durée, sans cumuler le bonus.'
+                      ? 'Pour 50, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Mondial renouvelle la durée, sans cumuler le bonus.'
                       : tile.type === 'travel'
-                        ? 'Au prochain tour, voyagez pour 50 k vers une case libre ou alliée.'
+                        ? 'Au prochain tour, voyagez pour 50 vers une case libre ou alliée.'
                         : tile.type === 'tax'
-                          ? 'Vous payez 50 k plus 10 % de la valeur foncière de vos propriétés.'
+                          ? 'Vous payez 50 plus 10 % de la valeur foncière de vos propriétés.'
                           : 'Une des dix-huit cartes peut transformer votre voyage, y compris des attaques contre vos adversaires.'}
               </p>
             )}
@@ -1711,8 +1699,7 @@ export default function App() {
                   const messages = view.events
                     .map((event) => eventText(event, view.state!))
                     .filter(Boolean);
-                  if (messages.length)
-                    setHistory((old) => [...messages.reverse(), ...old].slice(0, 60));
+                  if (messages.length) setHistory((old) => [...messages.reverse(), ...old]);
                 }
               }}
             />

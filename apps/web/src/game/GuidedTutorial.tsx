@@ -186,12 +186,12 @@ function Lesson({
   const simple: Partial<Record<LessonId, [GameAction['type'], string]>> = {
     roll: ['roll', 'Lancer les dés'],
     rent: ['roll', 'Sacha lance les dés'],
-    build: ['upgrade', 'Construire à Madrid · 75 k'],
+    build: ['upgrade', 'Construire à Madrid · 75'],
     start: ['roll', 'Passer par Départ'],
     card: ['roll', 'Tirer une carte Chance'],
     tax: ['roll', 'Visiter la case Taxe'],
     squatter: ['use_squatter', 'Utiliser Squatteur'],
-    island: ['pay_bail', 'Quitter l’île · 200 k'],
+    island: ['pay_bail', 'Quitter l’île · 200'],
     alliance: ['alliance', 'Choisir Sacha'],
   };
   const primary = simple[lesson.id];
@@ -281,10 +281,12 @@ function Lesson({
                 J’ai lu · continuer
               </button>
             </div>
-          ) : !done && !cinema.busy && ['buy', 'resorts', 'fraud'].includes(lesson.id) ? (
+          ) : !done && !cinema.busy && ['buy', 'resorts', 'fraud', 'build'].includes(lesson.id) ? (
             <PurchaseDetails
               state={state}
-              onBuy={(level) => act({ type: 'buy', playerId: 'p1', level })}
+              onBuy={(level) =>
+                act({ type: lesson.id === 'build' ? 'upgrade' : 'buy', playerId: 'p1', level })
+              }
               onFraud={
                 lesson.id === 'fraud'
                   ? (level) => act({ type: 'buy_fraud', playerId: 'p1', level })

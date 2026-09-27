@@ -7,6 +7,7 @@ import {
   legacyConfigV8,
   legacyConfigV9,
   legacyConfigV10,
+  legacyConfigV11,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -21,6 +22,18 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('resumes v11 without changing its two casinos, three Chance spaces or duel rules', () => {
+    const save = newLocal({
+      config: legacyConfigV11 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v11', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+    expect(loadLocal()!.state.config.duelReplayTies).toBeUndefined();
+  });
   it('preserves v10 saves with land-only purchases', () => {
     const save = newLocal({
       config: legacyConfigV10 as GameConfig,

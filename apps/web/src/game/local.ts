@@ -6,6 +6,7 @@ import {
   legacyConfigV8,
   legacyConfigV9,
   legacyConfigV10,
+  legacyConfigV11,
   sameRules,
   type GameConfig,
   createGame,
@@ -19,11 +20,12 @@ import {
 } from '@money-tour/engine';
 
 export interface LocalSave {
+  history?: string[];
   version: 1;
   seed: string;
   state: GameState;
 }
-const key = 'money-tour.local.v11';
+const key = 'money-tour.local.v12';
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
   return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
@@ -39,6 +41,7 @@ export function loadLocal(): LocalSave | null {
   try {
     const raw =
       localStorage.getItem(key) ??
+      localStorage.getItem('money-tour.local.v11') ??
       localStorage.getItem('money-tour.local.v10') ??
       localStorage.getItem('money-tour.local.v9') ??
       localStorage.getItem('money-tour.local.v8') ??
@@ -65,9 +68,13 @@ export function loadLocal(): LocalSave | null {
     }
     if (
       save.version !== 1 ||
+      (save.history !== undefined &&
+        (!Array.isArray(save.history) ||
+          save.history.some((entry) => typeof entry !== 'string'))) ||
       typeof save.seed !== 'string' ||
       !(
         sameRules(save.state.config, config) ||
+        sameRules(save.state.config, legacyConfigV11 as GameConfig) ||
         sameRules(save.state.config, legacyConfigV10 as GameConfig) ||
         sameRules(save.state.config, legacyConfigV9 as GameConfig) ||
         sameRules(save.state.config, legacyConfigV8 as GameConfig) ||
@@ -93,9 +100,7 @@ export function persistLocal(save: LocalSave): boolean {
 }
 
 export const money = (value: number, compact = false): string =>
-  compact
-    ? `${Math.round(value / 1000)} k 💵`
-    : `${new Intl.NumberFormat('fr-FR').format(value)} 💵`;
+  new Intl.NumberFormat('fr-FR', { maximumFractionDigits: compact ? 0 : 2 }).format(value) + ' 💵';
 export const duration = (ms: number): string =>
   `${Math.floor(ms / 60000)
     .toString()

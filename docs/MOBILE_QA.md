@@ -62,3 +62,28 @@ Recette effectuée dans Chromium avec tailles mobiles simulées ; aucun téléph
 - Validation automatique du coût cumulé de chaque construction, achat atomique, refus sans débit si solde insuffisant, hôtel verrouillé, fraude limitée au terrain, rejeu réseau identique et animations successives des bâtiments. Sauvegardes v10 préservées avec leurs règles ; nouvelles parties et salons v11.
 
 409 tests passent dans 36 fichiers ; couverture moteur 97,43 % des lignes et 93,49 % des branches. Typage, lint, formatage, build et contrôles des assets/modèles passent. Recette sur viewports Chromium ; téléphone physique, Safari iOS et réseau 5G non testés pour cette livraison.
+
+## Fiches desktop, rues de trois villes et mini-jeux — édition v12
+
+- PC 1920 × 1080 et 1280 × 800 : grandes fiches aux quatre coins, propriétés et loyers visibles, bonus et objectif secret disponibles. Inspection de Porto depuis sa carte vérifiée. Le bouton de carnet reste réservé au mobile ; la règle de partie se trouve dans la fiche supérieure gauche pour dégager le plateau.
+- Mobile 390 × 844 : carnet et duel lisibles, soldes visibles avant et après dépôt des mises. Carnet également mesuré à 320 × 568 et 844 × 390, sans débordement de page.
+- Duel local joué jusqu’à une égalité : nouvelle manche automatique, même pot de 100 k, comptes toujours à 1 450 k. Le test réseau signé fait une égalité puis désigne un vainqueur, avec états identiques chez les deux joueurs.
+- Voyage testé avec un double : choix proposé à l’action supplémentaire, acceptation ou refus possibles, frais débités une seule fois, aucun voyage restant après le déplacement. Voyage ordinaire au tour suivant également testé.
+- 18 villes, dont deux triplets complets aux emplacements 1–3 et 17–19 ; rues mélangées par taille, prix croissants conservés sur 100 graines. Un casino, deux cases Chance et 23 cartes différentes.
+- Casino : tests des gains normaux, jackpot, paires et triplets avec plancher 50 k ; résultat perdant toujours nul, y compris avec un compte vide.
+
+417 tests réussis dans 37 fichiers, dont 1 000 parties de bots. Couverture moteur : 97,17 % des lignes, 93,39 % des branches. Typage, lint, formatage, build et contrôles assets/modèles réussis. Recette Chromium uniquement ; ni téléphone physique, ni Safari iOS, ni réseau 5G validés. Inventaire complet dans [Mécaniques et probabilités](MECANIQUES_ET_PROBABILITES.md).
+
+## Économie lisible et chantier par visite — finalisation v12
+
+Cette section remplace les montants de la recette v12 ci-dessus : compte initial 1 500, prime Départ 300, minimum casino 50. Les anciens comptes rendus v10/v11 décrivent leurs éditions historiques.
+
+- Économie divisée par 1 000 dans les terrains, constructions, loyers, taxes, frais, cartes, enchères, duel, objectifs et capitale. Montants immobiliers arrondis à l’entier le plus proche ; Coimbra 140 et Hambourg 340. Les sauvegardes anciennes conservent leur économie.
+- PC 1920 × 1080 : retour sur Lisbonne, sélection de trois maisons, coût 150 sans facturer à nouveau le terrain ; après achat, seule la fin du tour est proposée. Lecture de Squatteur depuis la fiche de Léa, propriétés et cartes visibles aux quatre coins.
+- Mobile 390 × 844 : Madrid avec trois maisons acheté pour 375 ; compte final 1 125, loyer 105, aucun second chantier accessible. Journal consulté avec achat et les trois constructions.
+- 320 × 568 : fenêtre de construction à défilement interne, choix horizontal des bâtiments et bouton de validation fixe accessible. Journal mesuré à 298 × 482. Page sans débordement.
+- Paysage 844 × 390 : fenêtre de construction 739 × 364 avec défilement interne ; validation de trois maisons effectuée. Page sans débordement.
+- Journal public complet pour la session, sans limite de 60 entrées ; conservé dans la sauvegarde locale. Les offres et gestes secrets ne sont jamais dévoilés par les annonces de participation. Le journal réseau commence à l’ouverture de la session sur cet appareil.
+- Bonus et malus consultables : assurance liée à son bien et consommée une fois, cartes conservées, billet de sortie, risque fiscal, alliance, Mondial, cafards et crise.
+
+424 tests réussis dans 39 fichiers. Couverture moteur : 97,14 % des lignes, 93,46 % des branches. Recette sur viewports Chromium uniquement : téléphone physique, Safari iOS et réseau 5G non validés.
