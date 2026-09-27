@@ -1,5 +1,10 @@
 import { useState } from 'react';
-import { reservedCity, getLegalActions, type GameState } from '@money-tour/engine';
+import {
+  reservedCity,
+  getLegalActions,
+  getPurchaseQuote,
+  type GameState,
+} from '@money-tour/engine';
 import { ActionClock } from './ActionClock';
 import { money } from './local';
 import { BuildingIllustration } from './BuildingIllustration';
@@ -26,12 +31,15 @@ export function PurchaseDetails({
   onPass,
 }: {
   state: GameState;
-  onBuy: () => void;
-  onFraud?: () => void;
+  onBuy: (level: number) => void;
+  onFraud?: (level: number) => void;
   onPass: () => void;
 }) {
-  const { player, tile, canBuy } = purchaseOffer(state)!;
+  const { player, tile } = purchaseOffer(state)!;
   const [level, setLevel] = useState(0);
+  const quote = getPurchaseQuote(state, level)!;
+  const fraudQuote = getPurchaseQuote(state, level, true)!;
+  const canBuy = quote.canBuy;
   const hotelLocked = player.laps < (state.config.hotelUnlockLaps ?? 1);
   const labels = ['Terrain', '1 maison', '2 maisons', '3 maisons', 'Hôtel'];
   const modern = state.config.buildingRequiresGroup === false;
@@ -45,23 +53,38 @@ export function PurchaseDetails({
           <small>{tile.type === 'resort' ? 'ÎLE PRIVÉE' : 'VILLE DISPONIBLE'}</small>
           <h3>{tile.name}</h3>
         </div>
-        <span>{money(tile.price!, true)}</span>
+        <span>{money(quote.total, true)}</span>
       </header>
       {tile.type === 'city' ? (
         <>
-          <div className="purchase-levels" aria-label="Aperçu des bâtiments et loyers">
-            {tile.rents!.map((rent, index) => (
+          <div className="purchase-levels" aria-label="Choisir les bâtiments à acheter">
+            {tile.rents!.map((_, index) => (
               <button
                 key={index}
                 aria-pressed={level === index}
+                disabled={!getPurchaseQuote(state, index)?.available}
                 className={index === 4 && hotelLocked ? 'level-locked' : ''}
-                aria-label={`${labels[index]} : loyer ${money(rent, true)}${index === 4 && hotelLocked ? ', hôtel verrouillé' : ''}`}
+                aria-label={`${labels[index]} : loyer ${money(getPurchaseQuote(state, index)!.rent, true)}${index === 4 && hotelLocked ? ', hôtel verrouillé' : ''}`}
                 onClick={() => setLevel(index)}
               >
                 <BuildingIllustration level={index} />
                 <strong>{labels[index]}</strong>
+                <span className="level-rent">
+                  Loyer <b>{money(getPurchaseQuote(state, index)!.rent, true)}</b>
+                </span>
                 <span className="level-check" aria-hidden="true">
-                  {level === index ? '✓' : ''}
+                  {level === index && (
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path
+                        d="m5 12 4 4L19 6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
                 </span>
                 {index === 4 && hotelLocked && (
                   <span className="level-lock">
@@ -73,11 +96,11 @@ export function PurchaseDetails({
           </div>
           <div className="purchase-preview" aria-live="polite">
             <span>
-              Loyer de base <strong>{money(tile.rents![level]!, true)}</strong>
+              Loyer actuel <strong>{money(quote.rent, true)}</strong>
             </span>
             {level > 0 && (
               <span>
-                Construction de ce niveau <strong>+{money(tile.buildCosts![level]!, true)}</strong>
+                Bâtiments inclus <strong>+{money(quote.buildings, true)}</strong>
               </span>
             )}
           </div>
@@ -85,7 +108,8 @@ export function PurchaseDetails({
             {modern
               ? 'Maisons sans rue complète. Hôtel après 5 tours du plateau.'
               : 'Rue complète requise. Deux maisons maximum avant le premier passage Départ.'}{' '}
-            {level > 0 && 'Aperçu : l’achat ci-dessous concerne le terrain.'}
+            {level > 0 && 'Le prix comprend le terrain et tous les bâtiments sélectionnés.'}
+            {!state.config.bundledPurchase && 'Cette sauvegarde conserve l’achat du terrain seul.'}
           </p>
         </>
       ) : (
@@ -101,15 +125,21 @@ export function PurchaseDetails({
       )}
       <p className="purchase-wallet">
         Votre compte <strong>{money(player.cash, true)}</strong>
-        {canBuy && <span> · Après achat {money(player.cash - tile.price!, true)}</span>}
+        {canBuy && <span> · Après achat {money(player.cash - quote.total, true)}</span>}
       </p>
       {!canBuy && (
-        <p role="status">Il manque {money(Math.max(0, tile.price! - player.cash), true)}.</p>
+        <p role="status">Il manque {money(Math.max(0, quote.total - player.cash), true)}.</p>
       )}
       <div className="purchase-buttons">
-        <button className="primary purchase-cta" disabled={!canBuy} onClick={onBuy}>
+        <button className="primary purchase-cta" disabled={!canBuy} onClick={() => onBuy(level)}>
           <span>
-            Acheter {tile.type === 'city' ? 'le terrain' : 'l’île'} · {money(tile.price!, true)}
+            Acheter{' '}
+            {tile.type === 'resort'
+              ? 'l’île'
+              : level === 0
+                ? 'le terrain'
+                : `avec ${level === 4 ? 'hôtel' : labels[level]}`}{' '}
+            · {money(quote.total, true)}
           </span>
           <ActionClock />
         </button>
@@ -120,19 +150,34 @@ export function PurchaseDetails({
       </div>
       {tile.type === 'city' && (
         <p className="purchase-buyout">
-          Rachat par un adversaire, terrain seul :{' '}
-          <strong>{money(Math.floor(tile.price! * state.config.buyoutMultiplier), true)}</strong>
+          {level === state.config.hotelLevel ? (
+            'Un hôtel ne peut pas être racheté par un adversaire.'
+          ) : (
+            <>
+              Rachat par un adversaire :{' '}
+              <strong>
+                {money(
+                  Math.floor((tile.price! + quote.buildings) * state.config.buyoutMultiplier),
+                  true,
+                )}
+              </strong>
+            </>
+          )}
         </p>
       )}
       {onFraud && getLegalActions(state).some((a) => a.type === 'buy_fraud') && (
         <>
-          <button className="secondary purchase-fraud" onClick={onFraud}>
-            Fraude fiscale ·{' '}
-            {money(Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5)), true)}
+          <button
+            className="secondary purchase-fraud"
+            disabled={!fraudQuote.canBuy}
+            onClick={() => onFraud(level)}
+          >
+            Fraude fiscale · {money(fraudQuote.total, true)}
             <ActionClock />
           </button>
           <p className="fraud-risk">
-            Risque : {money(tile.price! * 2, true)} sur Taxe, jusqu’au prochain Départ.
+            Réduction sur le terrain uniquement. Risque : {money(tile.price! * 2, true)} sur Taxe,
+            jusqu’au prochain Départ.
           </p>
         </>
       )}

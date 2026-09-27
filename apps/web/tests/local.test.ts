@@ -6,6 +6,7 @@ import {
   legacyConfigV7,
   legacyConfigV8,
   legacyConfigV9,
+  legacyConfigV10,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -20,6 +21,18 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('preserves v10 saves with land-only purchases', () => {
+    const save = newLocal({
+      config: legacyConfigV10 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v10', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+    expect(loadLocal()!.state.config.bundledPurchase).toBeUndefined();
+  });
   it('preserves v9 prices and insurance rules when resuming an existing game', () => {
     const save = newLocal({
       config: legacyConfigV9 as GameConfig,

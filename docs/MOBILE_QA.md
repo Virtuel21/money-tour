@@ -53,3 +53,12 @@ Recette effectuée dans Chromium avec tailles mobiles simulées ; aucun téléph
 - Le message de verrouillage de l’hôtel utilise maintenant un texte sombre sur fond crème/jaune. Les libellés, boutons et bandeau d’achat ont des couleurs explicites et des focus visibles.
 
 394 tests passent dans 33 fichiers ; couverture moteur 97,47 % des lignes et 93,69 % des branches. Recette Chromium, sans validation sur téléphone physique ou Safari iOS.
+
+## Achat avec bâtiments — 27 septembre 2026
+
+- PC 1440 × 1000 : les cinq cartes affichent leurs loyers effectifs. Sélection de trois maisons à Madrid : total 375 k, solde après achat 1125 k et loyer 105 k. Achat exécuté puis propriété inspectée sur le plateau.
+- Mobile 390 × 844 : hôtel disponible après cinq tours complets, achat direct à 450 k, solde final 1050 k et loyer 180 k. Illustrations, loyers et commandes lisibles.
+- Petit écran 320 × 568 et paysage 844 × 390 : défilement interne, cartes accessibles horizontalement et CTA d’achat visible. Aucun débordement de page. La coche SVG est centrée dans sa case (écart horizontal et vertical mesuré : 0 px).
+- Validation automatique du coût cumulé de chaque construction, achat atomique, refus sans débit si solde insuffisant, hôtel verrouillé, fraude limitée au terrain, rejeu réseau identique et animations successives des bâtiments. Sauvegardes v10 préservées avec leurs règles ; nouvelles parties et salons v11.
+
+409 tests passent dans 36 fichiers ; couverture moteur 97,43 % des lignes et 93,49 % des branches. Typage, lint, formatage, build et contrôles des assets/modèles passent. Recette sur viewports Chromium ; téléphone physique, Safari iOS et réseau 5G non testés pour cette livraison.

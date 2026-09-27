@@ -284,9 +284,11 @@ function Lesson({
           ) : !done && !cinema.busy && ['buy', 'resorts', 'fraud'].includes(lesson.id) ? (
             <PurchaseDetails
               state={state}
-              onBuy={() => act({ type: 'buy', playerId: 'p1' })}
+              onBuy={(level) => act({ type: 'buy', playerId: 'p1', level })}
               onFraud={
-                lesson.id === 'fraud' ? () => act({ type: 'buy_fraud', playerId: 'p1' }) : undefined
+                lesson.id === 'fraud'
+                  ? (level) => act({ type: 'buy_fraud', playerId: 'p1', level })
+                  : undefined
               }
               onPass={() => act({ type: 'finish', playerId: 'p1' })}
             />

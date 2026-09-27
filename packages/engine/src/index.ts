@@ -9,6 +9,7 @@ export {
   getNetWorth,
   getPropertyValue,
   getRent,
+  getPurchaseQuote,
   validateState,
 } from './engine.js';
 export type * from './types.js';
@@ -24,3 +25,5 @@ export { default as legacyConfigV7 } from './legacy-v7.config.json';
 export { default as legacyConfigV9 } from './legacy-v9.config.json';
 export { default as legacyConfigV8 } from './legacy-v8.config.json';
 export { adventureText, questRules, auctionCommitment, reservedCity } from './adventure.js';
+
+export { default as legacyConfigV10 } from './legacy-v10.config.json';

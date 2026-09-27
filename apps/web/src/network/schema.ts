@@ -2,6 +2,13 @@ import { z } from 'zod';
 const id = z.string().min(1).max(80);
 const natural = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
 export const actionSchema = z.union([
+  z
+    .object({
+      type: z.enum(['buy', 'buy_fraud']),
+      playerId: id,
+      level: z.number().int().min(0).max(4).optional(),
+    })
+    .strict(),
   z.object({ type: z.literal('auction_pass'), playerId: id }).strict(),
   z
     .object({
@@ -46,8 +53,6 @@ export const actionSchema = z.union([
     .object({
       type: z.enum([
         'roll',
-        'buy',
-        'buy_fraud',
         'use_squatter',
         'pay_rent',
         'casino_red',

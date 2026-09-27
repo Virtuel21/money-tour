@@ -280,6 +280,74 @@ export function createGame(
   return state;
 }
 
+export function getPurchaseQuote(state: GameState, level = 0, fraud = false) {
+  const player = activePlayer(state),
+    tile = tileAt(state, player.position);
+  if (
+    !tile?.price ||
+    !Number.isSafeInteger(level) ||
+    level < 0 ||
+    level > state.config.hotelLevel ||
+    (level > 0 && tile.type !== 'city')
+  )
+    return null;
+  const costs = (tile.buildCosts ?? []).slice(1, level + 1);
+  if (costs.length !== level) return null;
+  const land = fraud ? Math.floor(tile.price * (state.config.fraudDiscount ?? 0.5)) : tile.price;
+  const buildings = costs.reduce((sum, cost) => sum + cost, 0),
+    total = land + buildings;
+  const available =
+    !state.winner &&
+    state.phase === 'property' &&
+    !state.properties[tile.id]?.ownerId &&
+    !reservedCity(state, tile.id) &&
+    (!fraud || Boolean(heldCard(state, player, 'fraud'))) &&
+    (level === 0 ||
+      (state.config.bundledPurchase === true &&
+        level <= buildingCap(state, player) &&
+        (state.config.buildingRequiresGroup === false ||
+          !state.config.board.some(
+            (other) =>
+              other.id !== tile.id &&
+              other.type === 'city' &&
+              other.group === tile.group &&
+              state.properties[other.id]?.ownerId !== player.id,
+          ))));
+  const rent = getRent(
+    {
+      ...state,
+      properties: {
+        ...state.properties,
+        [tile.id]: {
+          ...state.properties[tile.id]!,
+          ownerId: player.id,
+          level,
+        },
+      },
+    },
+    tile.id,
+  );
+  return {
+    level,
+    land,
+    buildings,
+    total,
+    rent,
+    available,
+    canBuy: available && player.cash >= total,
+  };
+}
+
+function buildingCap(state: GameState, player: Player): number {
+  return state.config.hotelUnlockLaps !== undefined
+    ? player.laps >= state.config.hotelUnlockLaps
+      ? state.config.hotelLevel
+      : state.config.hotelLevel - 1
+    : player.laps > 0
+      ? state.config.hotelLevel
+      : state.config.initialMaxLevel;
+}
+
 function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
   const property = state.properties[tile.id];
   if (tile.type !== 'city' || property?.ownerId !== player.id) return false;
@@ -293,14 +361,7 @@ function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
     )
   )
     return false;
-  const cap =
-    state.config.hotelUnlockLaps !== undefined
-      ? player.laps >= state.config.hotelUnlockLaps
-        ? state.config.hotelLevel
-        : state.config.hotelLevel - 1
-      : player.laps > 0
-        ? state.config.hotelLevel
-        : state.config.initialMaxLevel;
+  const cap = buildingCap(state, player);
   return property.level < cap && player.cash >= (tile.buildCosts?.[property.level + 1] ?? Infinity);
 }
 
@@ -1097,27 +1158,35 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
       resolveTile(state, rng, events);
       break;
     }
-    case 'buy': {
-      const tile = tileAt(state, player.position);
-      player.cash -= tile.price!;
-      state.properties[tile.id]!.ownerId = player.id;
-      events.push({ type: 'purchase', playerId: player.id, tile: tile.id, amount: tile.price });
-      break;
-    }
+    case 'buy':
     case 'buy_fraud': {
-      const tile = tileAt(state, player.position),
-        amount = Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5));
-      consumeCard(state, player, 'fraud');
-      player.cash -= amount;
-      player.fraudLiability = (player.fraudLiability ?? 0) + tile.price! * 2;
+      const tile = tileAt(state, player.position);
+      const fraud = action.type === 'buy_fraud';
+      const quote = getPurchaseQuote(state, action.level === undefined ? 0 : action.level, fraud)!;
+      if (fraud) {
+        consumeCard(state, player, 'fraud');
+        player.fraudLiability = (player.fraudLiability ?? 0) + tile.price! * 2;
+      }
+      player.cash -= quote.total;
       state.properties[tile.id]!.ownerId = player.id;
       events.push({
         type: 'purchase',
         playerId: player.id,
         tile: tile.id,
-        amount,
-        reason: 'fraud',
+        amount: quote.land,
+        ...(fraud ? { reason: 'fraud' } : {}),
+        ...(quote.level ? { level: 0 } : {}),
       });
+      for (let level = 1; level <= quote.level; level++) {
+        state.properties[tile.id]!.level = level;
+        events.push({
+          type: 'build',
+          playerId: player.id,
+          tile: tile.id,
+          level,
+          amount: tile.buildCosts![level],
+        });
+      }
       break;
     }
     case 'pay_rent': {
@@ -1253,6 +1322,15 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
 
 export function isLegalPlayerAction(state: GameState, action: GameAction): boolean {
   if (state.winner) return false;
+  if (
+    (action.type === 'buy' || action.type === 'buy_fraud') &&
+    !getPurchaseQuote(
+      state,
+      action.level === undefined ? 0 : action.level,
+      action.type === 'buy_fraud',
+    )?.canBuy
+  )
+    return false;
   if (action.type.startsWith('auction_')) return legalAuction(state, action);
   if (action.type.startsWith('duel_')) return isLegalDuelAction(state, action);
   return getLegalActions(state).some(

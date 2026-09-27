@@ -18,7 +18,7 @@ export const lessons = [
   {
     id: 'buy',
     title: 'Votre première ville',
-    text: 'Une ville libre peut être achetée au prix affiché. Comparez votre compte, le loyer et le coût des bâtiments. Fermer une offre permet de regarder le plateau ; Acheter la rouvre. « Non merci » termine la décision.',
+    text: 'Chaque option indique son loyer. Dans une partie, choisissez le terrain seul ou des maisons : Acheter acquiert tout en une fois au prix total affiché. L’hôtel attend cinq tours du plateau. Ici, commencez par le terrain ; la leçon Construire vous fera ajouter une maison. Fermer permet de regarder le plateau ; Acheter rouvre l’offre et Passer termine la décision.',
     task: 'Achetez Madrid ou essayez de passer.',
     target: 'action',
   },
