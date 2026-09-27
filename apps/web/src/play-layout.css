@@ -355,6 +355,9 @@
     display: none;
   }
   .game-layout .action-card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     position: static;
     inset: auto;
     transform: none;
@@ -363,8 +366,17 @@
     padding: 10px 16px;
   }
   .game-layout .action-card h2 {
-    font-size: 17px;
-    margin: 3px 0;
+    font-size: 14px;
+    margin: 0;
+  }
+  .game-layout .action-card > .eyebrow,
+  .game-layout .action-card > p:not(.board-choice-hint) {
+    display: none;
+  }
+  .game-layout .action-card .decision-time {
+    order: 2;
+    margin: 0;
+    height: 3px;
   }
   .game-layout .action-card > p {
     margin: 4px 0;
@@ -372,13 +384,24 @@
   }
   .game-layout .action-card .actions {
     display: flex;
+    flex-direction: row;
     flex-wrap: wrap;
     gap: 6px;
   }
   .game-layout .action-card .actions button {
     flex: 1;
+    min-width: 0;
+    flex-wrap: wrap;
+    gap: 3px;
+    font-size: 14px;
     min-height: 42px;
     padding: 8px;
+  }
+  .game-layout .action-card .actions button > span:first-child {
+    font-size: 15px;
+  }
+  .game-layout .action-card .actions .action-clock {
+    font-size: 11px;
   }
   .game-layout .board-watermark,
   .game-layout .bank-label {
