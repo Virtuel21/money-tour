@@ -492,6 +492,14 @@
   .game-layout .city-label.special-label b {
     font-size: clamp(10px, calc(1.05cqw * var(--camera-label-scale, 1)), 16px);
   }
+  .game-layout [data-camera='overview'] .city-label.special-label b {
+    font-size: calc(1.2cqw * var(--camera-label-scale, 1));
+    padding: 0.04em 0.25em;
+    line-height: 1;
+    border: 0;
+    border-radius: 0.3em;
+    box-shadow: inset 0 0 0 0.5px #bd9149;
+  }
   .mobile-tile-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

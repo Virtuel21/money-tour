@@ -23,7 +23,7 @@ function festivalTexture() {
   return texture;
 }
 
-export function festivalFlag(texture = festivalTexture()) {
+export function festivalFlag(texture: THREE.Texture = festivalTexture()) {
   const group = new THREE.Group();
   const gold = new THREE.MeshStandardMaterial({ color: '#eaa941', roughness: 0.5 });
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.038, 2.25, 10), gold);

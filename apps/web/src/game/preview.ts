@@ -13,6 +13,7 @@ export function previewScenario(): LocalSave | null {
       'travel',
       'travel-double',
       'festival-lagoon',
+      'utility-labels',
       'build',
       'card',
       'crowded',
@@ -74,6 +75,11 @@ export function previewScenario(): LocalSave | null {
   state.phase = name === 'travel' ? 'travel' : name === 'build' ? 'property' : 'roll';
   player.travelPending = name === 'travel';
   player.laps = 1;
+  if (name === 'utility-labels') {
+    state.players.forEach((p, i) => {
+      p.position = [8, 8, 11, 24][i]!;
+    });
+  }
   if (name === 'festival-lagoon') {
     player.position = state.config.board.find((tile) => tile.type === 'championship')!.id;
     state.players[1]!.position = player.position;

@@ -105,6 +105,7 @@ export default function Board({
   taunt?: Taunt;
 }) {
   const host = useRef<HTMLDivElement>(null);
+  const foregroundPawns = useRef<(HTMLSpanElement | null)[]>([]);
   const live = useRef({ state, cue, reducedMotion, choices, mobile, overview, selecting, self });
   live.current = { state, cue, reducedMotion, choices, mobile, overview, selecting, self };
   const update = useRef<() => void>(() => {});
@@ -558,10 +559,20 @@ export default function Board({
           setAnchors(
             live.current.state.config.board.map((t) => {
               const p = tileFrame(t.id, live.current.state.config.board.length);
+              const overviewWeight = live.current.mobile
+                ? THREE.MathUtils.clamp(1 - (camera.zoom - 1) / 0.8, 0, 1)
+                : 0;
+              // Give utility plaques their own lane in the tiny overview. Corner
+              // plaques move inward to separate the two meeting board edges.
+              const utilityOffset = THREE.MathUtils.lerp(
+                1.3,
+                p.corner ? 1.05 : 1.68,
+                overviewWeight,
+              );
               const labelOffset = !['city', 'resort'].includes(t.type)
                 ? p.side < 2
-                  ? 1.3
-                  : -1.3
+                  ? utilityOffset
+                  : -utilityOffset
                 : p.corner
                   ? 0.85
                   : 0.5;
@@ -806,6 +817,25 @@ export default function Board({
           camera.lookAt(focus);
           camera.updateProjectionMatrix();
           camera.updateMatrixWorld();
+          // The character art sits above DOM labels. Project it every frame so hops and
+          // camera transitions stay as smooth as the original WebGL billboards.
+          if (!demo)
+            pawns.forEach((pawn, i) => {
+              const foreground = foregroundPawns.current[i];
+              const character = pawn.children[0] as THREE.Sprite;
+              character.visible = !foreground;
+              if (!foreground) return;
+              const v = pawn.position.clone().project(camera);
+              foreground.style.left = (v.x + 1) * 50 + '%';
+              foreground.style.top = (1 - v.y) * 50 + '%';
+              foreground.style.width =
+                ((2.55 * pawn.scale.x * camera.zoom) / (camera.right - camera.left)) * 100 + '%';
+              foreground.style.height =
+                ((2.55 * pawn.scale.y * camera.zoom) / (camera.top - camera.bottom)) * 100 + '%';
+              foreground.style.opacity = String(character.material.opacity);
+              foreground.style.visibility = pawn.visible ? 'visible' : 'hidden';
+              foreground.style.zIndex = game.currentPlayer === i ? '10' : String(i);
+            });
           const pawnKey = [
             camera.right,
             camera.top,
@@ -993,6 +1023,23 @@ export default function Board({
       {!ready && !error && <div className="board-loading">Construction de votre archipel…</div>}
       {ready && (
         <>
+          {!demo && (
+            <div className="pawn-foreground-layer" aria-hidden="true">
+              {state.players.map((player, i) => (
+                <span
+                  key={player.id}
+                  ref={(element) => {
+                    foregroundPawns.current[i] = element;
+                  }}
+                  className="pawn-foreground"
+                  style={{
+                    backgroundImage: `url(${import.meta.env.BASE_URL}textures/travelers-v3.webp)`,
+                    backgroundPosition: `${i % 2 ? 100 : 0}% ${i < 2 ? 0 : 100}%`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
           {insuranceFocus && choices.length > 0 && (
             <svg
               className="insurance-spotlight"
