@@ -27,7 +27,10 @@ export function protectProperty(state: GameState, tile: number, events: GameEven
 }
 export function clearProtection(state: GameState, tile: number): void {
   for (const player of state.players)
-    if (player.insurance?.tile === tile) player.insurance.tile = null;
+    if (player.insurance?.tile === tile) {
+      if (state.config.insuranceSingleUse) delete player.insurance;
+      else player.insurance.tile = null;
+    }
 }
 export function casinoPlay(state: GameState, choice: string, rng: Rng, events: GameEvent[]): void {
   const player = state.players[state.currentPlayer]!;

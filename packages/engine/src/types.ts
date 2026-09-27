@@ -75,6 +75,8 @@ export interface GameConfig {
   crisisCooldownRounds?: number;
   crisisMaxCount?: number;
   buildingRequiresGroup?: boolean;
+  pricesFollowPosition?: boolean;
+  insuranceSingleUse?: boolean;
   hotelUnlockLaps?: number;
   lineVictory?: boolean;
   resortVictory?: boolean;

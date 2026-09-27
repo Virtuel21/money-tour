@@ -14,7 +14,17 @@ export function shuffleStreets(config: GameConfig, rng: Rng): void {
   for (let i = 0; i < config.board.length; i++) {
     if (config.board[i]!.type !== 'city') continue;
     const line = config.board[i]!.line;
-    for (const tile of streets[street++]!) config.board[i] = { ...tile, id: i++, line };
+    for (const tile of streets[street++]!) {
+      const slot = config.board[i]!;
+      config.board[i] = {
+        ...tile,
+        id: i++,
+        line,
+        ...(config.pricesFollowPosition
+          ? { price: slot.price, rents: slot.rents, buildCosts: slot.buildCosts }
+          : {}),
+      };
+    }
     i--;
   }
 }
@@ -29,12 +39,25 @@ export function sameRules(candidate: GameConfig, reference: GameConfig): boolean
   const cityData = (config: GameConfig) =>
     config.board
       .filter((t) => t.type === 'city')
-      .map((t) => ({ ...t, id: 0, line: 0 }))
+      .map((t) => ({
+        ...t,
+        id: 0,
+        line: 0,
+        ...(reference.pricesFollowPosition ? { price: 0, rents: [], buildCosts: [] } : {}),
+      }))
       .sort((x, y) => x.name.localeCompare(y.name));
   if (JSON.stringify(cityData(candidate)) !== JSON.stringify(cityData(reference))) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i]!.id !== i || a[i]!.type !== b[i]!.type || a[i]!.line !== b[i]!.line) return false;
     if (b[i]!.type !== 'city' && JSON.stringify(a[i]) !== JSON.stringify(b[i])) return false;
+    if (
+      reference.pricesFollowPosition &&
+      b[i]!.type === 'city' &&
+      (a[i]!.price !== b[i]!.price ||
+        JSON.stringify(a[i]!.rents) !== JSON.stringify(b[i]!.rents) ||
+        JSON.stringify(a[i]!.buildCosts) !== JSON.stringify(b[i]!.buildCosts))
+    )
+      return false;
     if (b[i]!.type === 'city' && b[i - 1]?.type !== 'city' && a[i]!.group !== a[i + 1]?.group)
       return false;
   }

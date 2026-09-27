@@ -981,7 +981,7 @@ export default function App() {
                   current.properties[active.position]?.level === 3 &&
                   current.config.hotelUnlockLaps !== undefined &&
                   active.laps < current.config.hotelUnlockLaps && (
-                    <p className="board-choice-hint">
+                    <p className="board-choice-hint hotel-unlock-hint">
                       Hôtel après {current.config.hotelUnlockLaps} tours du plateau · {active.laps}/
                       {current.config.hotelUnlockLaps} terminés.
                     </p>
@@ -1318,10 +1318,7 @@ export default function App() {
           </Modal>
         )}
         {offer && (
-          <Modal
-            title={'Bienvenue à ' + offer.tile.name}
-            onClose={() => setDismissedOffer(offerKey)}
-          >
+          <Modal title={offer.tile.name} onClose={() => setDismissedOffer(offerKey)}>
             <PurchaseDetails
               state={current}
               onBuy={() => act({ type: 'buy', playerId: active.id })}

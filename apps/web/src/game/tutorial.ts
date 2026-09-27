@@ -88,7 +88,7 @@ export const lessons = [
   {
     id: 'insurance',
     title: 'Protéger une propriété',
-    text: 'La case Assurance donne un jeton. Placez-le sur une de vos propriétés : il bloque une destruction, une expropriation ou un rachat hostile, puis disparaît. Il ne protège pas des cafards.',
+    text: 'La case Assurance donne un jeton. Posez-le une seule fois sur un de vos biens. Il reste lié à ce bien et bloque une destruction, une expropriation ou un rachat hostile, puis disparaît. Il ne protège pas des cafards.',
     task: 'Choisissez Madrid parmi les cases éclairées.',
     target: 'board',
   },

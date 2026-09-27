@@ -11,195 +11,414 @@
   width: 100%;
   box-sizing: border-box;
 }
-.purchase-simple {
+/* Purchase cards use the same cream, teal and warm gold as the board. */
+.purchase-offer.purchase-simple {
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  color: #183b48;
 }
 .purchase-title {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  border-left: 6px solid var(--property-color);
-  padding-left: 14px;
-}
-.purchase-title small {
-  font-size: 10px;
-  letter-spacing: 1.5px;
 }
 .purchase-title h3 {
-  margin: 3px 0;
-  font-size: 30px;
+  margin: 0;
+  font-size: 28px;
+}
+.purchase-title small {
+  font-size: 12px;
 }
 .purchase-title > span {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
-  white-space: nowrap;
 }
-.purchase-levels {
+.modal:has(.purchase-simple) {
+  width: min(1180px, calc(100vw - 64px));
+  max-width: none;
+  padding: 22px 32px 26px;
+  background: #fff8e8;
+  border: 3px solid #285966;
+  border-radius: 30px;
+  box-shadow:
+    0 12px 0 #c9c3ae,
+    0 25px 70px #102e4855;
+}
+.modal:has(.purchase-simple) > .modal-heading {
+  margin: 0 -32px 22px;
+  padding: 12px 30px;
+  background: #166574;
+  color: #fffaf0;
+  border-block: 3px solid #0e4654;
+  box-shadow: 0 5px 0 #e2be67;
+}
+.modal:has(.purchase-simple) .modal-heading h2 {
+  font-size: clamp(30px, 3vw, 48px);
+  color: #fffaf0;
+  margin: 0;
+}
+.modal:has(.purchase-simple) .modal-heading .icon-button {
+  background: #fff8e8;
+  color: #153d4e;
+  flex: 0 0 auto;
+}
+.modal:has(.purchase-simple) > .modal-countdown {
+  position: static;
+  min-height: 24px;
+  margin-bottom: 8px;
+  text-align: right;
+  color: #183b48;
+}
+.modal .purchase-simple > .purchase-title {
+  display: none;
+}
+.purchase-simple .purchase-levels {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 6px;
+  gap: 12px;
 }
-.purchase-levels button {
+.purchase-simple .purchase-levels button {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 10px 4px;
-  min-width: 0;
-  gap: 6px;
-  color: #204c56;
-  background: #e5ece5;
-  border: 2px solid transparent;
-  border-radius: 12px;
-}
-.purchase-levels button[aria-pressed='true'] {
-  background: #ffedb1;
-  border-color: #b08123;
-}
-.purchase-levels strong {
-  font-size: 12px;
-}
-.purchase-levels small {
-  font-size: 11px;
-  white-space: nowrap;
-}
-.building-preview {
-  display: flex;
-  align-items: center;
-  height: 45px;
-  font-size: 26px;
-  letter-spacing: -4px;
-  color: var(--property-color);
-  text-shadow: 1px 3px #ffffff;
-}
-.building-preview.level-4 {
-  font-size: 45px;
-}
-.level-locked .building-preview {
-  filter: grayscale(1);
-  opacity: 0.55;
-}
-.level-lock {
-  font-size: 10px;
-}
-.purchase-preview {
-  display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
   gap: 8px;
-  padding: 10px;
-  background: #edf2e9;
-  border-radius: 12px;
+  min-width: 0;
+  padding: 12px 8px 40px;
+  background: linear-gradient(#d2ece8, #fffdf4 80%);
+  color: #183b48;
+  border: 3px solid #b7c8bd;
+  border-radius: 18px;
+  box-shadow: 0 4px 0 #a0b3a8;
 }
-.purchase-preview span {
+.purchase-simple .purchase-levels button[aria-pressed='true'] {
+  border-color: #23726a;
+  box-shadow: 0 4px 0 #16534e;
+  background: linear-gradient(#d7efcf, #fff6cd);
+}
+.building-illustration {
+  display: block;
+  width: 100%;
+  height: auto;
+  flex: 0 0 auto;
+}
+.purchase-simple .purchase-levels strong {
+  font-size: clamp(18px, 1.7vw, 26px);
+  line-height: 1.15;
+}
+.purchase-simple .level-check {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
   display: grid;
-  gap: 3px;
-  font-size: 12px;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 2px solid #436d45;
+  border-radius: 6px;
+  background: #fffefa;
+  color: #245331;
+  font-size: 24px;
+  font-weight: 900;
 }
-.purchase-preview strong {
-  font-size: 21px;
+.purchase-simple .level-lock {
+  margin-top: 2px;
+  background: #eee6f3;
+  color: #563d62;
+  border: 1px solid #aa97b5;
+  border-radius: 6px;
+  padding: 4px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.level-locked .building-illustration {
+  filter: grayscale(1);
+}
+.purchase-simple .purchase-preview {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 32px;
+  text-align: center;
+  padding: 4px;
+}
+.purchase-simple .purchase-preview span {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 22px;
+}
+.purchase-simple .purchase-preview strong {
+  font-size: 34px;
+  color: #153d4e;
 }
 .purchase-simple .purchase-rule,
-.purchase-simple .purchase-wallet {
+.purchase-simple .purchase-wallet,
+.purchase-simple .purchase-buyout {
   margin: 0;
-  font-size: 12px;
-  line-height: 1.45;
-}
-.purchase-buttons {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-  gap: 8px;
-}
-.purchase-simple .purchase-buttons button,
-.modal .purchase-simple .purchase-buttons button {
-  grid-area: auto;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  padding: 12px;
-  min-height: 48px;
-}
-.purchase-simple .purchase-cta > span:first-child {
+  text-align: center;
   font-size: 17px;
+  line-height: 1.4;
+  color: #294b53;
+}
+.purchase-simple .purchase-wallet strong {
+  color: #153d4e;
+}
+.purchase-simple .purchase-buttons {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 12px;
+}
+.modal .purchase-simple .purchase-buttons button,
+.purchase-simple .purchase-buttons button {
+  grid-area: auto;
+  width: auto;
+  min-width: 0;
+  min-height: 64px;
+  margin: 0;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.purchase-simple .purchase-buttons .purchase-cta {
+  flex: 0 1 640px;
+  background: #ffc64f;
+  color: #153d4e;
+  border: 3px solid #ba7716;
+  border-radius: 18px;
+  box-shadow: 0 5px 0 #9d6519;
+}
+.purchase-simple .purchase-buttons .purchase-cta > span:first-child {
+  font-size: clamp(23px, 2.2vw, 34px);
+  font-weight: 900;
+}
+.purchase-simple .purchase-buttons .purchase-pass {
+  font-size: 20px;
+  background: #f5efde;
+  color: #294b53;
+  border: 2px solid #bcb4a1;
+}
+.purchase-simple .purchase-buyout strong {
+  white-space: nowrap;
 }
 .purchase-simple .purchase-fraud {
   margin: 0;
-  min-height: 40px;
+  color: #713724;
+  background: #fff0e4;
 }
-.modal:has(.purchase-simple) {
-  width: min(600px, calc(100vw - 24px));
+.purchase-simple .fraud-risk {
+  color: #713724;
+}
+.purchase-simple .island-rents {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.purchase-simple .island-rents .building-illustration {
+  width: 200px;
+}
+.purchase-simple .island-rents > span {
+  display: grid;
+  gap: 8px;
+  font-size: 20px;
+}
+.purchase-simple .island-rents strong {
+  font-size: 26px;
+}
+/* The hotel hint sits on cream; never inherit pale text from the dark action panel. */
+.game-layout .action-card > .board-choice-hint {
+  color: #153d4e;
+  background: #fff0b7;
+  font-weight: 600;
+  font-size: 14px;
+}
+.game-layout .action-card > .board-choice-hint * {
+  color: inherit;
+}
+.game-layout .action-card > .hotel-unlock-hint {
+  display: block;
+  padding: 8px;
+}
+.purchase-simple button:focus-visible {
+  outline: 3px solid #123e53;
+  outline-offset: 4px;
+}
+.purchase-simple button:disabled {
+  opacity: 1;
+  color: #53605d;
+  background: #e3e5df;
+  border-color: #828f88;
+  box-shadow: none;
 }
 @media (max-width: 1000px) {
-  .modal .purchase-simple {
-    gap: 9px;
+  .modal .purchase-simple .purchase-buttons {
+    position: sticky;
+    bottom: -16px;
+    z-index: 2;
+    background: #fff8e8;
+    padding: 8px 0;
   }
-  .purchase-title h3 {
-    font-size: 24px;
+  .modal:has(.purchase-simple) {
+    width: min(760px, calc(100vw - 16px));
+    padding: 10px 12px 16px;
+    border-radius: 22px;
   }
-  .purchase-title > span {
-    font-size: 18px;
+  .modal:has(.purchase-simple) > .modal-heading {
+    margin: 0 -12px 16px;
+    padding: 8px 14px;
   }
-  .purchase-levels {
-    gap: 3px;
+  .modal:has(.purchase-simple) .modal-heading h2 {
+    font-size: 30px;
   }
-  .purchase-levels strong {
-    font-size: 10px;
+  .purchase-offer.purchase-simple {
+    gap: 10px;
   }
-  .purchase-levels small {
-    font-size: 9px;
+  .purchase-simple .purchase-levels {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 3px 3px 8px;
+    scroll-snap-type: x proximity;
   }
-  .purchase-levels button {
-    padding: 6px 1px;
-    gap: 4px;
+  .purchase-simple .purchase-levels button {
+    flex: 1 0 100px;
+    padding: 7px 4px 31px;
+    scroll-snap-align: start;
+    border-width: 2px;
+    border-radius: 12px;
   }
-  .building-preview {
-    height: 32px;
-    font-size: 22px;
+  .purchase-simple .purchase-levels strong {
+    font-size: 16px;
   }
-  .building-preview.level-4 {
-    font-size: 33px;
+  .purchase-simple .level-lock {
+    font-size: 11px;
+    padding: 3px;
   }
+  .purchase-simple .level-check {
+    width: 19px;
+    height: 19px;
+    bottom: 6px;
+    right: 6px;
+    font-size: 19px;
+  }
+  .purchase-simple .purchase-preview {
+    gap: 5px;
+  }
+  .purchase-simple .purchase-preview span {
+    font-size: 15px;
+    gap: 8px;
+  }
+  .purchase-simple .purchase-preview strong {
+    font-size: 23px;
+  }
+  .purchase-simple .purchase-rule,
+  .purchase-simple .purchase-wallet,
+  .purchase-simple .purchase-buyout {
+    font-size: 13px;
+  }
+  .modal .purchase-simple .purchase-buttons button,
   .purchase-simple .purchase-buttons button {
-    padding: 9px 4px;
+    min-height: 48px;
+    padding: 9px 10px;
+    gap: 6px;
   }
-  .purchase-simple .purchase-cta > span:first-child {
+  .purchase-simple .purchase-buttons .purchase-cta {
+    flex: 1;
+    border-width: 2px;
+  }
+  .purchase-simple .purchase-buttons .purchase-cta > span:first-child {
+    font-size: 19px;
+  }
+  .purchase-simple .purchase-buttons .purchase-pass {
     font-size: 14px;
+  }
+  .purchase-simple .island-rents .building-illustration {
+    width: 120px;
   }
 }
 @media (max-height: 500px) and (max-width: 1000px) {
-  .modal:has(.purchase-simple) {
-    width: min(680px, calc(100vw - 24px));
+  .modal .purchase-offer.purchase-simple {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    gap: 8px 16px;
   }
-  .modal .purchase-simple {
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    gap: 7px 16px;
-  }
-  .purchase-title,
-  .purchase-levels {
+  .modal .purchase-simple .purchase-levels,
+  .modal .purchase-simple .island-rents {
     grid-column: 1;
+    grid-row: 1 / span 3;
   }
-  .purchase-preview {
+  .modal .purchase-simple .purchase-preview {
     grid-column: 2;
     grid-row: 1;
   }
-  .purchase-rule {
+  .modal .purchase-simple .purchase-rule {
     grid-column: 2;
     grid-row: 2;
   }
-  .purchase-simple .purchase-wallet {
-    grid-column: 1;
-  }
-  .purchase-buttons {
+  .modal .purchase-simple .purchase-wallet {
     grid-column: 2;
     grid-row: 3;
   }
-  .purchase-simple .purchase-fraud,
-  .purchase-simple .fraud-risk {
+  .modal .purchase-simple .purchase-buttons {
+    grid-column: 1 / -1;
     grid-row: 4;
   }
+  .modal .purchase-simple .purchase-buyout {
+    grid-column: 1 / -1;
+    grid-row: 5;
+  }
+  .modal .purchase-simple .purchase-fraud,
+  .modal .purchase-simple .fraud-risk {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+  .modal:has(.purchase-simple) > .modal-countdown {
+    min-height: 0;
+    margin: 0;
+  }
+  .modal:has(.purchase-simple) > .modal-heading {
+    margin-bottom: 8px;
+    padding-block: 4px;
+  }
+  .modal:has(.purchase-simple) .modal-heading h2 {
+    font-size: 26px;
+  }
+  .modal .purchase-simple .purchase-levels button {
+    flex-basis: 84px;
+  }
 }
+/* Keep the practice purchase compact alongside its board. */
+.tutorial-action .purchase-simple .purchase-levels {
+  display: none;
+}
+.tutorial-action .purchase-simple .purchase-preview span {
+  font-size: 14px;
+}
+.tutorial-action .purchase-simple .purchase-preview strong {
+  font-size: 20px;
+}
+.tutorial-action .purchase-simple .purchase-rule,
+.tutorial-action .purchase-simple .purchase-buyout {
+  display: none;
+}
+.tutorial-action .purchase-simple .purchase-buttons button {
+  padding: 8px;
+  min-height: 44px;
+}
+.tutorial-action .purchase-simple .purchase-buttons .purchase-cta > span:first-child {
+  font-size: 16px;
+}
+
 @media (min-width: 1001px) {
   body:has(.game-layout) {
     overflow: hidden;

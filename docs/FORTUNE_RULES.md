@@ -1,10 +1,10 @@
 # Casinos, assurance et Duel — édition 32 cases
 
-Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases conservent leur géographie et leurs cartes. Le protocole de salon v9 isole les éditions incompatibles.
+Règles appliquées aux nouvelles parties. Les sauvegardes de 26 et 28 cases conservent leur géographie et leurs cartes. Le protocole de salon v10 isole les éditions incompatibles.
 
 ## Plateau
 
-32 cases : carré de neuf cases par côté, coins inclus. Huit rues de deux villes réelles sont mélangées par graine partagée. Les quatre îles, les trois Chance, les deux casinos, Assurance, Duel et les quatre coins restent fixes. La Taxe est en position 31, immédiatement avant Départ. Les sols identifient les rues ; seul le liseré extérieur identifie le propriétaire.
+32 cases : carré de neuf cases par côté, coins inclus. Huit rues de deux villes réelles sont mélangées par graine partagée. Les tarifs restent attachés aux emplacements : les villes augmentent de 100 k à 475 k par pas de 25 k dans le sens horaire depuis Départ. Loyers et coûts de construction suivent ce même rang économique ; les îles conservent leur tarif commun. Les sauvegardes v9 gardent leurs anciens tarifs et leur assurance déplaçable. Les quatre îles, les trois Chance, les deux casinos, Assurance, Duel et les quatre coins restent fixes. La Taxe est en position 31, immédiatement avant Départ. Les sols identifient les rues ; seul le liseré extérieur identifie le propriétaire.
 
 ## Casinos
 
@@ -14,8 +14,8 @@ Chaque casino possède son compteur de visites : première visite 2 %, puis +2 p
 
 ## Assurance et attaques
 
-- Assurance donne au maximum un jeton par joueur. Pendant son tour, le joueur clique sur un bien possédé pour l’assurer ou déplacer son jeton. Le jeton apparaît près du nom et le bien porte un bouclier.
-- Le jeton est consommé pour bloquer un rachat hostile, une expropriation ou une destruction. Il ne bloque pas une vente volontaire ou nécessaire au paiement d’une dette. Après une vente, le jeton reste disponible pour un autre bien.
+- Assurance donne au maximum un jeton par joueur. Pendant son tour, le joueur clique sur un bien possédé pour y poser son jeton une seule fois. La pose est réservée à ses propres biens et ne peut plus être déplacée. Le jeton apparaît près du nom et le bien porte un bouclier.
+- Le jeton est consommé pour bloquer un rachat hostile, une expropriation ou une destruction. Il ne bloque pas une vente volontaire ou nécessaire au paiement d’une dette. Après la vente du bien protégé, le jeton disparaît également. Repasser sur Assurance après sa consommation peut donner un nouveau jeton.
 - **Expropriation** vise une ville adverse, hôtel compris, qui retourne à la banque sans bâtiments. Les coéquipiers sont exclus.
 - **Invasion de cafards** vise un hôtel adverse : loyer total réduit de 50 % pendant deux retours du propriétaire. Un double ne réduit pas la durée. L’assurance ne bloque pas cette réduction temporaire.
 - **Squatteur** est conservée en main. À l’arrivée chez un adversaire, choisir de payer ou consommer la carte pour éviter tout le loyer. En cas d’expiration du délai, la carte évite automatiquement le loyer.
