@@ -95,7 +95,7 @@ export const optionsSchema = z
       .min(2)
       .max(4),
     mode: z.enum(['free-for-all', 'teams']),
-    durationMs: z.number().int().min(60000).max(1800000),
+    durationMs: z.number().int().min(60000).max(10800000),
   })
   .strict();
 export const authSchema = z

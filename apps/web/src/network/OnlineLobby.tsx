@@ -4,6 +4,7 @@ import { identity, secret, type Identity } from './crypto';
 import { Session, type SavedSession, type SessionView } from './session';
 import { TrysteroTransport } from './trystero';
 import { invitationCode } from './invitation';
+import { DurationPicker, validMinutes } from '../game/DurationPicker';
 import { loadTurnServers } from './ice';
 
 export default function OnlineLobby({
@@ -398,16 +399,7 @@ export default function OnlineLobby({
                         ))}
                       </select>
                     </label>
-                    <label>
-                      Durée
-                      <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-                        {[1, 5, 10, 20, 30].map((n) => (
-                          <option value={n} key={n}>
-                            {n} min
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <DurationPicker value={minutes} onChange={setMinutes} />
                   </div>
                   <label className="toggle">
                     <input
@@ -423,7 +415,7 @@ export default function OnlineLobby({
                   <p>Les sièges libres seront occupés par des bots.</p>
                   <button
                     className="primary"
-                    disabled={view.busy || view.blocked}
+                    disabled={view.busy || view.blocked || !validMinutes(minutes)}
                     onClick={() => void session.current?.start(count, teams, minutes * 60000)}
                   >
                     {view.busy ? 'Préparation du plateau…' : 'Lancer la partie'}

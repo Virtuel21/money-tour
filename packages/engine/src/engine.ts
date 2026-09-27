@@ -101,6 +101,14 @@ export function getRent(state: GameState, tileId: number): number {
 }
 
 function validateConfig(config: GameConfig): void {
+  for (const field of [
+    'hotelUnlockLaps',
+    'crisisMinRound',
+    'crisisCooldownRounds',
+    'crisisMaxCount',
+  ] as const)
+    if (config[field] !== undefined && (!Number.isSafeInteger(config[field]) || config[field]! < 0))
+      throw new Error('Invalid pacing configuration.');
   if (
     config.crisisChance !== undefined &&
     (!Number.isSafeInteger(config.crisisChance) ||
@@ -276,6 +284,7 @@ function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
   const property = state.properties[tile.id];
   if (tile.type !== 'city' || property?.ownerId !== player.id) return false;
   if (
+    state.config.buildingRequiresGroup !== false &&
     state.config.board.some(
       (other) =>
         other.type === 'city' &&
@@ -284,7 +293,14 @@ function canUpgrade(state: GameState, player: Player, tile: Tile): boolean {
     )
   )
     return false;
-  const cap = player.laps > 0 ? state.config.hotelLevel : state.config.initialMaxLevel;
+  const cap =
+    state.config.hotelUnlockLaps !== undefined
+      ? player.laps >= state.config.hotelUnlockLaps
+        ? state.config.hotelLevel
+        : state.config.hotelLevel - 1
+      : player.laps > 0
+        ? state.config.hotelLevel
+        : state.config.initialMaxLevel;
   return property.level < cap && player.cash >= (tile.buildCosts?.[property.level + 1] ?? Infinity);
 }
 
@@ -756,6 +772,25 @@ function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0)
         message: 'Un jeton assurance maximum. Choisissez une de vos propriétés à protéger.',
       });
       break;
+    case 'duel': {
+      state.duel = {
+        id: `${state.turn}:${state.seq}:${player.id}`,
+        challengerId: player.id,
+        amount: 0,
+        stage: 'offer',
+        commitments: {},
+        reveals: {},
+        escrow: false,
+      };
+      state.phase = 'duel';
+      events.push({
+        type: 'duel_started',
+        playerId: player.id,
+        tile: tile.id,
+        message: 'Case Duel : choisissez un adversaire et proposez une mise.',
+      });
+      break;
+    }
     case 'karma': {
       const values = state.players
         .filter((p) => !p.eliminated)
@@ -1536,6 +1571,11 @@ export function validateState(state: GameState): string[] {
       state.crisis.remaining.some((id) => !state.players.some((p) => p.id === id)))
   )
     errors.push('Invalid crisis duration.');
+  if (
+    state.crisisHistory &&
+    (!safe(state.crisisHistory.count) || !safe(state.crisisHistory.lastRound))
+  )
+    errors.push('Invalid crisis history.');
   if (!state.winner && (state.phase === 'rent') !== Boolean(state.pendingRent))
     errors.push('Rent decision mismatch.');
   if (

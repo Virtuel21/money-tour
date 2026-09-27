@@ -27,6 +27,7 @@ const Board = lazy(() => import('../board/Board3D'));
 export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(0);
+  const [attempt, setAttempt] = useState(0);
   const previousFocus = useRef(document.activeElement as HTMLElement | null);
   useEffect(() => {
     dialog.current?.showModal();
@@ -63,8 +64,9 @@ export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
         <button onClick={onClose}>Quitter le tutoriel</button>
       </header>
       <Lesson
-        key={index}
+        key={`${index}:${attempt}`}
         index={index}
+        onReplay={() => setAttempt(attempt + 1)}
         onBack={() => setIndex(index - 1)}
         onNext={() => (index === lessons.length - 1 ? onClose() : setIndex(index + 1))}
       />
@@ -76,10 +78,12 @@ function Lesson({
   index,
   onBack,
   onNext,
+  onReplay,
 }: {
   index: number;
   onBack: () => void;
   onNext: () => void;
+  onReplay: () => void;
 }) {
   const lesson = lessons[index]!;
   const [state, setState] = useState(() => {
@@ -193,7 +197,12 @@ function Lesson({
   const primary = simple[lesson.id];
   const action = primary && legal.find((a) => a.type === primary[0]);
   const reading = ['card', 'tax'].includes(cinema.frame.cue.kind) && cinema.busy;
-  const spot = (target: string) => (lesson.target === target ? ' tutorial-spotlit' : '');
+  const showResult =
+    (cinema.busy || done) && !reading && !['carnet', 'controls', 'adventure'].includes(lesson.id);
+  const spot = (target: string) =>
+    (showResult ? target === 'board' || target === 'accounts' : lesson.target === target)
+      ? ' tutorial-spotlit'
+      : '';
   return (
     <GameClockContext.Provider value={{ state: null, held: true }}>
       <div className="tutorial-dimmer" aria-hidden="true" />
@@ -217,10 +226,10 @@ function Lesson({
           </button>
         ))}
       </div>
-      <div className="tutorial-scene">
+      <div className={`tutorial-scene ${showResult ? 'showing-result' : ''}`}>
         <section
           className={'tutorial-board' + spot('board')}
-          inert={lesson.target !== 'board'}
+          inert={lesson.target !== 'board' && !showResult}
           aria-label="Plateau d’entraînement"
         >
           <Suspense fallback={<p>Chargement du plateau…</p>}>
@@ -230,7 +239,7 @@ function Lesson({
               onTile={clickTile}
               mobile={mobile}
               reducedMotion={reduced}
-              overview
+              overview={!showResult}
               self="p1"
               inspectedOwner={inspected}
               choices={done ? [] : targetActions.map((a) => a.tile)}
@@ -373,12 +382,15 @@ function Lesson({
           <button onClick={onBack} disabled={index === 0}>
             Précédent
           </button>
-          <button className="primary" onClick={onNext}>
-            {index === lessons.length - 1
-              ? 'Terminer le tutoriel'
-              : done && !cinema.busy
-                ? 'Continuer →'
-                : 'Passer cette étape →'}
+          {done && !cinema.busy && <button onClick={onReplay}>Rejouer</button>}
+          <button className="primary" onClick={onNext} disabled={cinema.busy}>
+            {cinema.busy
+              ? 'Observez le plateau…'
+              : index === lessons.length - 1
+                ? 'Terminer le tutoriel'
+                : done && !cinema.busy
+                  ? 'Continuer →'
+                  : 'Passer cette étape →'}
           </button>
         </div>
       </section>

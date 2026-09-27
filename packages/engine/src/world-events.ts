@@ -60,7 +60,17 @@ export function endWorldTurn(state: GameState, leavingId: string, events: GameEv
 }
 export function maybeCrisis(state: GameState, rng: Rng, events: GameEvent[]): void {
   if (state.crisis || !state.config.crisisChance) return;
+  const round = state.adventure?.round ?? Math.floor((state.turn - 1) / state.players.length) + 1;
+  if (
+    round < (state.config.crisisMinRound ?? 0) ||
+    (state.crisisHistory?.count ?? 0) >= (state.config.crisisMaxCount ?? Infinity) ||
+    (state.crisisHistory &&
+      round - state.crisisHistory.lastRound < (state.config.crisisCooldownRounds ?? 0))
+  )
+    return;
   if (randomInt(rng, 100) >= state.config.crisisChance) return;
+  if (state.config.crisisMaxCount !== undefined)
+    state.crisisHistory = { count: (state.crisisHistory?.count ?? 0) + 1, lastRound: round };
   state.crisis = { remaining: state.players.filter((p) => !p.eliminated).map((p) => p.id) };
   events.push({
     type: 'crisis',

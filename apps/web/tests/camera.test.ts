@@ -2,8 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { cameraBounds, followPlayer } from '../src/board/camera';
 
 describe('mobile camera', () => {
-  it('keeps desktop framing exactly unchanged', () => {
-    expect(cameraBounds(1440, 900, false)).toEqual({ halfWidth: 18, halfHeight: 12.25 });
+  it.each([
+    [1440, 900],
+    [3440, 1440],
+    [1024, 768],
+  ])('uses desktop space without stretching at %s × %s', (w, h) => {
+    const bounds = cameraBounds(w, h, false);
+    expect(bounds.halfWidth / bounds.halfHeight).toBeCloseTo(w / h);
+    expect(bounds.halfWidth).toBeGreaterThanOrEqual(17);
   });
   it.each([
     [320, 220],

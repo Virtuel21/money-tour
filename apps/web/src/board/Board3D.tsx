@@ -426,7 +426,7 @@ export default function Board({
             palm.position.set(p.x - p.normal.x * 0.65, 0.26, p.z - p.normal.z * 0.65);
             resources.add(palm);
           }
-          if (!['city', 'resort', 'island', 'chance', 'tax'].includes(tile.type)) {
+          if (!['city', 'resort', 'island', 'chance', 'tax', 'duel'].includes(tile.type)) {
             const model =
               tile.type === 'casino'
                 ? tile.id < 15
@@ -941,9 +941,11 @@ export default function Board({
                             ? mobile
                               ? 'ASSUR.'
                               : 'ASSURANCE'
-                            : t.type === 'karma'
-                              ? 'KARMA'
-                              : t.name;
+                            : t.type === 'duel'
+                              ? 'DUEL'
+                              : t.type === 'karma'
+                                ? 'KARMA'
+                                : t.name;
               return (
                 <div
                   key={t.id}

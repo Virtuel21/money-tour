@@ -31,8 +31,8 @@ export const lessons = [
   },
   {
     id: 'build',
-    title: 'Une rue complète, puis des maisons',
-    text: 'Vous possédez maintenant Madrid ET Barcelone, de même couleur. Sur votre ville, Construire ajoute un niveau : trois maisons puis un hôtel. Avant votre premier passage Départ, vous êtes limité à deux maisons. Les villes d’un coéquipier ne complètent pas votre groupe pour construire.',
+    title: 'Construire dès votre premier achat',
+    text: 'Vous pouvez construire sur Madrid sans posséder Barcelone. Chaque clic ajoute une maison, jusqu’à trois. L’hôtel se débloque après cinq tours complets du plateau. Les rues complètes servent toujours à gagner la partie.',
     task: 'Construisez une maison à Madrid.',
     target: 'action',
   },
@@ -67,7 +67,7 @@ export const lessons = [
   {
     id: 'duel',
     title: 'Défier un adversaire',
-    text: 'Proposez une mise à Sacha : chacun doit pouvoir payer la même somme. Après acceptation, choisissez secrètement pierre, feuille ou ciseaux, puis révélez. Le gagnant prend le pot ; une égalité rembourse les mises. Refuser avant de miser ne coûte rien.',
+    text: 'La case Duel remplace le Karma ; cette rencontre ne vient plus des cartes Chance. Proposez une mise à Sacha : chacun doit pouvoir payer la même somme. Après acceptation, choisissez secrètement pierre, feuille ou ciseaux, puis révélez. Le gagnant prend le pot ; une égalité rembourse les mises. Refuser avant de miser ne coûte rien.',
     task: 'Proposez un duel, choisissez une main et révélez-la.',
     target: 'action',
   },
@@ -165,7 +165,7 @@ export const lessons = [
   {
     id: 'adventure',
     title: 'Chaque voyage a sa règle',
-    text: 'Une règle spéciale est tirée : villes jumelles aux loyers doublés, festivals, héritage de départ, marché aux enchères au tour de table 10 ou capitale mystère rapportant 200 k en fin de partie. Une crise aléatoire peut diviser les loyers par deux pendant un tour de tous les joueurs. Le Karma donne 50 k au dernier patrimoine ou prend 50 k au premier.',
+    text: 'Une règle spéciale est tirée : villes jumelles aux loyers doublés, festivals, héritage de départ, marché aux enchères au tour de table 10 ou capitale mystère rapportant 200 k en fin de partie. Une crise rare peut diviser les loyers par deux pendant un tour de table : jamais avant le sixième, au plus deux par partie et espacées de huit tours de table.',
     task: 'Consultez la règle de cette simulation.',
     target: 'action',
   },
@@ -247,6 +247,7 @@ export function tutorialScene(id: LessonId): GameState {
     own(5);
     own(6);
   }
+  if (id === 'build') state.properties[6]!.ownerId = null;
   if (id === 'roll') land(5);
   if (id === 'start') land(2);
   if (id === 'rent') {
