@@ -111,7 +111,8 @@
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 8px;
 }
-.purchase-simple .purchase-buttons button {
+.purchase-simple .purchase-buttons button,
+.modal .purchase-simple .purchase-buttons button {
   grid-area: auto;
   width: 100%;
   min-width: 0;
