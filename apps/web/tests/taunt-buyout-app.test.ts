@@ -4,18 +4,24 @@ import { act, createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { config, createGame, type GameState } from '@money-tour/engine';
 import type { Taunt } from '../src/game/taunts';
+import type { Cue } from '../src/game/presentation';
 import App from '../src/App';
-const scene = vi.hoisted(() => ({ state: null as GameState | null, busy: false }));
+const scene = vi.hoisted(() => ({
+  state: null as GameState | null,
+  busy: false,
+  cue: { kind: 'hop', duration: 0 } as Cue,
+  advance: vi.fn(),
+}));
 vi.mock('../src/game/preview', () => ({
   previewScenario: () => ({ version: 1, seed: 'app-test', state: scene.state }),
 }));
 vi.mock('../src/game/usePresentation', () => ({
   usePresentation: () => ({
-    frame: { state: scene.state, cue: { kind: 'hop', duration: 0 } },
+    frame: { state: scene.state, cue: scene.cue },
     busy: scene.busy,
     present: vi.fn(),
     reset: vi.fn(),
-    advance: vi.fn(),
+    advance: scene.advance,
   }),
 }));
 vi.mock('../src/board/Board3D', () => ({
@@ -54,6 +60,8 @@ afterEach(async () => {
   await act(() => root?.unmount());
   document.body.innerHTML = '';
   vi.useRealTimers();
+  scene.cue = { kind: 'hop', duration: 0 };
+  scene.advance.mockClear();
 });
 async function mount() {
   vi.useFakeTimers();
@@ -77,6 +85,43 @@ const game = () =>
       { id: 'b', name: 'Bob' },
     ],
   });
+it.each(['notice', 'card', 'tax', 'casino', 'money'] as const)(
+  'lets a player dismiss %s feedback during a bot turn without changing game state',
+  async (kind) => {
+    scene.state = game();
+    scene.state.currentPlayer = 1;
+    scene.state.players[1]!.bot = true;
+    scene.busy = true;
+    scene.cue = {
+      kind,
+      duration: 5000,
+      playerId: 'b',
+      cardId: 'chance-01',
+      amount: 100,
+      message: 'Information',
+    };
+    const before = structuredClone(scene.state);
+    const host = await mount();
+    const close = host.querySelector<HTMLButtonElement>(
+      kind === 'money' ? '.money-close' : '.modal-heading [aria-label="Fermer"]',
+    );
+    expect(close).not.toBeNull();
+    await act(() => close!.click());
+    expect(scene.advance).toHaveBeenCalledOnce();
+    expect(scene.state).toEqual(before);
+  },
+);
+
+it('lets Escape dismiss an announcement', async () => {
+  scene.state = game();
+  scene.busy = true;
+  scene.cue = { kind: 'notice', duration: 5000, message: 'Information' };
+  const host = await mount();
+  await act(() =>
+    host.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true })),
+  );
+  expect(scene.advance).toHaveBeenCalledOnce();
+});
 it('opens the buyout picker from the game CTA without transferring the property first', async () => {
   scene.state = game();
   scene.busy = false;

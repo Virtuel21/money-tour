@@ -33,9 +33,11 @@ export function MobileTiles({
               {selling
                 ? 'Vendre · ' +
                   money(Math.floor(getPropertyValue(state, t.id) * state.config.resaleRate), true)
-                : t.price
-                  ? money(t.price, true)
-                  : 'Escale spéciale'}
+                : state.phase === 'travel' && choices.length > 0
+                  ? 'Voyage · ' + money(state.config.travelFee, true)
+                  : t.price
+                    ? money(t.price, true)
+                    : 'Escale spéciale'}
             </small>
             {selling && <ActionClock />}
           </button>

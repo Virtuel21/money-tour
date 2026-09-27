@@ -11,6 +11,7 @@ export function previewScenario(): LocalSave | null {
       'auction',
       'quest',
       'travel',
+      'travel-double',
       'build',
       'card',
       'crowded',
@@ -76,6 +77,11 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'travel-double') {
+    player.position = 20;
+    const result = reduceGame(state, { type: 'roll', playerId: player.id }, () => 0.2);
+    return { version: 1, seed: 'visual-review', state: result.state };
+  }
   if (name === 'buyout') {
     player.position = 5;
     state.phase = 'property';

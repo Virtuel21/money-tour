@@ -490,7 +490,7 @@
     font-size: 13px;
   }
   .game-layout .city-label.special-label b {
-    font-size: 0.8em;
+    font-size: clamp(10px, calc(1.05cqw * var(--camera-label-scale, 1)), 16px);
   }
   .mobile-tile-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -574,6 +574,9 @@
   }
 }
 @media (max-width: 999px) and (orientation: landscape) {
+  .mobile-tile-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .app .game-layout {
     grid-template-columns: minmax(0, 1fr) 245px;
     grid-template-rows: 42px 48px minmax(0, 1fr);
