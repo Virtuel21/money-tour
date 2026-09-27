@@ -110,3 +110,14 @@ Recette Chromium sur tailles simulées. Téléphones physiques, Safari iOS et r�
 - 456 tests vérifiés : suite complète de 449 tests puis sept nouveaux cas de présentation et d’interface ; réseau signé, déduplication, délai, identité de l’expéditeur et état de jeu inchangé couverts. Couverture moteur de la passe complète : 97,13 % des lignes, 93,44 % des branches. Typage, lint, formatage, build et budgets assets/modèles validés.
 
 Recette Chromium sur viewports simulés. Appareils physiques, Safari iOS et liaison 5G non testés pour cette livraison. Prompts exacts dans [TAUNTS_ART.md](TAUNTS_ART.md).
+
+# Rachat avec constructions et corrections des taunts — édition v14
+
+- PC 1280 × 800 : clic sur le haut, le milieu et le bas du personnage, trois ouvertures du menu réussies. La zone cliquable reste stable pendant l’appui.
+- Taunt de Léa envoyé pendant le déplacement d’un bot, menu conservé malgré le changement de tour : une seule image au-dessus de Léa, aucun bandeau central ni message. Délai de huit secondes et identité réseau vérifiés.
+- PC 1920 × 1080 : clic Racheter → sélecteur identique à l’achat. Madrid avec deux maisons : prix 450 (300 au vendeur, 150 de construction), loyer 60 ; après validation, Léa 1 050, Max 1 800, uniquement Fin du tour. Portrait 390 × 844 : fenêtre 374 × 707, choix accessibles horizontalement, aucun débordement de page.
+- Rachat atomique testé pour terrain, une/deux/trois maisons et hôtel ; bâtiments existants conservés, seuls les niveaux manquants facturés, refus des offres invalides et de l’hôtel prématuré. Assurance : aucun débit/construction quand elle bloque, consommation unique. Rejeu réseau et animations successives identiques.
+- Tests de l’interface complète pour l’ouverture du sélecteur, les taunts pendant l’animation adverse, leur persistance au changement de tour et l’absence de message central. Sauvegardes v13 lisibles sans changement de leurs montants ; nouveaux salons v14 pour le format de commande de rachat.
+- 471 tests réussis. Couverture moteur : 97,17 % des lignes et 93,30 % des branches. Typage, lint, formatage, build et contrôles des assets/modèles validés.
+
+Recette Chromium sur tailles simulées ; téléphone physique et Safari iOS non testés.

@@ -1,5 +1,5 @@
 import type { GameState } from '@money-tour/engine';
-import { taunts, tauntAsset, type TauntKind, type Taunt } from './taunts';
+import { taunts, tauntAsset, type TauntKind } from './taunts';
 export function TauntMenu({
   state,
   playerId,
@@ -41,24 +41,6 @@ export function TauntMenu({
           ? 'Votre personnage reprend son souffle… quelques secondes avant le prochain taunt.'
           : 'Visible par tous · une réaction toutes les 8 secondes.'}
       </p>
-    </div>
-  );
-}
-export function TauntToast({ state, taunt }: { state: GameState; taunt: Taunt }) {
-  const seat = state.players.findIndex((p) => p.id === taunt.playerId),
-    player = state.players[seat];
-  if (!player) return null;
-  const target = state.players.find((p) => p.id === taunt.targetId);
-  return (
-    <div className="taunt-toast" role="status">
-      <img src={tauntAsset(seat, taunt.kind)} alt="" width="100" height="100" />
-      <div>
-        <b>
-          {player.name}
-          {target && target.id !== player.id ? ` → ${target.name}` : ''}
-        </b>
-        <span>{taunts.find((t) => t.id === taunt.kind)?.label}</span>
-      </div>
     </div>
   );
 }

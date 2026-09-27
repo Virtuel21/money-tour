@@ -1,6 +1,12 @@
 import { victoryThreats } from '@money-tour/engine';
-import { TauntMenu, TauntToast } from './game/TauntMenu';
-import { TAUNT_COOLDOWN, TAUNT_DURATION, type Taunt, type TauntKind } from './game/taunts';
+import { TauntMenu } from './game/TauntMenu';
+import {
+  TAUNT_COOLDOWN,
+  TAUNT_DURATION,
+  tauntPlayer,
+  type Taunt,
+  type TauntKind,
+} from './game/taunts';
 import { eventText } from './game/journal';
 import type { BonusInfo } from './game/bonuses';
 import { MobileTiles } from './game/MobileTiles';
@@ -155,6 +161,7 @@ export default function App() {
     setModal('bonus');
   };
   const [tauntTarget, setTauntTarget] = useState('');
+  const [tauntSender, setTauntSender] = useState<string>();
   const [visibleTaunt, setVisibleTaunt] = useState<Taunt | null>(null);
   const [tauntReadyAt, setTauntReadyAt] = useState(0);
   const seenTaunt = useRef('');
@@ -189,6 +196,7 @@ export default function App() {
     sound.current?.configure(audioPrefs);
   }, [audioPrefs]);
   const [dismissedOffer, setDismissedOffer] = useState('');
+  const [buyoutOfferKey, setBuyoutOfferKey] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(4),
     [mode, setMode] = useState<'solo' | 'local' | 'teams'>('solo');
@@ -209,7 +217,6 @@ export default function App() {
   useEffect(() => {
     setOverview(false);
     setInspectedOwner(null);
-    setModal((open) => (open === 'taunt' ? null : open));
   }, [turnKey]);
   const display = cinema.frame.state;
   useEffect(() => {
@@ -240,15 +247,12 @@ export default function App() {
   const active = current.players[current.currentPlayer]!;
   const warnings = victoryThreats(current);
   const humans = current.players.filter((p) => !p.bot && !p.eliminated);
-  const tauntSender =
-    online?.self ??
-    (humans.length === 1
-      ? humans[0]!.id
-      : !active.bot && !active.eliminated
-        ? active.id
-        : undefined);
+  const canTaunt =
+    !paused &&
+    !current.winner &&
+    (online ? humans.some((p) => p.id === online.self) : humans.length > 0);
   const sendTaunt = (kind: TauntKind) => {
-    if (!tauntSender || tauntReadyAt || current.winner) return;
+    if (!tauntSender || tauntReadyAt || tauntPlayer(current, tauntSender) !== tauntSender) return;
     if (onlineSession.current)
       void onlineSession.current.taunt(kind, tauntTarget === tauntSender ? undefined : tauntTarget);
     else {
@@ -405,11 +409,11 @@ export default function App() {
     decisionPlayer.bot ||
     Boolean(current.winner) ||
     Boolean(online && (online.self !== decisionPlayer.id || online.busy || online.blocked));
+  const offerKey = [save?.seed, active.id, current.turn, active.position].join(':');
   const eligibleOffer =
     screen === 'game' && !interactionDisabled && !modal
-      ? purchaseOffer(current, online?.self)
+      ? purchaseOffer(current, online?.self, buyoutOfferKey === offerKey)
       : null;
-  const offerKey = [save?.seed, active.id, current.turn, active.position].join(':');
   const offer = eligibleOffer && dismissedOffer !== offerKey ? eligibleOffer : null;
   const chooseTile = (id: number) => {
     setInspectedOwner(null);
@@ -744,7 +748,6 @@ export default function App() {
                 )}
               </div>
             )}
-            {visibleTaunt && <TauntToast state={current} taunt={visibleTaunt} />}
             <div className="players">
               {current.players.map((p, i) => (
                 <article
@@ -840,8 +843,11 @@ export default function App() {
                   <Board
                     state={display}
                     onPlayer={
-                      tauntSender && !paused && !rolling && !current.winner
+                      canTaunt
                         ? (id) => {
+                            const sender = tauntPlayer(current, online?.self, id);
+                            if (!sender) return;
+                            setTauntSender(sender);
                             setTauntTarget(id);
                             setSelected(null);
                             setModal('taunt');
@@ -1033,7 +1039,13 @@ export default function App() {
                           disabled={interactionDisabled}
                           onClick={() => {
                             if (!interactionDisabled) {
-                              if ((a.type === 'buy' || a.type === 'upgrade') && eligibleOffer)
+                              if (a.type === 'buyout') {
+                                setBuyoutOfferKey(offerKey);
+                                setDismissedOffer('');
+                              } else if (
+                                (a.type === 'buy' || a.type === 'upgrade') &&
+                                eligibleOffer
+                              )
                                 setDismissedOffer('');
                               else act(a);
                             }
@@ -1389,16 +1401,24 @@ export default function App() {
           <Modal title={offer.tile.name} onClose={() => setDismissedOffer(offerKey)}>
             <PurchaseDetails
               state={current}
+              buyout={offer.buyout}
               onBuy={(level) =>
                 act({
-                  type:
-                    current.properties[active.position]?.ownerId === active.id ? 'upgrade' : 'buy',
+                  type: offer.buyout
+                    ? 'buyout'
+                    : current.properties[active.position]?.ownerId === active.id
+                      ? 'upgrade'
+                      : 'buy',
                   playerId: active.id,
                   level,
                 })
               }
               onFraud={(level) => act({ type: 'buy_fraud', playerId: active.id, level })}
-              onPass={() => act({ type: 'finish', playerId: active.id })}
+              onPass={() =>
+                offer.buyout
+                  ? setDismissedOffer(offerKey)
+                  : act({ type: 'finish', playerId: active.id })
+              }
             />
           </Modal>
         )}

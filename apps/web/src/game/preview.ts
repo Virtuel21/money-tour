@@ -37,6 +37,8 @@ export function previewScenario(): LocalSave | null {
       'earthquake',
       'island',
       'rivalry',
+      'buyout',
+      'taunt-out-of-turn',
     ].includes(name)
   )
     return null;
@@ -74,6 +76,18 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'buyout') {
+    player.position = 5;
+    state.phase = 'property';
+    state.properties[5] = { ownerId: 'p2', level: 0, championships: 0 };
+  }
+  if (name === 'taunt-out-of-turn') {
+    state.currentPlayer = 1;
+    state.players.forEach((p, i) => {
+      p.bot = i !== 0;
+      p.position = [5, 0, 21, 29][i]!;
+    });
+  }
   if (name === 'rivalry') {
     state.phase = 'roll';
     player.position = 5;

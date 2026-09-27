@@ -55,15 +55,15 @@ it('shares authenticated out-of-turn taunts, deduplicates, rate limits, and pres
     expect(JSON.stringify(host.state)).toBe(before);
     expect(host.head).toBe(hash);
     await guest.taunt('cry');
-    await network.flush();
+    await flush();
     expect(host.taunts[0]!.kind).toBe('cash');
     now += 8000;
     await guest.taunt('crown');
-    await network.flush();
+    await flush();
     expect(host.taunts[0]!.kind).toBe('crown');
     now += 8000;
     await guest.taunt('kiss', 'unknown-player');
-    await network.flush();
+    await flush();
     expect(host.taunts[0]!.kind).toBe('crown');
     expect(bodySchema.safeParse({ type: 'taunt', kind: 'arbitrary text' }).success).toBe(false);
     expect(

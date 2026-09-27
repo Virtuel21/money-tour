@@ -9,6 +9,7 @@ import {
   legacyConfigV10,
   legacyConfigV11,
   legacyConfigV12,
+  legacyConfigV13,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -23,6 +24,17 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('resumes v13 with the same economy, properties and earthquake rules', () => {
+    const save = newLocal({
+      config: legacyConfigV13 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v13', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+  });
   it('resumes v12 without adding earthquakes or renaming its cities', () => {
     const save = newLocal({
       config: legacyConfigV12 as GameConfig,

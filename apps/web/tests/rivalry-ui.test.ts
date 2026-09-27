@@ -7,6 +7,10 @@ import { PlayerInventory } from '../src/game/AdventureHUD';
 import { MobilePocket } from '../src/game/MobilePocket';
 import { TauntMenu } from '../src/game/TauntMenu';
 import { estateGroups } from '../src/game/estate';
+import { tauntPlayer } from '../src/game/taunts';
+import { PurchaseDetails, purchaseOffer } from '../src/game/PurchaseOffer';
+import { reduceGame } from '@money-tour/engine';
+import { actionSchema } from '../src/network/schema';
 vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 let root: Root;
 afterEach(async () => {
@@ -19,6 +23,46 @@ const mount = () => {
   root = createRoot(host);
   return host;
 };
+it('keeps network and solo taunts bound to the human outside their turn, and supports shared-device players', () => {
+  const state = tutorialScene('build');
+  state.currentPlayer = 1;
+  state.players[1]!.bot = true;
+  expect(tauntPlayer(state, undefined, 'p2')).toBe('p1');
+  expect(tauntPlayer(state, 'p1', 'p2')).toBe('p1');
+  expect(tauntPlayer(state, 'p2', 'p1')).toBeUndefined();
+  state.players[1]!.bot = false;
+  expect(tauntPlayer(state, undefined, 'p1')).toBe('p1');
+  state.players[0]!.eliminated = true;
+  expect(tauntPlayer(state, 'p1')).toBeUndefined();
+});
+it('opens the requested buyout selector and submits the chosen houses in one validated action', async () => {
+  let state = tutorialScene('build');
+  state.quests!.p1!.completed = true;
+  state.properties[5] = { ownerId: 'p2', level: 0, championships: 0 };
+  expect(purchaseOffer(state)).toBeNull();
+  expect(purchaseOffer(state, undefined, true)?.buyout).toBe(true);
+  const host = mount(),
+    buy = vi.fn((level: number) => {
+      state = reduceGame(
+        state,
+        actionSchema.parse({ type: 'buyout', playerId: 'p1', level }),
+      ).state;
+    });
+  await act(() =>
+    root.render(
+      createElement(PurchaseDetails, { state, buyout: true, onBuy: buy, onPass: vi.fn() }),
+    ),
+  );
+  const before = state.players[0]!.cash;
+  expect(host.querySelector('.purchase-cta')!.textContent).toContain('300 💵');
+  await act(() => host.querySelectorAll<HTMLButtonElement>('.purchase-levels button')[3]!.click());
+  expect(host.querySelector('.purchase-cta')!.textContent).toContain('525 💵');
+  await act(() => host.querySelector<HTMLButtonElement>('.purchase-cta')!.click());
+  expect(buy).toHaveBeenCalledWith(3);
+  expect(state.properties[5]).toMatchObject({ ownerId: 'p1', level: 3 });
+  expect(state.players[0]!.cash).toBe(before - 525);
+  expect(state.phase).toBe('end');
+});
 it('keeps streets together on desktop and paginates whole streets on mobile with the targeted malus', async () => {
   const state = tutorialScene('build');
   Object.values(state.properties).forEach((p) => (p.ownerId = null));

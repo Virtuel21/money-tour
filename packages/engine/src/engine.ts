@@ -360,6 +360,43 @@ export function getPurchaseQuote(state: GameState, level = 0, fraud = false) {
   };
 }
 
+/** Transfer the existing property at the buyout price; only new buildings go to the bank. */
+export function getBuyoutQuote(
+  state: GameState,
+  level = state.properties[activePlayer(state).position]?.level ?? 0,
+) {
+  const player = activePlayer(state),
+    tile = tileAt(state, player.position);
+  const property = state.properties[tile.id],
+    base = getPurchaseQuote(state, level);
+  if (!base || !property || tile.type !== 'city') return null;
+  const land = Math.floor(getPropertyValue(state, tile.id) * state.config.buyoutMultiplier);
+  const buildings = (tile.buildCosts ?? [])
+    .slice(property.level + 1, level + 1)
+    .reduce((sum, cost) => sum + cost, 0);
+  const total = land + buildings;
+  const available =
+    !state.winner &&
+    state.phase === 'property' &&
+    !!property.ownerId &&
+    !allies(state, player.id, property.ownerId) &&
+    property.level < state.config.hotelLevel &&
+    level >= property.level &&
+    (level === property.level ||
+      (state.config.bundledPurchase === true &&
+        state.config.singlePropertyDecision === true &&
+        level <= buildingCap(state, player) &&
+        (state.config.buildingRequiresGroup === false ||
+          !state.config.board.some(
+            (other) =>
+              other.id !== tile.id &&
+              other.type === 'city' &&
+              other.group === tile.group &&
+              state.properties[other.id]?.ownerId !== player.id,
+          ))));
+  return { ...base, land, buildings, total, available, canBuy: available && player.cash >= total };
+}
+
 /** Quote only the additional buildings on an already owned city. */
 export function getConstructionQuote(state: GameState, level: number) {
   const player = activePlayer(state),
@@ -1290,17 +1327,36 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
     }
     case 'buyout': {
       const property = state.properties[player.position]!;
-      const price = Math.floor(
-        getPropertyValue(state, player.position) * state.config.buyoutMultiplier,
-      );
+      const quote = getBuyoutQuote(
+        state,
+        action.level === undefined ? property.level : action.level,
+      )!;
+      const price = quote.land,
+        previousLevel = property.level;
       if (protectProperty(state, player.position, events)) {
         state.phase = 'end';
         break;
       }
-      player.cash -= price;
+      player.cash -= quote.total;
       credit(state, property.ownerId, price, events, 'buyout');
       property.ownerId = player.id;
-      events.push({ type: 'buyout', playerId: player.id, tile: player.position, amount: price });
+      events.push({
+        type: 'buyout',
+        playerId: player.id,
+        tile: player.position,
+        amount: price,
+        ...(quote.level > previousLevel ? { level: previousLevel } : {}),
+      });
+      for (let level = previousLevel + 1; level <= quote.level; level++) {
+        property.level = level;
+        events.push({
+          type: 'build',
+          playerId: player.id,
+          tile: player.position,
+          level,
+          amount: tileAt(state, player.position).buildCosts![level],
+        });
+      }
       if (state.config.singlePropertyDecision) state.phase = 'end';
       break;
     }
@@ -1386,6 +1442,16 @@ function applyAction(state: GameState, action: GameAction, rng: Rng, events: Gam
 
 export function isLegalPlayerAction(state: GameState, action: GameAction): boolean {
   if (state.winner) return false;
+  if (
+    action.type === 'buyout' &&
+    !getBuyoutQuote(
+      state,
+      action.level === undefined
+        ? (state.properties[activePlayer(state).position]?.level ?? 0)
+        : action.level,
+    )?.canBuy
+  )
+    return false;
   if (
     (action.type === 'buy' || action.type === 'buy_fraud') &&
     !getPurchaseQuote(

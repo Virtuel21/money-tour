@@ -4,13 +4,14 @@ import {
   getLegalActions,
   getPurchaseQuote,
   getConstructionQuote,
+  getBuyoutQuote,
   type GameState,
 } from '@money-tour/engine';
 import { ActionClock } from './ActionClock';
 import { money } from './local';
 import { BuildingIllustration } from './BuildingIllustration';
 
-export function purchaseOffer(state: GameState, self?: string) {
+export function purchaseOffer(state: GameState, self?: string, buyout = false) {
   const player = state.players[state.currentPlayer]!;
   const tile = state.config.board[player.position]!;
   if (
@@ -20,34 +21,47 @@ export function purchaseOffer(state: GameState, self?: string) {
     (self !== undefined && self !== player.id) ||
     !tile.price ||
     reservedCity(state, tile.id) ||
-    (state.properties[tile.id]?.ownerId &&
-      !(
-        state.config.singlePropertyDecision &&
-        state.properties[tile.id]?.ownerId === player.id &&
-        tile.type === 'city' &&
-        state.properties[tile.id]!.level < state.config.hotelLevel
-      ))
+    (buyout
+      ? !getBuyoutQuote(state)?.available
+      : state.properties[tile.id]?.ownerId &&
+        !(
+          state.config.singlePropertyDecision &&
+          state.properties[tile.id]?.ownerId === player.id &&
+          tile.type === 'city' &&
+          state.properties[tile.id]!.level < state.config.hotelLevel
+        ))
   )
     return null;
-  return { player, tile, canBuy: getLegalActions(state).some((a) => a.type === 'buy') };
+  return {
+    player,
+    tile,
+    buyout,
+    canBuy: getLegalActions(state).some((a) => a.type === (buyout ? 'buyout' : 'buy')),
+  };
 }
 export function PurchaseDetails({
   state,
   onBuy,
   onFraud,
   onPass,
+  buyout = false,
 }: {
   state: GameState;
+  buyout?: boolean;
   onBuy: (level: number) => void;
   onFraud?: (level: number) => void;
   onPass: () => void;
 }) {
-  const { player, tile } = purchaseOffer(state)!;
+  const { player, tile } = purchaseOffer(state, undefined, buyout)!;
   const owned = state.properties[tile.id]?.ownerId === player.id;
   const currentLevel = state.properties[tile.id]?.level ?? 0;
-  const [level, setLevel] = useState(owned ? currentLevel + 1 : 0);
+  const [level, setLevel] = useState(owned ? currentLevel + 1 : buyout ? currentLevel : 0);
   const getQuote = (index: number) =>
-    owned ? getConstructionQuote(state, index) : getPurchaseQuote(state, index);
+    buyout
+      ? getBuyoutQuote(state, index)
+      : owned
+        ? getConstructionQuote(state, index)
+        : getPurchaseQuote(state, index);
   const quote = getQuote(level)!;
   const fraudQuote = getPurchaseQuote(state, level, true)!;
   const canBuy = quote.canBuy;
@@ -62,11 +76,13 @@ export function PurchaseDetails({
       <header className="purchase-title">
         <div>
           <small>
-            {owned
-              ? 'AMÉLIORER MA VILLE'
-              : tile.type === 'resort'
-                ? 'ÎLE PRIVÉE'
-                : 'VILLE DISPONIBLE'}
+            {buyout
+              ? 'RACHETER CETTE VILLE'
+              : owned
+                ? 'AMÉLIORER MA VILLE'
+                : tile.type === 'resort'
+                  ? 'ÎLE PRIVÉE'
+                  : 'VILLE DISPONIBLE'}
           </small>
           <h3>{tile.name}</h3>
         </div>
@@ -125,9 +141,11 @@ export function PurchaseDetails({
             {modern
               ? 'Maisons sans rue complète. Hôtel après 5 tours du plateau.'
               : 'Rue complète requise. Deux maisons maximum avant le premier passage Départ.'}{' '}
-            {owned
-              ? `Vous possédez déjà ${currentLevel === 0 ? 'le terrain' : labels[currentLevel].toLowerCase()}. Seuls les nouveaux bâtiments sont facturés. Un chantier par visite.`
-              : 'Le prix comprend le terrain et les bâtiments sélectionnés. Un achat par visite.'}
+            {buyout
+              ? `Rachat à ${state.players.find((p) => p.id === state.properties[tile.id]?.ownerId)?.name} : ${money(quote.land, true)}. Les bâtiments existants sont conservés ; seuls les nouveaux sont ajoutés au prix. Un chantier par visite.`
+              : owned
+                ? `Vous possédez déjà ${currentLevel === 0 ? 'le terrain' : labels[currentLevel].toLowerCase()}. Seuls les nouveaux bâtiments sont facturés. Un chantier par visite.`
+                : 'Le prix comprend le terrain et les bâtiments sélectionnés. Un achat par visite.'}
             {!state.config.bundledPurchase && 'Cette sauvegarde conserve l’achat du terrain seul.'}
           </p>
         </>
@@ -156,7 +174,7 @@ export function PurchaseDetails({
       <div className="purchase-buttons">
         <button className="primary purchase-cta" disabled={!canBuy} onClick={() => onBuy(level)}>
           <span>
-            {owned ? 'Passer à' : 'Acheter'}{' '}
+            {buyout ? 'Racheter' : owned ? 'Passer à' : 'Acheter'}{' '}
             {tile.type === 'resort'
               ? 'l’île'
               : level === 0
@@ -167,7 +185,7 @@ export function PurchaseDetails({
           <ActionClock />
         </button>
         <button className="secondary purchase-pass" onClick={onPass}>
-          <span>Passer</span>
+          <span>{buyout ? 'Annuler' : 'Passer'}</span>
           <ActionClock />
         </button>
       </div>
