@@ -14,6 +14,8 @@ Créations originales avec le générateur d’images intégré de ChatGPT : app
 
 ## Audio fourni par Julien
 
+Les vingt taunts (`apps/web/public/taunts/*.webp`) sont des créations originales générées avec l’outil imagegen intégré à partir des visages de `travelers-v3.webp`, puis encodées en WebP transparent 320 × 320. Cinq expressions par personnage, aucune illustration extraite d’un autre jeu. Prompts exacts : [TAUNTS_ART.md](docs/TAUNTS_ART.md).
+
 - apps/web/public/audio/menu.mp3 : « Property Party - main menu.mp3 ».
 - apps/web/public/audio/game.mp3 : « Property Party - Party running song.mp3 ».
 - apps/web/public/audio/game-2.mp3 : « Property Party - party running song 2.mp3 ».

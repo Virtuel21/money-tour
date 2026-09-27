@@ -89,6 +89,7 @@ export function presentation(
       alliance_expired: String(event.message),
       crisis: String(event.message),
       crisis_expired: String(event.message),
+      victory_warning: String(event.message),
       duel_forfeit: String(event.message),
       duel_cancelled: String(event.message),
       duel_result:
@@ -110,8 +111,7 @@ export function presentation(
       insured_tile: 'Cette propriété est maintenant assurée.',
       squatter: 'Vous passez sans payer de loyer !',
       expropriate: 'Expropriation : cette ville est à nouveau disponible.',
-      roaches:
-        'Invasion de cafards : le loyer de cet hôtel est divisé par deux pendant deux tours.',
+      roaches: `🪳 ${event.tile === undefined ? 'Hôtel ciblé' : next.config.board[event.tile]?.name} · ${next.players.find((p) => p.id === next.properties[event.tile ?? -1]?.ownerId)?.name ?? ''} : hôtel infesté, loyer divisé par deux pendant ${next.properties[event.tile ?? -1]?.roachTurns ?? 2} retours du tour de son propriétaire.`,
       roaches_expired: 'La désinsectisation est terminée : le loyer revient à la normale.',
       karma: String(event.message ?? 'Le Karma a tranché.'),
     };
@@ -229,6 +229,7 @@ export function presentationMs(events: GameEvent[]): number {
                   'alliance_expired',
                   'crisis',
                   'crisis_expired',
+                  'victory_warning',
                   'duel_result',
                   'duel_cancelled',
                   'duel_forfeit',

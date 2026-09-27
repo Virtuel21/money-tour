@@ -100,3 +100,13 @@ Cette section remplace les montants de la recette v12 ci-dessus : compte initial
 - 444 tests réussis dans 40 fichiers, dont 1 000 parties de bots. Couverture moteur : 97,04 % des lignes, 93,30 % des branches ; séisme 100 % des lignes. Typage, lint, formatage, build, assets et modèles validés.
 
 Recette Chromium sur tailles simulées. Téléphones physiques, Safari iOS et réseau 5G non validés.
+
+# Rivalités, collections et vingt taunts — septembre 2026
+
+- PC 1920 × 1080 : règle commune et alerte de victoire en haut au centre ; rues regroupées dans les fiches. Madrid affiche le symbole cafard et deux tours restants sur sa petite carte et sur le plateau. Contour rose de Max vérifié au focus clavier, aligné sur sa silhouette.
+- Clic sur Max depuis le tour de Léa : menu avec les cinq expressions de Léa, destinataire Max. Envoi affiché publiquement ; nouvelle ouverture immédiate avec les cinq boutons désactivés pendant le délai de huit secondes.
+- Portrait 390 × 844 : menu lisible, carnet paginé par rue complète (trois villes Rue 1, deux Rue 2) et malus de Madrid clairement indiqué. Petit écran 320 × 568 : dialogue 290 × 486, entièrement dans la page. Paysage 844 × 390 : cinq boutons sur une ligne, dialogue 814 × 272. Aucun débordement de page sur ces formats.
+- Vingt images WebP transparentes : cinq par personnage, 466 704 octets en tout. Atlas des personnages partagé avec le plateau ; aucun second téléchargement de cet atlas pour le survol.
+- 456 tests vérifiés : suite complète de 449 tests puis sept nouveaux cas de présentation et d’interface ; réseau signé, déduplication, délai, identité de l’expéditeur et état de jeu inchangé couverts. Couverture moteur de la passe complète : 97,13 % des lignes, 93,44 % des branches. Typage, lint, formatage, build et budgets assets/modèles validés.
+
+Recette Chromium sur viewports simulés. Appareils physiques, Safari iOS et liaison 5G non testés pour cette livraison. Prompts exacts dans [TAUNTS_ART.md](TAUNTS_ART.md).

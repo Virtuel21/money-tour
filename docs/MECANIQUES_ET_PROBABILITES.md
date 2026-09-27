@@ -214,3 +214,13 @@ Les anciens prix, le cash initial, la prime Départ, la taxe, les rapports loyer
 Les tests vérifient la conservation des mises, plusieurs égalités consécutives, la synchronisation réseau, Voyage avec et sans double, les gains gagnants/perdants, le mélange de rues complètes, les sauvegardes précédentes et 1 000 parties de bots terminées sans état invalide. Ces simulations vérifient la cohérence et la terminaison ; elles ne remplacent pas une étude d’équilibrage avec des joueurs humains. Aucun test sur réseau 5G ou téléphone physique n’est revendiqué ici.
 
 Sources du dépôt : packages/engine/src/game.config.json, engine.ts, layout.ts, duel.ts, expansion.ts, world-events.ts, earthquake.ts, adventure.ts ; apps/web/src/game/CasinoView.tsx et DuelView.tsx.
+
+# Informations publiques et taunts
+
+Une alerte publique apparaît lorsqu’une seule acquisition suffit à gagner : troisième rue complète, côté complet (avec son île), ou toutes les îles si cette victoire est activée. En équipes, les propriétés des partenaires sont réunies. L’annonce nomme les biens manquants, reste visible tant que le risque existe et rejoint le journal lors d’un nouveau risque. Aucun objectif secret ni capitale cachée n’est dévoilé.
+
+La règle spéciale de partie est affichée en haut au centre. Les collections sont regroupées par rue ; le carnet mobile présente une rue entière par page. Un hôtel infesté porte un symbole cafard sur le plateau, dans sa fiche et dans la collection, avec le nombre de retours du tour du propriétaire restant et la réduction de loyer de 50 %.
+
+Taunts : cinq expressions pour chacun des quatre personnages (rire, loyer, fausse tristesse, bisou, couronne). Survol/focus d’un personnage : contour dans sa couleur ; clic/tap : menu. Cliquer un adversaire le désigne comme destinataire mais utilise toujours le visage du joueur qui envoie. Affichage public de cinq secondes, délai minimal de huit secondes par expéditeur en réseau. Messages signés, sans texte libre, sans coût, récompense, consommation du hasard ou effet sur la partie. Les personnages bots ne produisent pas de taunts automatiques.
+
+Les probabilités des cartes et événements ainsi que les montants restent inchangés par cette mise à jour.

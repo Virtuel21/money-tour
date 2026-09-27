@@ -9,6 +9,7 @@ import {
   type Player,
 } from '@money-tour/engine';
 import { money } from './local';
+import { estateGroups } from './estate';
 export function AdventureBanner({ state }: { state: GameState }) {
   return (
     <section className="adventure-banner" aria-label="Règle spéciale de cette partie">
@@ -73,26 +74,38 @@ export function PlayerInventory({
   onTile: (id: number) => void;
   onBonus?: (bonus: BonusInfo) => void;
 }) {
-  const cities = state.config.board.filter((t) => state.properties[t.id]?.ownerId === player.id);
+  const groups = estateGroups(state, player.id);
   return (
     <div className="player-inventory">
       <div className="mini-properties" aria-label={`Propriétés de ${player.name}`}>
-        {cities.map((t) => (
-          <button
-            key={t.id}
-            className="mini-property"
-            style={{ borderTopColor: t.color ?? '#f1d17b' }}
-            onClick={() => onTile(t.id)}
-            title={`${t.name} · loyer ${money(getRent(state, t.id))}`}
-          >
-            <span>
-              {t.type === 'resort' ? '🏝' : state.properties[t.id]!.level === 4 ? '▥' : '⌂'}
-            </span>
-            <b>{t.name}</b>
-            <small>{money(getRent(state, t.id), true)}</small>
-          </button>
+        {groups.map(([street, cities]) => (
+          <section className="estate-street" key={street} aria-label={street}>
+            <h4 style={{ borderColor: cities[0]?.color }}>{street}</h4>
+            <div className="estate-street-cards">
+              {cities.map((t) => (
+                <button
+                  key={t.id}
+                  className="mini-property"
+                  style={{ borderTopColor: t.color ?? '#f1d17b' }}
+                  onClick={() => onTile(t.id)}
+                  title={`${t.name} · loyer ${money(getRent(state, t.id))}`}
+                >
+                  <span>
+                    {t.type === 'resort' ? '🏝' : state.properties[t.id]!.level === 4 ? '▥' : '⌂'}
+                  </span>
+                  <b>{t.name}</b>
+                  <small>{money(getRent(state, t.id), true)}</small>
+                  {!!state.properties[t.id]!.roachTurns && (
+                    <span className="roach-badge">
+                      🪳 {state.properties[t.id]!.roachTurns} tours · −50 %
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </section>
         ))}
-        {!cities.length && <small className="empty-estate">Aucune propriété pour le moment</small>}
+        {!groups.length && <small className="empty-estate">Aucune propriété pour le moment</small>}
       </div>
       <div className="bonus-tokens" aria-label={`Bonus et malus de ${player.name}`}>
         {playerBonuses(state, player).map((bonus, index) => (

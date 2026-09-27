@@ -11,6 +11,22 @@ const game = () =>
     ],
     seed: 1,
   });
+it('names the infested hotel, its owner and its remaining duration in the public notice', () => {
+  const state = game();
+  state.properties[1] = { ownerId: 'b', level: 4, championships: 0, roachTurns: 2 };
+  const frames = presentation(state, state, [{ type: 'roaches', playerId: 'a', tile: 1 }]);
+  const message = frames.find((f) => f.cue.reason === 'roaches')!.cue.message!;
+  expect(message).toContain(state.config.board[1]!.name);
+  expect(message).toContain('B');
+  expect(message).toContain('2 retours');
+});
+it('budgets the public monopoly warning in the shared presentation clock', () => {
+  const state = game(),
+    events = [{ type: 'victory_warning', message: 'A approche du monopole' }];
+  const frames = presentation(state, state, events);
+  expect(frames[0]!.cue.message).toBe(events[0]!.message);
+  expect(presentationMs(events)).toBe(frames[0]!.cue.duration);
+});
 it('shows quake damage after the shake, with a bounded network clock and reduced presentation', () => {
   const before = game(),
     after = structuredClone(before);

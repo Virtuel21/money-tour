@@ -36,6 +36,7 @@ export function previewScenario(): LocalSave | null {
       'crisis',
       'earthquake',
       'island',
+      'rivalry',
     ].includes(name)
   )
     return null;
@@ -73,6 +74,16 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'rivalry') {
+    state.phase = 'roll';
+    player.position = 5;
+    for (const id of [1, 2, 3, 5, 6, 9])
+      state.properties[id] = { ownerId: 'p1', level: 0, championships: 0 };
+    state.properties[5] = { ownerId: 'p1', level: 4, championships: 0, roachTurns: 2 };
+    state.players.forEach((p, i) => {
+      p.position = [5, 14, 21, 29][i]!;
+    });
+  }
   if (name === 'earthquake') {
     state.config = {
       ...state.config,

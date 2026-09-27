@@ -162,6 +162,13 @@ export const memberSchema = z
   .strict();
 export type Member = z.infer<typeof memberSchema>;
 export const bodySchema = z.discriminatedUnion('type', [
+  z
+    .object({
+      type: z.literal('taunt'),
+      kind: z.enum(['laugh', 'cash', 'cry', 'kiss', 'crown']),
+      targetId: id.optional(),
+    })
+    .strict(),
   z.object({
     type: z.literal('attest'),
     nonce: z.string().length(64),
