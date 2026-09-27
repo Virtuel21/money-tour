@@ -65,7 +65,7 @@ function commits(s: GameState, a: DuelChoice, b: DuelChoice) {
     hash: duelCommitment(s.duel!.id, 'b', b, saltB),
   });
 }
-it('balances every square side and separates Chance, Karma and casinos after every shuffle', () => {
+it('balances every square side and separates Chance, Duel and casinos after every shuffle', () => {
   for (let seed = 0; seed < 20; seed++) {
     const s = createGame({
       players: [
@@ -79,12 +79,12 @@ it('balances every square side and separates Chance, Karma and casinos after eve
       expect(b.filter((t) => t.type === 'city')).toHaveLength(4);
       expect(b.filter((t) => t.type === 'resort')).toHaveLength(1);
       expect(
-        b.filter((t) => ['chance', 'tax', 'casino', 'insurance', 'karma'].includes(t.type)),
+        b.filter((t) => ['chance', 'tax', 'casino', 'insurance', 'duel'].includes(t.type)),
       ).toHaveLength(2);
     }
     s.config.board.forEach((t, i) => {
-      if (['chance', 'karma', 'casino'].includes(t.type))
-        expect(['chance', 'karma', 'casino']).not.toContain(s.config.board[(i + 1) % 32]!.type);
+      if (['chance', 'duel', 'casino'].includes(t.type))
+        expect(['chance', 'duel', 'casino']).not.toContain(s.config.board[(i + 1) % 32]!.type);
     });
   }
 });
@@ -142,6 +142,7 @@ it('shares rent and Start income without creating money, excludes sale capital a
 it('runs an economic crisis for every living player and all doubles, then restores city and island rents', () => {
   let s = game();
   s.config.crisisChance = 100;
+  s.config.crisisMinRound = 1;
   s.currentPlayer = 2;
   s.phase = 'end';
   s.properties[1]!.ownerId = 'b';
@@ -241,11 +242,8 @@ it('waits for human commitment before using shared randomness against a bot', ()
   s = step(s, { type: 'duel_reveal', playerId: 'a', choice: 'rock', salt: saltA }, () => 0.9);
   expect(s.players[0]!.cash).toBe(1550000);
 });
-it('offers both added cards when they are drawn and preserves the deck', () => {
-  for (const [id, phase] of [
-    ['chance-23', 'alliance'],
-    ['chance-24', 'duel'],
-  ] as const) {
+it('offers the alliance card when they are drawn and preserves the deck', () => {
+  for (const [id, phase] of [['chance-23', 'alliance']] as const) {
     const s = game();
     s.players[0]!.position = 0;
     const index = s.deck.indexOf(id);

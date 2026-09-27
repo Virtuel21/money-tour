@@ -14,7 +14,19 @@ export function streetSurface(tile: Tile) {
   ctx.fillRect(0, 0, 256, 256);
   ctx.globalAlpha = 1;
   const group = Number(tile.group?.slice(1) ?? 0);
-  if (sand) {
+  if (tile.type === 'duel') {
+    ctx.fillStyle = '#742957';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.strokeStyle = '#f6d88a';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(16, 16, 224, 224);
+    ctx.fillStyle = '#fff4ce';
+    ctx.font = 'bold 90px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('VS', 128, 142);
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText('DUEL', 128, 199);
+  } else if (sand) {
     ctx.fillStyle = '#36c8d4';
     ctx.fillRect(0, 0, 256, 29);
     ctx.strokeStyle = '#e4fffa';

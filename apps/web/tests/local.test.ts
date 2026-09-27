@@ -4,6 +4,7 @@ import {
   legacyConfig,
   legacyConfigV6,
   legacyConfigV7,
+  legacyConfigV8,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -18,6 +19,23 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('resumes v8 saves with their original construction rules, Karma and Chance deck', () => {
+    const save = newLocal({
+      config: legacyConfigV8 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v8', JSON.stringify(save));
+    const resumed = loadLocal()!;
+    expect(resumed).toEqual(save);
+    expect(resumed.state.config.hotelUnlockLaps).toBeUndefined();
+    expect(resumed.state.config.board.some((tile) => tile.type === 'karma')).toBe(true);
+    expect(resumed.state.config.cards.some((card) => card.effect === 'duel')).toBe(true);
+    const action = chooseBotAction(save.state);
+    expect(applyLocal(resumed, action)).toEqual(applyLocal(save, action));
+  });
   it('preserves v7 saves without retroactively adding quests or a new party rule', () => {
     const save = newLocal({
       config: legacyConfigV7 as GameConfig,

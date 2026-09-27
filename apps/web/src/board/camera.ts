@@ -1,8 +1,7 @@
 /** Preserve the desktop composition; portrait view uses real, undistorted world units. */
 export function cameraBounds(width: number, height: number, mobile: boolean) {
-  if (!mobile) return { halfWidth: 18, halfHeight: 12.25 };
   const aspect = Math.max(1, width) / Math.max(1, height);
-  const halfWidth = Math.max(17, 12 * aspect);
+  const halfWidth = Math.max(17, (mobile ? 12 : 13.3) * aspect);
   return { halfWidth, halfHeight: halfWidth / aspect };
 }
 

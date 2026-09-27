@@ -23,6 +23,7 @@ import {
 } from '@money-tour/engine';
 const Board = lazy(() => import('./board/Board3D'));
 import { usePresentation } from './game/usePresentation';
+import { DurationPicker, validMinutes } from './game/DurationPicker';
 import { previewScenario } from './game/preview';
 import { Soundscape, loadAudio } from './audio/synth';
 const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
@@ -131,6 +132,7 @@ function eventText(event: GameEvent, state: GameState): string {
     case 'quest_completed':
     case 'capital_revealed':
     case 'duel_result':
+    case 'duel_started':
     case 'duel_forfeit':
     case 'duel_cancelled':
       return String(event.message);
@@ -240,8 +242,7 @@ export default function App() {
     [names, setNames] = useState(['Vous', 'Sacha', 'Lou', 'Noa']);
   const [bots, setBots] = useState([false, true, true, true]);
   const tutorialPause = useRef(false);
-  const [paused, setPaused] = useState(false),
-    [zoom, setZoom] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
   );
@@ -336,6 +337,7 @@ export default function App() {
     return () => clearTimeout(timer);
   }, [save, screen, paused, rolling, Boolean(online)]);
   const start = () => {
+    if (!validMinutes(minutes)) return;
     const next = newLocal({
       players: Array.from({ length: count }, (_, i) => ({
         id: `p${i + 1}`,
@@ -574,16 +576,7 @@ export default function App() {
                       ))}
                     </select>
                   </label>
-                  <label>
-                    Durée
-                    <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))}>
-                      {[1, 5, 10, 20, 30].map((n) => (
-                        <option key={n} value={n}>
-                          {n} min{n === 20 ? ' · classique' : n === 1 ? ' · express' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <DurationPicker value={minutes} onChange={setMinutes} />
                 </div>
                 <div className="seat-list">
                   {Array.from({ length: count }, (_, i) => (
@@ -621,18 +614,22 @@ export default function App() {
                     setCreateSalon(true);
                     setModal('online');
                   }}
-                  disabled={!!online}
+                  disabled={!!online || !validMinutes(minutes)}
                 >
                   Embarquer <span>→</span>
                 </button>
-                <button className="secondary local-launch" onClick={start} disabled={!!online}>
+                <button
+                  className="secondary local-launch"
+                  onClick={start}
+                  disabled={!!online || !validMinutes(minutes)}
+                >
                   Jouer sur cet appareil · solo / local
                 </button>
                 {save && (
                   <>
                     <button
                       className="resume"
-                      disabled={!!online}
+                      disabled={!!online || !validMinutes(minutes)}
                       onClick={() => {
                         cinema.reset(save.state);
                         setScreen('game');
@@ -792,7 +789,8 @@ export default function App() {
                     <strong>{p.eliminated ? 'Faillite' : money(p.cash, true)}</strong>
                   </div>
                   <span className="property-count" title="Propriétés">
-                    ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}
+                    ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length} ·
+                    Tour du plateau {p.laps + 1}
                   </span>
                   {!!p.fraudLiability && (
                     <small className="fraud-risk" title="Jusqu’au prochain passage par Départ">
@@ -811,7 +809,7 @@ export default function App() {
                 </article>
               ))}
             </div>
-            <section className={`board-area ${zoom ? 'zoomed' : ''}`}>
+            <section className="board-area">
               <AdventureBanner state={current} />
               <div className="board-viewport">
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
@@ -883,7 +881,10 @@ export default function App() {
                     <button onClick={() => setModal('pocket')}>Mon carnet</button>
                   </>
                 ) : (
-                  <button onClick={() => setZoom(!zoom)}>{zoom ? 'Réduire' : 'Agrandir'}</button>
+                  <>
+                    <button onClick={() => setInspectedOwner(null)}>Vue globale</button>
+                    <button onClick={() => setModal('pocket')}>Mon carnet</button>
+                  </>
                 )}
               </div>
             </section>
@@ -975,6 +976,16 @@ export default function App() {
                     .
                   </p>
                 )}
+                {current.phase === 'property' &&
+                  current.properties[active.position]?.ownerId === active.id &&
+                  current.properties[active.position]?.level === 3 &&
+                  current.config.hotelUnlockLaps !== undefined &&
+                  active.laps < current.config.hotelUnlockLaps && (
+                    <p className="board-choice-hint">
+                      Hôtel après {current.config.hotelUnlockLaps} tours du plateau · {active.laps}/
+                      {current.config.hotelUnlockLaps} terminés.
+                    </p>
+                  )}
                 <div className="actions">
                   {!active.bot &&
                     (!online || online.self === active.id) &&
@@ -1121,11 +1132,10 @@ export default function App() {
                 </p>
                 <h3>2. Construisez votre fortune</h3>
                 <p>
-                  Possédez d’abord toutes les villes du groupe de couleur, puis construisez sur
-                  votre ville. Terrain, une à trois maisons, puis hôtel. Vous êtes limité à deux
-                  maisons avant le premier passage Départ. Chaque passage rapporte 300 k. Après le
-                  loyer, une ville adverse sans hôtel peut être rachetée au double de sa valeur
-                  foncière.
+                  Construisez sur une ville à vous sans attendre la rue complète : jusqu’à trois
+                  maisons, puis un hôtel après cinq tours complets du plateau. Chaque passage
+                  rapporte 300 k. Après le loyer, une ville adverse sans hôtel peut être rachetée au
+                  double de sa valeur foncière.
                 </p>
                 <h3>3. Plusieurs façons de gagner</h3>
                 <p>
@@ -1137,7 +1147,7 @@ export default function App() {
                 <h3>4. Des escales qui changent tout</h3>
                 <p>
                   32 cases : 8 rues de deux villes, 4 îles privées, 3 cases cartes, 1 taxe, 2
-                  casinos, 1 assurance, 1 karma et 4 coins spéciaux. Les loyers sont payés
+                  casinos, 1 assurance, 1 duel et 4 coins spéciaux. Les loyers sont payés
                   automatiquement par le visiteur. Les cartes se résolvent pour leur destinataire
                   uniquement.
                 </p>
@@ -1151,7 +1161,8 @@ export default function App() {
                 <p>
                   Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot
                   rapporte 10 % de votre solde ; ses chances augmentent à chaque visite du casino.
-                  Le Karma offre 50 k au dernier patrimoine ou prélève 50 k au premier.
+                  La case Duel permet de défier un adversaire à pierre-feuille-ciseaux avec une mise
+                  acceptée par les deux joueurs.
                 </p>
                 <p>
                   L’assurance donne un jeton unique à placer sur un bien : il bloque une destruction
@@ -1167,10 +1178,11 @@ export default function App() {
                 </p>
                 <p>
                   Alliance temporaire prélève la moitié des gains d’un joueur jusqu’à la fin de son
-                  prochain tour. Une crise économique aléatoire divise tous les loyers par deux
-                  pendant un tour complet de tous les joueurs. Le duel propose une mise identique
-                  acceptée par les deux adversaires : pierre, feuille, ciseaux avec choix secrets ;
-                  le gagnant remporte le pot, une égalité rembourse les mises.
+                  prochain tour. Une crise économique rare (au plus deux par partie, espacées de
+                  huit tours de table) divise tous les loyers par deux pendant un tour complet de
+                  tous les joueurs. Le duel propose une mise identique acceptée par les deux
+                  adversaires : pierre, feuille, ciseaux avec choix secrets ; le gagnant remporte le
+                  pot, une égalité rembourse les mises.
                 </p>
                 <h3>À quatre, jouez en équipe</h3>
                 <p>

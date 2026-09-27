@@ -11,7 +11,7 @@ describe('published board and economic data', () => {
     expect(count('tax')).toBe(1);
     expect(count('casino')).toBe(2);
     expect(count('insurance')).toBe(1);
-    expect(count('karma')).toBe(1);
+    expect(count('duel')).toBe(1);
     expect([0, 8, 16, 24].map((i) => config.board[i]!.type)).toEqual([
       'start',
       'island',
@@ -50,11 +50,11 @@ describe('published board and economic data', () => {
     }
   });
 
-  it('contains one copy of all twenty-four configured chance cards', () => {
-    expect(config.cards).toHaveLength(24);
+  it('contains one copy of all twenty-three configured chance cards', () => {
+    expect(config.cards).toHaveLength(23);
     expect(config.cards.map((card) => card.id)).toEqual(
-      Array.from({ length: 24 }, (_, i) => `chance-${String(i + 1).padStart(2, '0')}`),
+      Array.from({ length: 23 }, (_, i) => `chance-${String(i + 1).padStart(2, '0')}`),
     );
-    expect(new Set(config.cards.map((card) => card.title)).size).toBe(24);
+    expect(new Set(config.cards.map((card) => card.title)).size).toBe(23);
   });
 });

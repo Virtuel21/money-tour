@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 8,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -16,7 +16,7 @@
   "travelFee": 50000,
   "festivalCount": 3,
   "festivalMultiplier": 2,
-  "initialMaxLevel": 3,
+  "initialMaxLevel": 2,
   "hotelLevel": 4,
   "buyoutMultiplier": 2,
   "resaleRate": 0.5,
@@ -229,8 +229,8 @@
       "buildCosts": [0, 187500, 187500, 187500, 187500]
     },
     {
-      "name": "Le grand duel",
-      "type": "duel",
+      "name": "La roue du Karma",
+      "type": "karma",
       "id": 23,
       "line": 2
     },
@@ -464,6 +464,12 @@
       "title": "Alliance temporaire",
       "description": "Choisissez un joueur. Vous recevez la moitié de ses gains jusqu’à la fin de son prochain tour.",
       "effect": "alliance"
+    },
+    {
+      "id": "chance-24",
+      "title": "Duel !",
+      "description": "Défiez un joueur à pierre-feuille-ciseaux. Proposez une mise identique, puis révélez vos choix : le gagnant remporte tout.",
+      "effect": "duel"
     }
   ],
   "network": {
@@ -482,11 +488,6 @@
   "casinoMaxChance": 50,
   "karmaAmount": 50000,
   "fraudDiscount": 0.5,
-  "crisisChance": 4,
-  "adventures": true,
-  "buildingRequiresGroup": false,
-  "hotelUnlockLaps": 5,
-  "crisisMinRound": 6,
-  "crisisCooldownRounds": 8,
-  "crisisMaxCount": 2
+  "crisisChance": 12,
+  "adventures": true
 }

@@ -13,15 +13,15 @@ pnpm check
 pnpm simulate 1000
 ```
 
-Pour construire, le propriétaire doit posséder toutes les villes du même groupe de couleur (les propriétés d’un coéquipier ne complètent pas ce groupe). Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
+Chaque ville possédée peut recevoir jusqu’à trois maisons sans réunir la rue complète. L’hôtel se débloque après cinq tours complets du plateau du propriétaire. La durée se choisit parmi les préréglages ou de 1 à 180 minutes personnalisées. Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
 
 Un Mondial coûte 50 k et double le loyer de la ville pendant quatre retours du propriétaire : les doubles ne consomment pas de durée et un nouveau Mondial renouvelle les quatre tours sans cumuler le bonus. Un trophée, un ruban et des confettis signalent la ville hôte ; le badge indique les tours restants. Fermer l’offre d’achat ne termine pas le tour : cliquez de nouveau sur votre case ou sur Acheter pour la rouvrir. « Non merci, je passe » termine la décision. Les taxes sont annoncées par une fenêtre humoristique avant l’animation du prélèvement.
 
-La crise économique est active : 12 % de chances au début d’un tour de table, loyers divisés par deux jusqu’à ce que chacun ait terminé un tour. Les autres [événements proposés](docs/EVENT_IDEAS.md) restent des pistes.
+La crise économique est active : 4 % de chances à partir du sixième tour de table, avec huit tours de table entre deux déclenchements et deux crises au maximum par partie, loyers divisés par deux jusqu’à ce que chacun ait terminé un tour. Les autres [événements proposés](docs/EVENT_IDEAS.md) restent des pistes.
 
 Après achat, le loyer actuel s’affiche en gros et en gras directement sur la case. Il est recalculé avec les constructions, festivals, Mondial et le nombre d’îles détenues.
 
-Le moteur couvre les 32 cases, les 24 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
+Le moteur couvre les 32 cases, les 23 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 
 - [Plan et critères de livraison](PLAN.md)
 - [Règles, hypothèses et limites du protocole](DECISIONS.md)
@@ -69,11 +69,11 @@ Vue en trois-quarts, noms seuls sur les cases, comptes à gauche et fiche de pro
 
 ## Plateau carré, événements et réserves
 
-Chaque nouvelle partie mélange huit rues complètes (deux villes réelles chacune). Le carré comporte 32 cases, 9 par bord coins inclus. Chaque côté possède exactement quatre villes, une île et deux cases spéciales en plus du coin. Casino, Chance et Karma ne se touchent pas. La Taxe reste juste avant Départ. La disposition fait partie de l’état partagé : tous les joueurs voient le même plateau. Les sauvegardes des éditions précédentes conservent leur plateau de 26 ou 28 cases.
+Chaque nouvelle partie mélange huit rues complètes (deux villes réelles chacune). Le carré comporte 32 cases, 9 par bord coins inclus. Chaque côté possède exactement quatre villes, une île et deux cases spéciales en plus du coin. Casino, Chance et Duel ne se touchent pas. La Taxe reste juste avant Départ. La disposition fait partie de l’état partagé : tous les joueurs voient le même plateau. Les sauvegardes des éditions précédentes conservent leur plateau de 26 ou 28 cases.
 
 Les tuiles rectangulaires séparent constructions et loyers. Les bâtiments prennent la couleur du propriétaire ; les plages ont une bordure d’eau. Les liasses et lingots autour du plateau suivent le compte de chaque joueur. Le temps restant figure sur les boutons de décision et dans les fenêtres ; pause et animations suspendent le décompte. Trois musiques alternent pendant la partie.
 
-Deux casinos (roulette ou machine à sous aléatoire), jackpot progressif à 10 % du solde, assurance, Karma, Squatteur, Expropriation, Cafards et Fraude fiscale complètent le jeu. Alliance partage les gains jusqu’à la fin du prochain tour du joueur ciblé ; Duel propose des mises égales acceptées et des choix secrets. Posséder toutes les villes et l’île d’un côté donne une victoire Monopole. [Règles détaillées et durées](docs/FORTUNE_RULES.md).
+Deux casinos (roulette ou machine à sous aléatoire), jackpot progressif à 10 % du solde, assurance, Duel, Squatteur, Expropriation, Cafards et Fraude fiscale complètent le jeu. Alliance partage les gains jusqu’à la fin du prochain tour du joueur ciblé ; Duel propose des mises égales acceptées et des choix secrets. Posséder toutes les villes et l’île d’un côté donne une victoire Monopole. [Règles détaillées et durées](docs/FORTUNE_RULES.md).
 
 Les dés 3D roulent dans un écrin séparé du décor. Les icônes conservent des proportions carrées sur les tuiles rectangulaires. Les nouvelles pièces sont dans models/fortune.glb, source scripts/casino_models.py. [Provenance et prompt de l’atlas](docs/FORTUNE_ART.md).
 

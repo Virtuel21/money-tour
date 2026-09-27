@@ -410,3 +410,110 @@
     min-width: 0;
   }
 }
+/* Keep the result on the board visible instead of covering it with a message. */
+.tutorial-scene.showing-result {
+  grid-template-columns: minmax(0, 1fr);
+}
+.tutorial-scene.showing-result .tutorial-action {
+  display: none;
+}
+.tutorial-navigation .primary {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .guided-tutorial[open] {
+    grid-template-rows: auto auto minmax(200px, 1fr) minmax(0, 30dvh);
+  }
+  .tutorial-scene {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(140px, 1fr) auto;
+    gap: 8px;
+  }
+  .tutorial-scene .tutorial-board,
+  .tutorial-board .board-shell {
+    min-height: 0;
+    height: 100%;
+  }
+  .tutorial-scene .tutorial-action {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    margin: 0;
+    max-height: 30dvh;
+    padding: 8px;
+  }
+  .tutorial-scene .tutorial-action:not(.tutorial-spotlit) {
+    display: none;
+  }
+  .tutorial-scene.showing-result {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .tutorial-coach {
+    height: 100%;
+    overflow: auto;
+  }
+  .tutorial-navigation {
+    position: sticky;
+    bottom: -10px;
+    background: #fffaf0;
+    padding: 6px 0;
+  }
+  .tutorial-task {
+    font-size: 11px;
+  }
+  .tutorial-action > .eyebrow {
+    margin: 0 0 5px;
+    font-size: 10px;
+  }
+  .tutorial-coach p {
+    font-size: 12px;
+  }
+  .tutorial-coach h2 {
+    font-size: 18px;
+  }
+  .tutorial-action .purchase-title h3 {
+    font-size: 21px;
+  }
+  .tutorial-action .purchase-simple {
+    gap: 6px;
+  }
+  .tutorial-action .purchase-levels,
+  .tutorial-action .purchase-rule {
+    display: none;
+  }
+  .tutorial-action .purchase-preview {
+    padding: 4px;
+  }
+  .tutorial-action .purchase-buttons {
+    position: sticky;
+    bottom: -8px;
+    background: #fffaf0;
+    padding: 5px 0;
+  }
+}
+@media (max-width: 700px) and (max-height: 650px) {
+  .tutorial-scene {
+    grid-template-rows: minmax(80px, 1fr) auto;
+  }
+  .tutorial-action .purchase-preview,
+  .tutorial-action .purchase-wallet {
+    display: none;
+  }
+}
+@media (min-width: 701px) and (max-height: 500px) {
+  .tutorial-scene {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(80px, 1fr) auto;
+    gap: 6px;
+  }
+  .tutorial-scene .tutorial-action {
+    position: relative;
+    inset: auto;
+    max-height: 28dvh;
+  }
+  .tutorial-scene.showing-result {
+    grid-template-rows: minmax(0, 1fr);
+  }
+}

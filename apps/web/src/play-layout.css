@@ -1,0 +1,386 @@
+.duration-picker {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.duration-picker label {
+  display: grid;
+  gap: 5px;
+}
+.duration-picker input {
+  width: 100%;
+  box-sizing: border-box;
+}
+.purchase-simple {
+  display: grid;
+  gap: 12px;
+}
+.purchase-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-left: 6px solid var(--property-color);
+  padding-left: 14px;
+}
+.purchase-title small {
+  font-size: 10px;
+  letter-spacing: 1.5px;
+}
+.purchase-title h3 {
+  margin: 3px 0;
+  font-size: 30px;
+}
+.purchase-title > span {
+  font-size: 22px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.purchase-levels {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.purchase-levels button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  min-width: 0;
+  gap: 6px;
+  color: #204c56;
+  background: #e5ece5;
+  border: 2px solid transparent;
+  border-radius: 12px;
+}
+.purchase-levels button[aria-pressed='true'] {
+  background: #ffedb1;
+  border-color: #b08123;
+}
+.purchase-levels strong {
+  font-size: 12px;
+}
+.purchase-levels small {
+  font-size: 11px;
+  white-space: nowrap;
+}
+.building-preview {
+  display: flex;
+  align-items: center;
+  height: 45px;
+  font-size: 26px;
+  letter-spacing: -4px;
+  color: var(--property-color);
+  text-shadow: 1px 3px #ffffff;
+}
+.building-preview.level-4 {
+  font-size: 45px;
+}
+.level-locked .building-preview {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+.level-lock {
+  font-size: 10px;
+}
+.purchase-preview {
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 10px;
+  background: #edf2e9;
+  border-radius: 12px;
+}
+.purchase-preview span {
+  display: grid;
+  gap: 3px;
+  font-size: 12px;
+}
+.purchase-preview strong {
+  font-size: 21px;
+}
+.purchase-simple .purchase-rule,
+.purchase-simple .purchase-wallet {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.purchase-buttons {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 8px;
+}
+.purchase-simple .purchase-buttons button {
+  grid-area: auto;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  min-height: 48px;
+}
+.purchase-simple .purchase-cta > span:first-child {
+  font-size: 17px;
+}
+.purchase-simple .purchase-fraud {
+  margin: 0;
+  min-height: 40px;
+}
+.modal:has(.purchase-simple) {
+  width: min(600px, calc(100vw - 24px));
+}
+@media (max-width: 1000px) {
+  .modal .purchase-simple {
+    gap: 9px;
+  }
+  .purchase-title h3 {
+    font-size: 24px;
+  }
+  .purchase-title > span {
+    font-size: 18px;
+  }
+  .purchase-levels {
+    gap: 3px;
+  }
+  .purchase-levels strong {
+    font-size: 10px;
+  }
+  .purchase-levels small {
+    font-size: 9px;
+  }
+  .purchase-levels button {
+    padding: 6px 1px;
+    gap: 4px;
+  }
+  .building-preview {
+    height: 32px;
+    font-size: 22px;
+  }
+  .building-preview.level-4 {
+    font-size: 33px;
+  }
+  .purchase-simple .purchase-buttons button {
+    padding: 9px 4px;
+  }
+  .purchase-simple .purchase-cta > span:first-child {
+    font-size: 14px;
+  }
+}
+@media (max-height: 500px) and (max-width: 1000px) {
+  .modal:has(.purchase-simple) {
+    width: min(680px, calc(100vw - 24px));
+  }
+  .modal .purchase-simple {
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 7px 16px;
+  }
+  .purchase-title,
+  .purchase-levels {
+    grid-column: 1;
+  }
+  .purchase-preview {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .purchase-rule {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .purchase-simple .purchase-wallet {
+    grid-column: 1;
+  }
+  .purchase-buttons {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .purchase-simple .purchase-fraud,
+  .purchase-simple .fraud-risk {
+    grid-row: 4;
+  }
+}
+@media (min-width: 1001px) {
+  body:has(.game-layout) {
+    overflow: hidden;
+  }
+  .app:has(.game-layout) {
+    padding: 0;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .app:has(.game-layout) > .topbar {
+    display: none;
+  }
+  .app .game-layout {
+    position: relative;
+    display: block;
+    padding: 0;
+    width: 100%;
+    height: 100dvh;
+  }
+  .game-layout .game-top {
+    height: auto;
+    padding: 0;
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(560px, calc(100% - 560px));
+    justify-content: center;
+    gap: 12px;
+  }
+  .game-top > div:first-child {
+    display: none;
+  }
+  .game-layout .players {
+    display: contents;
+  }
+  .game-layout .players .player-card {
+    position: absolute;
+    z-index: 12;
+    width: 232px;
+    min-height: 98px;
+    padding: 12px;
+    margin: 0;
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 5px 10px;
+    background: #fffaf0f5;
+  }
+  .game-layout .player-card:nth-child(1) {
+    top: 16px;
+    left: 16px;
+  }
+  .game-layout .player-card:nth-child(2) {
+    top: 16px;
+    right: 16px;
+  }
+  .game-layout .player-card:nth-child(3) {
+    bottom: 16px;
+    left: 16px;
+  }
+  .game-layout .player-card:nth-child(4) {
+    bottom: 16px;
+    right: 16px;
+  }
+  .game-layout .players .player-card .avatar {
+    width: 48px;
+    height: 48px;
+  }
+  .game-layout .players .player-card strong {
+    font-size: 20px;
+  }
+  .game-layout .players .player-card .property-count {
+    grid-column: 1 / -1;
+    font-size: 11px;
+  }
+  .game-layout .player-card .player-inventory,
+  .game-layout .player-card .private-quest {
+    display: none;
+  }
+  .game-layout .board-area,
+  .game-layout .board-area.zoomed {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .game-layout .board-viewport,
+  .game-layout .board-shell,
+  .game-layout .board-3d {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    aspect-ratio: auto;
+    border-radius: 0;
+  }
+  .game-layout .board-canvas,
+  .game-layout .board-canvas canvas {
+    width: 100%;
+    height: 100%;
+  }
+  .game-layout .adventure-banner {
+    position: absolute;
+    left: 16px;
+    top: 132px;
+    transform: none;
+    width: 220px;
+    z-index: 7;
+    margin: 0;
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  .game-layout .board-controls {
+    top: 130px;
+    right: 18px;
+    left: auto;
+    bottom: auto;
+    display: grid;
+    gap: 7px;
+    width: 150px;
+  }
+  .game-layout .board-controls button {
+    padding: 10px;
+  }
+  .game-layout .roll-status {
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fffaf0e6;
+    padding: 5px 12px;
+    border-radius: 20px;
+  }
+  .game-layout .game-sidebar {
+    position: absolute;
+    top: auto;
+    right: auto;
+    height: auto;
+    display: flex;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(660px, calc(100% - 550px));
+    max-height: 30dvh;
+    z-index: 15;
+    overflow: auto;
+  }
+  .game-layout .game-sidebar .journal {
+    display: none;
+  }
+  .game-layout .action-card {
+    position: static;
+    inset: auto;
+    transform: none;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 16px;
+  }
+  .game-layout .action-card h2 {
+    font-size: 17px;
+    margin: 3px 0;
+  }
+  .game-layout .action-card > p {
+    margin: 4px 0;
+    font-size: 12px;
+  }
+  .game-layout .action-card .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .game-layout .action-card .actions button {
+    flex: 1;
+    min-height: 42px;
+    padding: 8px;
+  }
+  .game-layout .board-watermark,
+  .game-layout .bank-label {
+    display: none;
+  }
+}

@@ -1,8 +1,7 @@
-import { ActionClock } from './ActionClock';
-import { reservedCity, getLegalActions, type GameState } from '@money-tour/engine';
-import { money } from './local';
 import { useState } from 'react';
-import { useMobile } from './useMobile';
+import { reservedCity, getLegalActions, type GameState } from '@money-tour/engine';
+import { ActionClock } from './ActionClock';
+import { money } from './local';
 
 export function purchaseOffer(state: GameState, self?: string) {
   const player = state.players[state.currentPlayer]!;
@@ -19,7 +18,6 @@ export function purchaseOffer(state: GameState, self?: string) {
     return null;
   return { player, tile, canBuy: getLegalActions(state).some((a) => a.type === 'buy') };
 }
-
 export function PurchaseDetails({
   state,
   onBuy,
@@ -32,126 +30,97 @@ export function PurchaseDetails({
   onPass: () => void;
 }) {
   const { player, tile, canBuy } = purchaseOffer(state)!;
-  const mobile = useMobile();
-  const [details, setDetails] = useState(false);
+  const [level, setLevel] = useState(0);
+  const hotelLocked = player.laps < (state.config.hotelUnlockLaps ?? 1);
+  const labels = ['Terrain', '1 maison', '2 maisons', '3 maisons', 'Hôtel'];
+  const modern = state.config.buildingRequiresGroup === false;
   return (
-    <div className="purchase-offer">
-      {mobile && tile.type === 'city' && (
-        <nav className="purchase-tabs" aria-label="Détails de l’achat">
-          <button aria-pressed={!details} onClick={() => setDetails(false)}>
-            Acheter
-          </button>
-          <button aria-pressed={details} onClick={() => setDetails(true)}>
-            Loyers et bâtiments
-          </button>
-        </nav>
-      )}
-      {(!mobile || !details) && (
-        <>
-          <div className="purchase-cover" style={{ borderColor: tile.color ?? '#edc866' }}>
-            <span
-              className={tile.type === 'city' ? 'property-art' : 'island-offer-icon'}
-              aria-hidden="true"
-            >
-              {tile.type === 'resort' ? '🏝' : ''}
-            </span>
-            <div>
-              <p className="eyebrow">UNE NOUVELLE ESCALE POUR {player.name}</p>
-              <h3>{tile.name}</h3>
-              <p>Ajoutez cette propriété à votre collection.</p>
-            </div>
-          </div>
-          <div className="property-stats">
-            <div>
-              <small>Prix d’achat</small>
-              <strong>{money(tile.price!)}</strong>
-            </div>
-            <div>
-              <small>Votre compte</small>
-              <strong>{money(player.cash)}</strong>
-            </div>
-          </div>
-          {mobile && tile.type === 'city' && (
-            <p className="purchase-summary">
-              Loyer terrain <b>{money(tile.rents![0]!, true)}</b> · Maison dès{' '}
-              <b>{money(tile.buildCosts![1]!, true)}</b>. Toute la rue doit être acquise pour
-              construire.
-            </p>
-          )}
-        </>
-      )}
+    <div
+      className="purchase-offer purchase-simple"
+      style={{ '--property-color': tile.color ?? '#348d91' } as React.CSSProperties}
+    >
+      <header className="purchase-title">
+        <div>
+          <small>{tile.type === 'resort' ? 'ÎLE PRIVÉE' : 'VILLE DISPONIBLE'}</small>
+          <h3>{tile.name}</h3>
+        </div>
+        <span>{money(tile.price!, true)}</span>
+      </header>
       {tile.type === 'city' ? (
-        (!mobile || details) && (
-          <>
-            <table className="purchase-table">
-              <thead>
-                <tr>
-                  <th>Niveau</th>
-                  <th>Construction</th>
-                  <th>Loyer de base</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tile.rents!.map((rent, level) => (
-                  <tr key={level}>
-                    <th>{['Terrain', 'Maison 1', 'Maison 2', 'Maison 3', 'Hôtel'][level]}</th>
-                    <td>{level ? money(tile.buildCosts![level]!, true) : '—'}</td>
-                    <td>{money(rent, true)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            <p className="setup-note">
-              Construction niveau par niveau après acquisition de toute la rue :{' '}
-              {state.config.board
-                .filter((t) => t.group === tile.group)
-                .map((t) => t.name)
-                .join(' · ')}
-              . Festivals ×2 ; Mondial ×2 pendant 4 tours du propriétaire, sans cumul.
-            </p>
-          </>
-        )
-      ) : (
         <>
-          <h3>Plus d’îles, plus de loyers</h3>
-          <div className="island-rents">
-            {state.config.resortRents.map((rent, i) => (
-              <span key={i}>
-                {i + 1} île{i ? 's' : ''}
-                <strong>{money(rent, true)}</strong>
-              </span>
+          <div className="purchase-levels" aria-label="Aperçu des bâtiments et loyers">
+            {tile.rents!.map((rent, index) => (
+              <button
+                key={index}
+                aria-pressed={level === index}
+                className={index === 4 && hotelLocked ? 'level-locked' : ''}
+                aria-label={`${labels[index]} : loyer ${money(rent, true)}${index === 4 && hotelLocked ? ', hôtel verrouillé' : ''}`}
+                onClick={() => setLevel(index)}
+              >
+                <span className={`building-preview level-${index}`} aria-hidden="true">
+                  {index === 0 ? '◇' : index === 4 ? '▥' : '⌂'.repeat(index)}
+                </span>
+                <strong>{labels[index]}</strong>
+                <small>{money(rent, true)}</small>
+                {index === 4 && hotelLocked && (
+                  <span className="level-lock">🔒 Tour {state.config.hotelUnlockLaps ?? 1}</span>
+                )}
+              </button>
             ))}
           </div>
-          <p>Les îles ne reçoivent pas de bâtiments.</p>
+          <div className="purchase-preview" aria-live="polite">
+            <span>
+              Loyer de base <strong>{money(tile.rents![level]!, true)}</strong>
+            </span>
+            {level > 0 && (
+              <span>
+                Ce niveau <strong>+{money(tile.buildCosts![level]!, true)}</strong>
+              </span>
+            )}
+          </div>
+          <p className="purchase-rule">
+            {modern
+              ? 'Maisons sans rue complète. Hôtel après 5 tours du plateau.'
+              : 'Rue complète requise. Deux maisons maximum avant le premier passage Départ.'}{' '}
+            {level > 0 && 'Aperçu : l’achat ci-dessous concerne le terrain.'}
+          </p>
         </>
+      ) : (
+        <div className="island-rents">
+          {state.config.resortRents.map((rent, i) => (
+            <span key={i}>
+              {i + 1} île{i ? 's' : ''}
+              <strong>{money(rent, true)}</strong>
+            </span>
+          ))}
+        </div>
       )}
+      <p className="purchase-wallet">
+        Votre compte <strong>{money(player.cash, true)}</strong>
+        {canBuy && <span> · Après achat {money(player.cash - tile.price!, true)}</span>}
+      </p>
       {!canBuy && (
-        <p role="status">
-          Il vous manque {money(Math.max(0, tile.price! - player.cash), true)} pour acheter.
-        </p>
+        <p role="status">Il manque {money(Math.max(0, tile.price! - player.cash), true)}.</p>
       )}
-      <button className="primary purchase-cta" disabled={!canBuy} onClick={onBuy}>
-        <span>
-          Acheter {tile.name} · {money(tile.price!, true)}
-        </span>
-        <ActionClock />
-      </button>
-      <button className="secondary purchase-pass" onClick={onPass}>
-        <span>Non merci, je passe</span>
-        <ActionClock />
-      </button>
+      <div className="purchase-buttons">
+        <button className="primary purchase-cta" disabled={!canBuy} onClick={onBuy}>
+          <span>Acheter · {money(tile.price!, true)}</span>
+          <ActionClock />
+        </button>
+        <button className="secondary purchase-pass" onClick={onPass}>
+          <span>Passer</span>
+          <ActionClock />
+        </button>
+      </div>
       {onFraud && getLegalActions(state).some((a) => a.type === 'buy_fraud') && (
         <>
-          <button className="secondary purchase-cta" onClick={onFraud}>
-            <span>
-              Utiliser Fraude fiscale ·{' '}
-              {money(Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5)), true)}
-            </span>
+          <button className="secondary purchase-fraud" onClick={onFraud}>
+            Fraude fiscale ·{' '}
+            {money(Math.floor(tile.price! * (state.config.fraudDiscount ?? 0.5)), true)}
             <ActionClock />
           </button>
           <p className="fraud-risk">
-            Risque jusqu’au prochain passage par Départ : {money(tile.price! * 2, true)} si vous
-            tombez sur Taxe.
+            Risque : {money(tile.price! * 2, true)} sur Taxe, jusqu’au prochain Départ.
           </p>
         </>
       )}

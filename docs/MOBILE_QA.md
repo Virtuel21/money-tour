@@ -32,3 +32,13 @@ Captures dans le dossier de livraison : `mobile-camera-suivi.png`, `mobile-propr
 - Fermeture anticipée d'une carte testée avec conservation de la présentation suivante. Nouvelle tentative et sortie vers l'aide testées pendant une connexion en attente.
 
 Validation : 374 tests dans 30 fichiers ; couverture moteur 97,76 % des lignes, 93,66 % des branches. Typage, lint, formatage, build de production et contrôles des assets/modèles passent. Le tutoriel est chargé à la demande. La recette sur téléphone physique, Safari iOS et deux réseaux dont une 5G reste à effectuer ; voir [Connexions mobiles](NETWORK_MOBILE.md).
+
+## Plateau plein écran et rythme — 27 septembre 2026
+
+- PC 1440 × 900 : plateau occupant le viewport, caméra sans distorsion, quatre fiches joueurs aux coins, commandes centrales accessibles. Les propriétés et objectifs restent consultables dans le carnet.
+- Achat 390 × 844 et 320 × 568 : terrain, aperçu des niveaux, prix, solde et CTA lisibles. Changer le niveau affiché ne réalise aucun achat. Paysage 844 × 390 : présentation en deux colonnes.
+- Tutoriel : construction exécutée à 390 × 844, zoom sur Madrid et nouveau loyer de 30 k visibles après l’action ; achat exécuté à 320 × 568 avec le plateau et le CTA visibles. Le bouton Continuer attend la fin de la présentation. Rejouer restaure la scène. Les textes longs défilent dans le guide.
+- 389 tests passent, notamment construction sans rue, verrouillage de l’hôtel, case Duel, crises espacées/plafonnées, durée personnalisée réseau et reprise exacte des sauvegardes v8. Couverture moteur : 97,54 % des lignes, 93,89 % des branches.
+- Nouvelles parties : règles v9 et salons séparés des anciennes versions. Les sauvegardes locales v8 gardent leurs règles d’origine.
+
+Recette effectuée dans Chromium avec tailles mobiles simulées ; aucun téléphone physique ou Safari iOS réel validé.

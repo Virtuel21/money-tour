@@ -25,7 +25,8 @@ export type TileType =
   | 'tax'
   | 'casino'
   | 'insurance'
-  | 'karma';
+  | 'karma'
+  | 'duel';
 export interface Tile {
   id: number;
   name: string;
@@ -70,6 +71,11 @@ export interface GameConfig {
   karmaAmount?: number;
   fraudDiscount?: number;
   crisisChance?: number;
+  crisisMinRound?: number;
+  crisisCooldownRounds?: number;
+  crisisMaxCount?: number;
+  buildingRequiresGroup?: boolean;
+  hotelUnlockLaps?: number;
   lineVictory?: boolean;
   resortVictory?: boolean;
   initialCash: number;
@@ -151,6 +157,7 @@ export interface Winner {
   netWorth: number;
 }
 export interface GameState {
+  crisisHistory?: { count: number; lastRound: number };
   adventure?: Adventure;
   quests?: Record<string, Quest>;
   auction?: Auction;
