@@ -19,3 +19,7 @@ La pause est réservée au solo/local : elle arrête bots, chrono et sons, et te
 Références d’ergonomie consultées : capture Business Tour fournie par Julien, [page officielle Steam](https://store.steampowered.com/app/397900/Business_Tour__Online_Multiplayer_Board_Game/) et [MONOPOLY de Marmalade](https://www.marmaladegamestudio.com/games/monopoly). Principes retenus : vue en trois-quarts, priorité au plateau, portraits associés aux couleurs et à la trésorerie, actions contextuelles, fiche de propriété lisible. Aucun asset de ces jeux n’est redistribué.
 
 Génération et provenance : docs/IMAGE_PROMPTS.md. Contrôles visuels : docs/VISUAL_QA.md. Crédits : CREDITS.md.
+
+## Cases spéciales — v15
+
+L’Île perdue reçoit une queue d’avion orange et turquoise enfouie dans le sable. Festival remplace Mondial avec une scène rock miniature ; seules les membranes des enceintes pulsent doucement, sans flash ni nouveau son. Chance, Taxe et Assurance ont des textures portrait peintes couvrant toute leur tuile, avec titre HTML contrasté. Voir `docs/SPECIAL_TILES_ART.md` pour les prompts et la provenance.

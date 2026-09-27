@@ -1,4 +1,5 @@
 import { victoryThreats } from '@money-tour/engine';
+import { tileTitle, festivalText } from './game/tileTitle';
 import { TauntMenu } from './game/TauntMenu';
 import {
   TAUNT_COOLDOWN,
@@ -384,7 +385,7 @@ export default function App() {
           ? 'Choisir mes constructions'
           : `Construire · ${money(tile.buildCosts?.[(current.properties[tile.id]?.level ?? 0) + 1] ?? 0, true)}`;
       case 'finish':
-        if (current.phase === 'championship') return 'Ne pas organiser le Mondial';
+        if (current.phase === 'championship') return 'Ne pas organiser le Festival';
         return current.extraRoll
           ? 'Continuer · double !'
           : current.phase === 'property'
@@ -665,7 +666,7 @@ export default function App() {
               <div>
                 <b>02</b>
                 <span>
-                  <strong>Voyez plus grand</strong>Maisons, hôtels et championnats.
+                  <strong>Voyez plus grand</strong>Maisons, hôtels et festivals.
                 </span>
               </div>
               <div>
@@ -911,7 +912,7 @@ export default function App() {
                         : 'Votre aventure continue…'
                       : mobile && options.length && !interactionDisabled
                         ? current.phase === 'championship'
-                          ? 'Touchez une ville éclairée · Mondial 50'
+                          ? 'Touchez une ville éclairée · Festival 50'
                           : 'Touchez une case éclairée pour la choisir'
                         : display.dice.length
                           ? 'Dés : ' +
@@ -958,8 +959,8 @@ export default function App() {
             </section>
             <aside className="game-sidebar">
               {current.phase === 'championship' && !interactionDisabled && (
-                <section className="mondial-picker" aria-label="Choisir la ville du Mondial">
-                  <strong>🏆 Où accueillir le Mondial ?</strong>
+                <section className="mondial-picker" aria-label="Choisir la ville du Festival">
+                  <strong>🎸 Où accueillir le Festival ?</strong>
                   {options.length ? (
                     <>
                       <p>
@@ -981,8 +982,8 @@ export default function App() {
                       )
                         ? 'Il vous faut ' +
                           money(current.config.championshipFee, true) +
-                          ' pour organiser le Mondial.'
-                        : 'Achetez d’abord une ville : les îles ne peuvent pas accueillir le Mondial.'}
+                          ' pour organiser le Festival.'
+                        : 'Achetez d’abord une ville : les îles ne peuvent pas accueillir le Festival.'}
                     </p>
                   )}
                 </section>
@@ -1023,10 +1024,14 @@ export default function App() {
                   <div className="chance-card">
                     <small>✦ LA BONNE ÉTOILE</small>
                     <strong>
-                      {current.config.cards.find((c) => c.id === current.lastCard)?.title}
+                      {festivalText(
+                        current.config.cards.find((c) => c.id === current.lastCard)?.title,
+                      )}
                     </strong>
                     <p>
-                      {current.config.cards.find((c) => c.id === current.lastCard)?.description}
+                      {festivalText(
+                        current.config.cards.find((c) => c.id === current.lastCard)?.description,
+                      )}
                     </p>
                   </div>
                 )}
@@ -1248,11 +1253,11 @@ export default function App() {
                   uniquement.
                 </p>
                 <p>
-                  Selon la règle tirée, trois festivals peuvent doubler les loyers. Le Mondial coûte
-                  50 et double le loyer pendant quatre retours du propriétaire. L’île vous retient
-                  jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour, ou
-                  dès l’action supplémentaire si vous arrivez avec un double. Si votre cash manque,
-                  vendez des biens à la banque à moitié de leur valeur.
+                  Selon la règle tirée, trois festivals peuvent doubler les loyers. Le Festival
+                  coûte 50 et double le loyer pendant quatre retours du propriétaire. L’île vous
+                  retient jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain
+                  tour, ou dès l’action supplémentaire si vous arrivez avec un double. Si votre cash
+                  manque, vendez des biens à la banque à moitié de leur valeur.
                 </p>
                 <h3>5. Tentez votre chance, protégez vos biens</h3>
                 <p>
@@ -1388,7 +1393,7 @@ export default function App() {
                     }}
                   >
                     <i style={{ background: t.color ?? '#e6b94a' }} />
-                    {t.name}
+                    {tileTitle(t)}
                     <small>{t.price ? money(t.price, true) : 'Escale spéciale'}</small>
                   </button>
                 ))}
@@ -1647,7 +1652,7 @@ export default function App() {
           </Modal>
         )}
         {tile && !offer && (
-          <Modal title={tile.name} onClose={() => setSelected(null)}>
+          <Modal title={tileTitle(tile)} onClose={() => setSelected(null)}>
             <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
               {tile.type === 'city' ? (
                 <span
@@ -1720,7 +1725,7 @@ export default function App() {
                     : ''}
                   {current.festivals.includes(tile.id) ? '✦ Festival permanent : loyers ×2. ' : ''}
                   {property?.championships
-                    ? `Mondial : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`
+                    ? `Festival : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`
                     : ''}
                 </p>
               </>
@@ -1731,7 +1736,7 @@ export default function App() {
                   : tile.type === 'island'
                     ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200.'
                     : tile.type === 'championship'
-                      ? 'Pour 50, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Mondial renouvelle la durée, sans cumuler le bonus.'
+                      ? 'Pour 50, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Festival renouvelle la durée, sans cumuler le bonus.'
                       : tile.type === 'travel'
                         ? 'Au prochain tour, voyagez pour 50 vers une case libre ou alliée.'
                         : tile.type === 'tax'
@@ -1799,9 +1804,15 @@ export default function App() {
                 src={import.meta.env.BASE_URL + 'textures/chance.webp'}
                 alt="Une enveloppe pleine de surprises"
               />
-              <h2>{current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.title}</h2>
+              <h2>
+                {festivalText(
+                  current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.title,
+                )}
+              </h2>
               <p>
-                {current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description}
+                {festivalText(
+                  current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description,
+                )}
               </p>
               {canCloseCard ? (
                 <button className="primary" onClick={cinema.advance}>

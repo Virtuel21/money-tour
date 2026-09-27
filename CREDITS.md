@@ -42,3 +42,7 @@ models/fortune.glb et scripts/casino_models.py : roulette, machine à sous, bouc
 textures/expansion-v1.webp : atlas original généré avec l’outil d’images intégré de ChatGPT, 1254 × 1254 natifs, WebP qualité 95. [Prompt exact et provenance](docs/FORTUNE_ART.md). Aucun asset tiers incorporé.
 
 [@noble/hashes](https://github.com/paulmillr/noble-hashes), version 2.4.0, MIT, vérifie les engagements SHA-256 des choix de duel.
+
+## Cases spéciales et Festival (v15)
+
+Cinq illustrations originales générées avec l’outil imagegen intégré : `lost-island-v1.webp`, `festival-stage-v1.webp`, `chance-tile-v2.webp`, `tax-tile-v2.webp`, `insurance-tile-v2.webp`. Référence de style : notre atlas `architecture-v3.webp`. Aucun nouvel asset tiers. Dioramas natifs 1254 × 1254, textures natives 1024 × 1536 ; livraison WebP 768 × 768 et 768 × 1152. [Prompts exacts, provenance et intégration](docs/SPECIAL_TILES_ART.md).

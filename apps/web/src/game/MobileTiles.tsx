@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { getPropertyValue, type GameState } from '@money-tour/engine';
 import { ActionClock } from './ActionClock';
 import { money } from './local';
+import { tileTitle } from './tileTitle';
 
 export function MobileTiles({
   state,
@@ -27,7 +28,7 @@ export function MobileTiles({
         {tiles.slice(index * size, index * size + size).map((t) => (
           <button key={t.id} onClick={() => onTile(t.id)}>
             <i style={{ background: t.color ?? '#e6b94a' }} />
-            {t.name}
+            {tileTitle(t)}
             <small>
               {selling
                 ? 'Vendre · ' +

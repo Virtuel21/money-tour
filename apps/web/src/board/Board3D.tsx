@@ -9,6 +9,8 @@ import { reservedCity, getRent, type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
 import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
+import { tileTitle } from '../game/tileTitle';
+import { concertSprite, festivalBeat, illustratedSprite } from './specialArt';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
 const up = new THREE.Vector3(0, 1, 0);
@@ -267,17 +269,37 @@ export default function Board({
         });
         const shownWealth = live.current.state.players.map((p) => p.cash);
         const textureLoader = new THREE.TextureLoader();
-        const [travelers, architecture, specialTiles, expansionTiles] = await Promise.all([
+        const [
+          travelers,
+          architecture,
+          expansionTiles,
+          lostIslandArt,
+          festivalArt,
+          chanceArt,
+          taxArt,
+          insuranceArt,
+        ] = await Promise.all([
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/architecture-v3.webp'),
-          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/special-tiles-v1.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/expansion-v1.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/lost-island-v1.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/festival-stage-v1.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/chance-tile-v2.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/tax-tile-v2.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/insurance-tile-v2.webp'),
         ]);
+        const loadedTextures = [
+          travelers,
+          architecture,
+          expansionTiles,
+          lostIslandArt,
+          festivalArt,
+          chanceArt,
+          taxArt,
+          insuranceArt,
+        ];
         if (disposed) {
-          travelers.dispose();
-          architecture.dispose();
-          specialTiles.dispose();
-          expansionTiles.dispose();
+          loadedTextures.forEach((texture) => texture.dispose());
           disposePending(gltf.scene);
           return;
         }
@@ -358,35 +380,42 @@ export default function Board({
           flags: THREE.Sprite[] = [],
           championships: THREE.Group[] = [],
           confetti: THREE.Group[] = [];
+        const concertBeats: { value: number }[] = [];
         for (const tile of live.current.state.config.board) {
           const p = tileFrame(tile.id, live.current.state.config.board.length),
             cell = clone('tile');
           cell.position.set(p.x, 0, p.z);
           cell.scale.set(p.width / 1.66, 1, p.depth / 1.66);
           resources.add(cell);
-          const special = tile.type === 'chance' || tile.type === 'tax';
-          const extra = ['casino', 'insurance', 'karma'].includes(tile.type);
-          const tileMap = extra
-            ? expansionTiles.clone()
-            : special
-              ? specialTiles.clone()
+          const illustratedTile =
+            tile.type === 'chance'
+              ? chanceArt
+              : tile.type === 'tax'
+                ? taxArt
+                : tile.type === 'insurance'
+                  ? insuranceArt
+                  : undefined;
+          const extra = ['casino', 'karma'].includes(tile.type);
+          const tileMap = illustratedTile
+            ? illustratedTile.clone()
+            : extra
+              ? expansionTiles.clone()
               : streetSurface(tile);
           if (extra) {
-            const index =
-              tile.type === 'casino' ? (tile.id < 15 ? 0 : 1) : tile.type === 'insurance' ? 2 : 3;
+            const index = tile.type === 'casino' ? (tile.id < 15 ? 0 : 1) : 3;
             tileMap.repeat.set(0.5, 0.5);
             tileMap.offset.set((index % 2) * 0.5, index < 2 ? 0.5 : 0);
             tileMap.colorSpace = THREE.SRGBColorSpace;
             tileMap.anisotropy = renderer!.capabilities.getMaxAnisotropy();
           }
-          if (special) {
-            tileMap.repeat.set(0.5, 1);
-            tileMap.offset.x = tile.type === 'chance' ? 0 : 0.5;
+          if (illustratedTile) {
+            tileMap.center.set(0.5, 0.5);
+            tileMap.rotation = p.angle;
             tileMap.colorSpace = THREE.SRGBColorSpace;
             tileMap.anisotropy = renderer!.capabilities.getMaxAnisotropy();
           }
           const iconSize = Math.min(p.width, p.depth) - 0.12;
-          if (special || extra) {
+          if (extra) {
             const backdrop = new THREE.Mesh(
               new THREE.PlaneGeometry(p.width - 0.12, p.depth - 0.12),
               new THREE.MeshStandardMaterial({
@@ -401,8 +430,8 @@ export default function Board({
           }
           const surface = new THREE.Mesh(
             new THREE.PlaneGeometry(
-              special || extra ? iconSize : p.width - 0.12,
-              special || extra ? iconSize : p.depth - 0.12,
+              extra ? iconSize : p.width - 0.12,
+              extra ? iconSize : p.depth - 0.12,
             ),
             new THREE.MeshStandardMaterial({ map: tileMap, roughness: 0.95 }),
           );
@@ -431,13 +460,35 @@ export default function Board({
           city.rotation.y = p.angle;
           resources.add(city);
           buildings.push(city);
-          if (tile.type === 'resort' || tile.type === 'island') {
+          if (tile.type === 'island') {
+            const wreck = illustratedSprite(lostIslandArt, 2.65, 0.045);
+            wreck.position.set(p.x - p.normal.x * 0.35, 0.29, p.z - p.normal.z * 0.35);
+            resources.add(wreck);
+          }
+          if (tile.type === 'championship') {
+            const concert = concertSprite(festivalArt, 3.1);
+            concert.sprite.position.set(p.x - p.normal.x * 0.35, 0.29, p.z - p.normal.z * 0.35);
+            resources.add(concert.sprite);
+            concertBeats.push(concert.beat);
+          }
+          if (tile.type === 'resort') {
             const palm = clone('palm');
             palm.scale.setScalar(0.9);
             palm.position.set(p.x - p.normal.x * 0.65, 0.26, p.z - p.normal.z * 0.65);
             resources.add(palm);
           }
-          if (!['city', 'resort', 'island', 'chance', 'tax', 'duel'].includes(tile.type)) {
+          if (
+            ![
+              'city',
+              'resort',
+              'island',
+              'chance',
+              'tax',
+              'duel',
+              'championship',
+              'insurance',
+            ].includes(tile.type)
+          ) {
             const model =
               tile.type === 'casino'
                 ? tile.id < 15
@@ -461,10 +512,10 @@ export default function Board({
           celebration.position.set(p.x, 0.29, p.z);
           celebration.rotation.y = p.angle;
           if (tile.type === 'city') {
-            const trophy = clone('championship');
-            trophy.scale.setScalar(0.3);
-            trophy.position.set(-0.66, 0, -0.5);
-            celebration.add(trophy);
+            const concert = concertSprite(festivalArt, 1.2);
+            concert.sprite.position.set(-0.66, 0, -0.5);
+            celebration.add(concert.sprite);
+            concertBeats.push(concert.beat);
             const ribbon = new THREE.Mesh(
               new THREE.BoxGeometry(1.92, 0.07, 0.13),
               new THREE.MeshStandardMaterial({ color: '#ffd45c', metalness: 0.3, roughness: 0.4 }),
@@ -505,7 +556,14 @@ export default function Board({
           setAnchors(
             live.current.state.config.board.map((t) => {
               const p = tileFrame(t.id, live.current.state.config.board.length);
-              const labelOffset = p.corner ? 0.85 : 0.5;
+              const labelOffset =
+                t.type === 'championship'
+                  ? -1.15
+                  : t.type === 'island'
+                    ? 1.25
+                    : p.corner
+                      ? 0.85
+                      : 0.5;
               const v = new THREE.Vector3(
                 p.x + p.normal.x * labelOffset,
                 0.32,
@@ -643,6 +701,10 @@ export default function Board({
           if (disposed) return;
           const { state: game, cue: activeCue, reducedMotion: reduced } = live.current;
           const now = performance.now();
+          const beat = festivalBeat(now, reduced);
+          concertBeats.forEach((uniform) => {
+            uniform.value = beat;
+          });
           if (activeCue !== lastCue) {
             lastCue = activeCue;
             started = now;
@@ -877,10 +939,7 @@ export default function Board({
           gather(note);
           gather(ingot);
           templates.forEach(gather);
-          textures.add(travelers);
-          textures.add(architecture);
-          textures.add(specialTiles);
-          textures.add(expansionTiles);
+          loadedTextures.forEach((texture) => textures.add(texture));
           detached.forEach(gather);
           geometries.forEach((g) => g.dispose());
           materials.forEach((m) => m.dispose());
@@ -952,7 +1011,7 @@ export default function Board({
                   points={anchors[i]?.points}
                   tabIndex={0}
                   role="button"
-                  aria-label={(choices.includes(t.id) ? 'Choisir ' : 'Voir ') + t.name}
+                  aria-label={(choices.includes(t.id) ? 'Choisir ' : 'Voir ') + tileTitle(t)}
                   className={
                     inspectedOwner
                       ? state.properties[t.id]?.ownerId === inspectedOwner
@@ -1047,7 +1106,7 @@ export default function Board({
                 t.type === 'chance'
                   ? 'CHANCE'
                   : t.type === 'championship'
-                    ? 'MONDIAL'
+                    ? 'FESTIVAL'
                     : t.type === 'travel'
                       ? 'VOYAGE'
                       : t.type === 'tax'
@@ -1076,7 +1135,11 @@ export default function Board({
                     )
                       ? ' label-dimmed'
                       : '') +
-                    (['casino', 'insurance', 'karma'].includes(t.type) ? ' special-label' : '')
+                    (['casino', 'insurance', 'karma', 'chance', 'tax', 'championship'].includes(
+                      t.type,
+                    )
+                      ? ' special-label'
+                      : '')
                   }
                   style={
                     {
@@ -1108,7 +1171,7 @@ export default function Board({
                   )}
                   {!!state.properties[t.id]?.championships && (
                     <small className="world-badge">
-                      🏆 {state.properties[t.id]?.championshipTurns ?? 4} tours
+                      🎸 {state.properties[t.id]?.championshipTurns ?? 4} tours
                     </small>
                   )}
                 </div>
@@ -1123,7 +1186,7 @@ export default function Board({
           <div className="tile-list">
             {state.config.board.map((t) => (
               <button key={t.id} onClick={() => onTile(t.id)}>
-                {t.name}
+                {tileTitle(t)}
               </button>
             ))}
           </div>

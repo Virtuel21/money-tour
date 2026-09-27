@@ -47,7 +47,7 @@ export function playerBonuses(state: GameState, player: Player): BonusInfo[] {
     const p = state.properties[tile.id]!;
     if (p.championships)
       items.push({
-        title: `🏆 Mondial · ${tile.name}`,
+        title: `🎸 Festival · ${tile.name}`,
         description: `Le loyer de ${tile.name} est doublé. Durée restante : ${p.championshipTurns ?? 0} retours de votre tour. Un double aux dés ne réduit pas cette durée.`,
       });
     if (p.roachTurns)
