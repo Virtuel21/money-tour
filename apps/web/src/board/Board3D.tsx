@@ -11,6 +11,8 @@ import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
 import { boardTileTitle, tileTitle } from '../game/tileTitle';
 import { concertSprite, festivalBeat } from './specialArt';
+import { advanceScenery, lagoonIslands } from './lagoon';
+import { festivalFlag, lagoonBoat } from './scenery';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
 const up = new THREE.Vector3(0, 1, 0);
@@ -347,12 +349,7 @@ export default function Board({
           return sprite;
         };
         // Detailed pre-rendered dioramas: a fixed three-quarter camera lets the art retain its fine detail.
-        [
-          [-2.5, -1.6],
-          [2.5, -1.6],
-          [-2.5, 2.2],
-          [2.5, 2.2],
-        ].forEach(([x, z], i) => {
+        lagoonIslands.forEach(({ x, z }, i) => {
           const island = atlasSprite(architecture, i + 2, 3, 3.05, 3.05);
           island.position.set(x!, 0.08, z!);
           resources.add(island);
@@ -363,6 +360,8 @@ export default function Board({
         );
         sea.position.y = 0.02;
         resources.add(sea);
+        const boats = [lagoonBoat('cruise', 0), lagoonBoat('sail', 1)];
+        boats.forEach((boat) => resources.add(boat.root));
         for (let i = 0; i < 34; i++) {
           const ripple = new THREE.Mesh(
             new THREE.PlaneGeometry(0.22 + (i % 3) * 0.13, 0.045),
@@ -377,9 +376,9 @@ export default function Board({
         const buildings: THREE.Group[] = [],
           trims: THREE.Mesh[] = [],
           borders: THREE.Mesh[] = [],
-          flags: THREE.Sprite[] = [],
           championships: THREE.Group[] = [],
           confetti: THREE.Group[] = [];
+        const festivalFlags: ReturnType<typeof festivalFlag>[] = [];
         const concertBeats: { value: number }[] = [];
         for (const tile of live.current.state.config.board) {
           const p = tileFrame(tile.id, live.current.state.config.board.length),
@@ -479,7 +478,7 @@ export default function Board({
           }
           if (tile.type === 'championship') {
             const concert = concertSprite(festivalArt, 3.1);
-            concert.sprite.position.set(p.x - p.normal.x * 0.35, 0.29, p.z - p.normal.z * 0.35);
+            concert.sprite.position.set(p.x - 0.3, 0.29, p.z - 0.3);
             resources.add(concert.sprite);
             concertBeats.push(concert.beat);
           }
@@ -516,24 +515,15 @@ export default function Board({
             icon.position.set(p.x - p.normal.x * 0.3, 0.27, p.z - p.normal.z * 0.3);
             resources.add(icon);
           }
-          const flag = caption('⚑ ×2', 0.38, 0.22, '#b55b20');
-          flag.position.set(p.x - 0.58, 0.7, p.z - 0.5);
-          resources.add(flag);
-          flags.push(flag);
           const celebration = new THREE.Group();
           celebration.position.set(p.x, 0.29, p.z);
           celebration.rotation.y = p.angle;
           if (tile.type === 'city') {
-            const concert = concertSprite(festivalArt, 1.2);
-            concert.sprite.position.set(-0.66, 0, -0.5);
-            celebration.add(concert.sprite);
-            concertBeats.push(concert.beat);
-            const ribbon = new THREE.Mesh(
-              new THREE.BoxGeometry(1.92, 0.07, 0.13),
-              new THREE.MeshStandardMaterial({ color: '#ffd45c', metalness: 0.3, roughness: 0.4 }),
-            );
-            ribbon.position.set(0, 0.03, 1.5);
-            celebration.add(ribbon);
+            const flag = festivalFlag(festivalFlags[0]?.texture);
+            flag.group.position.set(-0.72, 0, -0.62);
+            flag.group.rotation.y = -p.angle;
+            celebration.add(flag.group);
+            festivalFlags.push(flag);
           }
           resources.add(celebration);
           championships.push(celebration);
@@ -673,8 +663,8 @@ export default function Board({
               colors[owner] ?? '#ffffff',
             );
             borders[i]!.visible = live.current.choices.includes(tile.id);
-            flags[i]!.visible = game.festivals.includes(tile.id);
-            championships[i]!.visible = (prop?.championships ?? 0) > 0;
+            championships[i]!.visible =
+              (prop?.championships ?? 0) > 0 || game.festivals.includes(tile.id);
             const signature = String(prop?.level ?? 0) + ':' + String(prop?.ownerId);
             if (signatures[i] === signature) return;
             signatures[i] = signature;
@@ -708,10 +698,19 @@ export default function Board({
         let previousTime = performance.now(),
           lastProjection = 0,
           projectionSignature = '';
+        let sceneryTime = 0,
+          sceneryPrevious = performance.now();
         renderer.setAnimationLoop(() => {
           if (disposed) return;
           const { state: game, cue: activeCue, reducedMotion: reduced } = live.current;
           const now = performance.now();
+          const still = reduced || document.hidden;
+          sceneryTime = advanceScenery(sceneryTime, (now - sceneryPrevious) / 1000, still);
+          sceneryPrevious = now;
+          boats.forEach((boat) => boat.animate(sceneryTime, still));
+          festivalFlags.forEach((flag) => {
+            if (flag.group.parent?.visible) flag.wave(sceneryTime);
+          });
           const beat = festivalBeat(now, reduced);
           concertBeats.forEach((uniform) => {
             uniform.value = beat;
@@ -730,11 +729,17 @@ export default function Board({
               return;
             }
             pawn.visible = !player.eliminated;
-            let point = tilePoint(player.position, game.config.board.length),
+            const walkingPoint = (id: number) => {
+              const point = tilePoint(id, game.config.board.length);
+              return game.config.board[id]?.type === 'championship'
+                ? { x: point.x + 0.68, z: point.z + 0.68 }
+                : point;
+            };
+            let point = walkingPoint(player.position),
               height = 0.27;
             if (activeCue?.kind === 'hop' && activeCue.playerId === player.id && !reduced) {
-              const from = tilePoint(activeCue.from!, game.config.board.length),
-                to = tilePoint(activeCue.to!, game.config.board.length);
+              const from = walkingPoint(activeCue.from!),
+                to = walkingPoint(activeCue.to!);
               point = {
                 x: THREE.MathUtils.lerp(from.x, to.x, progress),
                 z: THREE.MathUtils.lerp(from.z, to.z, progress),
@@ -761,10 +766,13 @@ export default function Board({
                   : 0;
             const offsetZ = peers.length > 2 ? (slot < 2 ? 0.15 : 0.6) : 0.35;
             const frame = tileFrame(player.position, game.config.board.length);
+            const atFestival = game.config.board[player.position]?.type === 'championship';
             pawn.position.set(
-              point.x + offsetX + frame.normal.x * 0.25,
+              point.x +
+                (atFestival ? offsetX * 1.5 + offsetZ * 0.4 : offsetX + frame.normal.x * 0.25),
               height,
-              point.z + offsetZ + frame.normal.z * 0.25,
+              point.z +
+                (atFestival ? -offsetX * 1.5 + offsetZ * 0.4 : offsetZ + frame.normal.z * 0.25),
             );
             // A crowded cell remains readable: the active traveler stays solid; companions become translucent.
             pawn.traverse((node) => {
@@ -1157,11 +1165,6 @@ export default function Board({
                         getRent(state, t.id),
                       )}
                     </strong>
-                  )}
-                  {!!state.properties[t.id]?.championships && (
-                    <small className="world-badge">
-                      🎸 {state.properties[t.id]?.championshipTurns ?? 4} tours
-                    </small>
                   )}
                 </div>
               );
