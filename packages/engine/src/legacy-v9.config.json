@@ -1,5 +1,5 @@
 {
-  "version": 10,
+  "version": 9,
   "initialCash": 1500000,
   "startBonus": 300000,
   "durationMs": 1200000,
@@ -280,9 +280,9 @@
       "type": "city",
       "group": "g8",
       "color": "#805965",
-      "price": 450000,
-      "rents": [45000, 90000, 180000, 315000, 540000],
-      "buildCosts": [0, 225000, 225000, 225000, 225000],
+      "price": 400000,
+      "rents": [40000, 80000, 160000, 280000, 480000],
+      "buildCosts": [0, 200000, 200000, 200000, 200000],
       "id": 29,
       "line": 3
     },
@@ -291,9 +291,9 @@
       "type": "city",
       "group": "g8",
       "color": "#805965",
-      "price": 475000,
-      "rents": [47500, 95000, 190000, 332500, 570000],
-      "buildCosts": [0, 237500, 237500, 237500, 237500],
+      "price": 425000,
+      "rents": [42500, 85000, 170000, 297500, 510000],
+      "buildCosts": [0, 212500, 212500, 212500, 212500],
       "id": 30,
       "line": 3
     },
@@ -488,7 +488,5 @@
   "hotelUnlockLaps": 5,
   "crisisMinRound": 6,
   "crisisCooldownRounds": 8,
-  "crisisMaxCount": 2,
-  "pricesFollowPosition": true,
-  "insuranceSingleUse": true
+  "crisisMaxCount": 2
 }

@@ -409,7 +409,11 @@ export function getLegalActions(state: GameState): GameAction[] {
       result.push({ type: 'attack', playerId: player.id, tile: tile.id });
     result.push(action('finish'));
   }
-  if (player.insurance && ['roll', 'property', 'end'].includes(state.phase)) {
+  if (
+    player.insurance &&
+    (!state.config.insuranceSingleUse || player.insurance.tile === null) &&
+    ['roll', 'property', 'end'].includes(state.phase)
+  ) {
     for (const tile of propertyTiles(state, player.id))
       if (tile.id !== player.insurance.tile)
         result.push({ type: 'insure', playerId: player.id, tile: tile.id });
@@ -769,7 +773,9 @@ function resolveTile(state: GameState, rng: Rng, events: GameEvent[], depth = 0)
       events.push({
         type: 'insurance',
         playerId: player.id,
-        message: 'Un jeton assurance maximum. Choisissez une de vos propriétés à protéger.',
+        message: state.config.insuranceSingleUse
+          ? 'Un jeton, un bien à vous, une attaque bloquée. Une fois posé, le jeton ne se déplace plus.'
+          : 'Un jeton assurance maximum. Choisissez une de vos propriétés à protéger.',
       });
       break;
     case 'duel': {

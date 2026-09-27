@@ -42,3 +42,14 @@ Validation : 374 tests dans 30 fichiers ; couverture moteur 97,76 % des lignes, 
 - Nouvelles parties : règles v9 et salons séparés des anciennes versions. Les sauvegardes locales v8 gardent leurs règles d’origine.
 
 Recette effectuée dans Chromium avec tailles mobiles simulées ; aucun téléphone physique ou Safari iOS réel validé.
+
+## Achat illustré, assurance et prix — 27 septembre 2026
+
+- Achat PC 1440 × 900 : fenêtre large de 1180 px, bandeau de ville, cinq illustrations vectorielles originales (terrain, une à trois maisons, hôtel), loyer sélectionné et grand CTA. Les cartes sont des aperçus ; le bouton achète explicitement le terrain seul.
+- Mobile 390 × 844, 320 × 568 et paysage 844 × 390 : illustrations accessibles par défilement horizontal, contenu long défilant dans la fenêtre et boutons d’achat visibles grâce à leur position collante. Aucun débordement horizontal de page.
+- Les piles 3D suivent le même ordre que les fiches PC : haut gauche, haut droit, bas gauche, bas droit. Un test de projection avec la caméra du jeu contrôle les quatre quadrants.
+- Assurance v10 : pose unique, uniquement sur un bien du joueur. Le jeton ne se déplace pas ; il disparaît après la première attaque bloquée ou après la vente du bien. Les autres biens restent vulnérables. Les règles des sauvegardes v9 sont préservées.
+- Mélange des villes : tarifs, loyers et constructions restent attachés aux rangs du plateau. Prix des villes de 100 k à 475 k, par pas de 25 k, dans le sens horaire. Vérification sur 40 graines et rejet des sauvegardes dont les tarifs ont été altérés.
+- Le message de verrouillage de l’hôtel utilise maintenant un texte sombre sur fond crème/jaune. Les libellés, boutons et bandeau d’achat ont des couleurs explicites et des focus visibles.
+
+394 tests passent dans 33 fichiers ; couverture moteur 97,47 % des lignes et 93,69 % des branches. Recette Chromium, sans validation sur téléphone physique ou Safari iOS.

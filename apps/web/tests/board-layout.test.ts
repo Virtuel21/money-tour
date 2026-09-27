@@ -1,5 +1,23 @@
 import { expect, it } from 'vitest';
-import { tileFrame, boardShape } from '../src/board/layout';
+import { tileFrame, boardShape, wealthPoints } from '../src/board/layout';
+import { OrthographicCamera, Vector3 } from 'three';
+it('projects each cash pile into the same screen quadrant as its player card', () => {
+  const camera = new OrthographicCamera(-20, 20, 15, -15, 0.1, 100);
+  camera.position.set(18, 22, 18);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
+  expect(
+    wealthPoints.map((p) => {
+      const v = new Vector3(p.x, 0, p.z).project(camera);
+      return [Math.sign(v.x), Math.sign(v.y)];
+    }),
+  ).toEqual([
+    [-1, 1],
+    [1, 1],
+    [-1, -1],
+    [1, -1],
+  ]);
+});
 it.each([26, 28, 30, 32])(
   'keeps all %i interactive rectangles separate, including corner neighbours',
   (count) => {

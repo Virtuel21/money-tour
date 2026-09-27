@@ -69,7 +69,7 @@ Vue en trois-quarts, noms seuls sur les cases, comptes à gauche et fiche de pro
 
 ## Plateau carré, événements et réserves
 
-Chaque nouvelle partie mélange huit rues complètes (deux villes réelles chacune). Le carré comporte 32 cases, 9 par bord coins inclus. Chaque côté possède exactement quatre villes, une île et deux cases spéciales en plus du coin. Casino, Chance et Duel ne se touchent pas. La Taxe reste juste avant Départ. La disposition fait partie de l’état partagé : tous les joueurs voient le même plateau. Les sauvegardes des éditions précédentes conservent leur plateau de 26 ou 28 cases.
+Chaque nouvelle partie mélange huit rues complètes (deux villes réelles chacune), avec des prix croissants attachés aux emplacements : de 100 k à 475 k dans le sens horaire depuis Départ. Le carré comporte 32 cases, 9 par bord coins inclus. Chaque côté possède exactement quatre villes, une île et deux cases spéciales en plus du coin. Casino, Chance et Duel ne se touchent pas. La Taxe reste juste avant Départ. La disposition fait partie de l’état partagé : tous les joueurs voient le même plateau. Les sauvegardes des éditions précédentes conservent leur plateau de 26 ou 28 cases.
 
 Les tuiles rectangulaires séparent constructions et loyers. Les bâtiments prennent la couleur du propriétaire ; les plages ont une bordure d’eau. Les liasses et lingots autour du plateau suivent le compte de chaque joueur. Le temps restant figure sur les boutons de décision et dans les fenêtres ; pause et animations suspendent le décompte. Trois musiques alternent pendant la partie.
 

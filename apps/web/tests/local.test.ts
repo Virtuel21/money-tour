@@ -5,6 +5,7 @@ import {
   legacyConfigV6,
   legacyConfigV7,
   legacyConfigV8,
+  legacyConfigV9,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -19,6 +20,18 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('preserves v9 prices and insurance rules when resuming an existing game', () => {
+    const save = newLocal({
+      config: legacyConfigV9 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v9', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+    expect(loadLocal()!.state.config.pricesFollowPosition).toBeUndefined();
+  });
   it('resumes v8 saves with their original construction rules, Karma and Chance deck', () => {
     const save = newLocal({
       config: legacyConfigV8 as GameConfig,

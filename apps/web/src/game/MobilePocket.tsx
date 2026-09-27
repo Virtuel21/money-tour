@@ -29,7 +29,7 @@ export function MobilePocket({
       ? [
           '🛡 Assurance · ' +
             (player.insurance.tile === null
-              ? 'À placer sur une propriété'
+              ? 'À poser une fois sur un de vos biens'
               : state.config.board[player.insurance.tile]!.name),
         ]
       : []),
