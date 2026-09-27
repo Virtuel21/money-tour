@@ -1,37 +1,5 @@
 import * as THREE from 'three';
 import type { Tile } from '@money-tour/engine';
-import { tileTitle } from '../game/tileTitle';
-
-/** Printed on the board, so labels follow its perspective and stay inside the case. */
-export function specialTileLabel(tile: Tile) {
-  const canvas = document.createElement('canvas');
-  canvas.width = 768;
-  canvas.height = 144;
-  const ctx = canvas.getContext('2d')!;
-  ctx.fillStyle = '#fff4d7';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeStyle = '#bd9149';
-  ctx.lineWidth = 8;
-  ctx.strokeRect(4, 4, 760, 136);
-  ctx.fillStyle = '#173c48';
-  ctx.font = '900 72px Trebuchet MS, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const titles: Partial<Record<Tile['type'], string>> = {
-    travel: 'Voyage',
-    casino: 'Casino',
-    chance: 'Chance',
-    tax: 'Taxe',
-    insurance: 'Assurance',
-    karma: 'Karma',
-  };
-  const title = titles[tile.type] ?? tileTitle(tile);
-  ctx.fillText(title.toLocaleUpperCase('fr-FR'), 384, 76, 720);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
-  return texture;
-}
 
 /** Small repeating patterns authored for the board, not photographic map labels. */
 export function streetSurface(tile: Tile) {

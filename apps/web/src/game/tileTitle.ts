@@ -5,6 +5,18 @@ export function tileTitle(tile: Pick<Tile, 'type' | 'name'>) {
   return tile.type === 'championship' ? 'Festival' : tile.name;
 }
 
+export function boardTileTitle(tile: Pick<Tile, 'type' | 'name'>) {
+  const titles: Partial<Record<Tile['type'], string>> = {
+    travel: 'Voyage',
+    casino: 'Casino',
+    chance: 'Chance',
+    tax: 'Taxe',
+    insurance: 'Assurance',
+    karma: 'Karma',
+  };
+  return titles[tile.type] ?? tileTitle(tile);
+}
+
 export function festivalText(text?: string) {
   return (text ?? '')
     .replaceAll('Championnat du monde', 'Festival')

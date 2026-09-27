@@ -386,6 +386,8 @@ export default function App() {
           : `Construire · ${money(tile.buildCosts?.[(current.properties[tile.id]?.level ?? 0) + 1] ?? 0, true)}`;
       case 'finish':
         if (current.phase === 'championship') return 'Ne pas organiser le Festival';
+        if (current.extraRoll && current.config.travelOnDouble && active.travelPending)
+          return 'Continuer · Voyage disponible';
         return current.extraRoll
           ? 'Continuer · double !'
           : current.phase === 'property'
@@ -455,7 +457,7 @@ export default function App() {
                   : current.phase === 'island'
                     ? 'Payez le voyage de retour, utilisez un billet ou tentez un double. Vous sortirez au plus tard à la troisième tentative.'
                     : current.phase === 'travel'
-                      ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(config.travelFee, true)} et remplace les dés.`
+                      ? `Choisissez une case libre ou alliée. Le voyage coûte ${money(current.config.travelFee, true)} et remplace les dés, même après un double.`
                       : current.phase === 'championship'
                         ? `Choisissez une ville éclairée : ${money(current.config.championshipFee, true)}, loyer ×2 pendant quatre de vos tours.`
                         : current.phase === 'property'
@@ -1062,6 +1064,23 @@ export default function App() {
                     </p>
                   )}
                 <div className="actions">
+                  {current.phase === 'travel' &&
+                    !active.bot &&
+                    (!online || online.self === active.id) && (
+                      <button
+                        className="primary travel-destination"
+                        disabled={interactionDisabled || !options.length}
+                        onClick={() => setModal('tiles')}
+                      >
+                        <span>
+                          {options.length
+                            ? 'Choisir ma destination'
+                            : 'Voyage · fonds insuffisants'}{' '}
+                          · {money(current.config.travelFee, true)}
+                        </span>
+                        <ActionClock />
+                      </button>
+                    )}
                   {!active.bot &&
                     (!online || online.self === active.id) &&
                     available
@@ -1069,7 +1088,11 @@ export default function App() {
                       .map((a, i) => (
                         <button
                           key={`${a.type}-${'tile' in a ? a.tile : ''}`}
-                          className={i === 0 && a.type !== 'finish' ? 'primary' : 'secondary'}
+                          className={
+                            i === 0 && a.type !== 'finish' && a.type !== 'decline_travel'
+                              ? 'primary'
+                              : 'secondary'
+                          }
                           disabled={interactionDisabled}
                           onClick={() => {
                             if (!interactionDisabled) {
@@ -1373,10 +1396,14 @@ export default function App() {
         )}
         {modal === 'tiles' && (
           <Modal
-            title={`Les ${current.config.board.length} escales`}
+            title={
+              current.phase === 'travel' && !interactionDisabled
+                ? 'Choisir ma destination'
+                : `Les ${current.config.board.length} escales`
+            }
             onClose={() => setModal(null)}
           >
-            {mobile ? (
+            {mobile || (current.phase === 'travel' && !interactionDisabled) ? (
               <MobileTiles
                 state={current}
                 choices={interactionDisabled ? [] : options.map((a) => a.tile)}

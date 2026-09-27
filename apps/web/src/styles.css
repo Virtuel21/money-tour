@@ -3131,10 +3131,31 @@ footer a {
   }
 }
 .special-label b {
-  background: #fff5dfef;
-  padding: 1px 3px;
-  border-radius: 3px;
-  font-size: 0.85em;
+  background: #fff5df;
+  color: #173c48;
+  padding: 2px 5px;
+  border: 1px solid #bd9149;
+  border-radius: 4px;
+  font-size: clamp(10px, 1.05cqw, 16px);
+  line-height: 1.15;
+  text-shadow: none;
+}
+.game-layout .city-label.special-label b {
+  font-size: clamp(10px, calc(1.05cqw * var(--camera-label-scale, 1)), 16px);
+}
+.game-layout .action-card .actions .travel-destination {
+  font-size: 14px;
+  line-height: 1.2;
+}
+.game-layout .action-card .actions .travel-destination > span:first-child {
+  flex: 1;
+  font-size: 14px;
+  min-width: 0;
+  white-space: normal;
+}
+.game-layout .action-card .actions .travel-destination .cta-clock {
+  flex-shrink: 0;
+  font-size: 11px;
 }
 
 .board-watermark {

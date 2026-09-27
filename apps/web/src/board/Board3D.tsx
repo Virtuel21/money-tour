@@ -7,9 +7,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { reservedCity, getRent, type GameState } from '@money-tour/engine';
 import type { Cue } from '../game/presentation';
-import { specialTileLabel, streetSurface } from './surfaces';
+import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
-import { tileTitle } from '../game/tileTitle';
+import { boardTileTitle, tileTitle } from '../game/tileTitle';
 import { concertSprite, festivalBeat } from './specialArt';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
@@ -477,21 +477,6 @@ export default function Board({
             wreck.receiveShadow = true;
             resources.add(wreck);
           }
-          if (!['city', 'resort', 'duel'].includes(tile.type)) {
-            const label = new THREE.Mesh(
-              new THREE.PlaneGeometry((p.corner ? shape.depth : shape.step) - 0.3, 0.48),
-              new THREE.MeshStandardMaterial({ map: specialTileLabel(tile), roughness: 0.95 }),
-            );
-            label.rotation.set(-Math.PI / 2, 0, p.angle);
-            const labelOffset = p.side < 2 ? 1.3 : -1.3;
-            label.position.set(
-              p.x + p.normal.x * labelOffset,
-              0.292,
-              p.z + p.normal.z * labelOffset,
-            );
-            label.receiveShadow = true;
-            resources.add(label);
-          }
           if (tile.type === 'championship') {
             const concert = concertSprite(festivalArt, 3.1);
             concert.sprite.position.set(p.x - p.normal.x * 0.35, 0.29, p.z - p.normal.z * 0.35);
@@ -583,14 +568,13 @@ export default function Board({
           setAnchors(
             live.current.state.config.board.map((t) => {
               const p = tileFrame(t.id, live.current.state.config.board.length);
-              const labelOffset =
-                t.type === 'championship'
-                  ? -1.15
-                  : t.type === 'island'
-                    ? 1.25
-                    : p.corner
-                      ? 0.85
-                      : 0.5;
+              const labelOffset = !['city', 'resort'].includes(t.type)
+                ? p.side < 2
+                  ? 1.3
+                  : -1.3
+                : p.corner
+                  ? 0.85
+                  : 0.5;
               const v = new THREE.Vector3(
                 p.x + p.normal.x * labelOffset,
                 0.32,
@@ -1129,13 +1113,15 @@ export default function Board({
               TOUR <span>✦</span>
             </div>
             {state.config.board.map((t, i) => {
-              if (!['city', 'resort'].includes(t.type)) return null;
+              if (t.type === 'duel') return null;
+              const special = !['city', 'resort'].includes(t.type);
               return (
                 <div
                   key={t.id}
                   data-tile-label={t.id}
                   className={
                     'city-label' +
+                    (special ? ' special-label' : '') +
                     ((
                       inspectedOwner
                         ? state.properties[t.id]?.ownerId !== inspectedOwner
@@ -1153,7 +1139,7 @@ export default function Board({
                     } as React.CSSProperties
                   }
                 >
-                  <b>{t.name}</b>
+                  <b>{boardTileTitle(t)}</b>
                   {reservedCity(state, t.id) && (
                     <small className="tile-condition">🔒 Enchère T10</small>
                   )}
