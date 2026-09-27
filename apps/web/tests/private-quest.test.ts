@@ -4,7 +4,7 @@ import { expect, it } from 'vitest';
 import { config, createGame, questRules } from '@money-tour/engine';
 import { PrivateQuest } from '../src/game/AdventureHUD';
 
-it('keeps the online objective collapsed, even after completion, and never renders another seat’s objective', () => {
+it('keeps the online objective private and removes it when completed', () => {
   const state = createGame({
     config,
     players: [
@@ -19,7 +19,8 @@ it('keeps the online objective collapsed, even after completion, and never rende
     renderToStaticMarkup(createElement(PrivateQuest, { state, player, self }));
   expect(render('a')).toContain('aria-expanded="false"');
   expect(render('a')).not.toContain(title);
+  expect(render('b')).toBe('');
   state.quests![player.id]!.completed = true;
-  expect(render('a')).not.toContain(title);
+  expect(render('a')).toBe('');
   expect(render('b')).toBe('');
 });

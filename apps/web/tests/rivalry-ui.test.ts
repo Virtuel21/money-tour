@@ -23,6 +23,29 @@ const mount = () => {
   root = createRoot(host);
   return host;
 };
+it('removes a completed secret objective from the mobile notebook and returns to cities', async () => {
+  const state = tutorialScene('build'),
+    host = mount();
+  state.quests!.p1!.completed = false;
+  const render = () =>
+    root.render(createElement(MobilePocket, { state, self: 'p1', onTile: vi.fn() }));
+  await act(render);
+  await act(() =>
+    [...host.querySelectorAll<HTMLButtonElement>('nav button')]
+      .find((button) => button.textContent === 'Objectif')!
+      .click(),
+  );
+  expect(host.querySelector('.private-quest')).not.toBeNull();
+  state.quests!.p1!.completed = true;
+  await act(render);
+  expect(host.querySelector('.private-quest')).toBeNull();
+  expect([...host.querySelectorAll('nav button')].map((button) => button.textContent)).toEqual([
+    'Villes',
+    'Bonus',
+    'Partie',
+  ]);
+  expect(host.querySelector('.pocket-cities')).not.toBeNull();
+});
 it('keeps network and solo taunts bound to the human outside their turn, and supports shared-device players', () => {
   const state = tutorialScene('build');
   state.currentPlayer = 1;

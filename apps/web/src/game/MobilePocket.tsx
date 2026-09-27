@@ -23,7 +23,10 @@ export function MobilePocket({
       ? state.players.find((p) => !p.bot)
       : undefined) ??
     state.players[state.currentPlayer]!;
-  const [tab, setTab] = useState<'cities' | 'bonus' | 'quest' | 'rules'>('cities');
+  const [requestedTab, setTab] = useState<'cities' | 'bonus' | 'quest' | 'rules'>('cities');
+  const quest = state.quests?.[viewer.id];
+  const hasQuest = !!quest && !quest.completed && !viewer.bot && (!self || self === viewer.id);
+  const tab = requestedTab === 'quest' && !hasQuest ? 'cities' : requestedTab;
   const [owner, setOwner] = useState(viewer.id);
   const [page, setPage] = useState(0);
   const player = state.players.find((p) => p.id === owner) ?? state.players[0]!;
@@ -34,18 +37,20 @@ export function MobilePocket({
   return (
     <div className="mobile-pocket">
       <nav aria-label="Votre carnet">
-        {(['cities', 'bonus', 'quest', 'rules'] as const).map((item, i) => (
-          <button
-            key={item}
-            aria-pressed={tab === item}
-            onClick={() => {
-              setTab(item);
-              setPage(0);
-            }}
-          >
-            {['Villes', 'Bonus', 'Objectif', 'Partie'][i]}
-          </button>
-        ))}
+        {(['cities', 'bonus', 'quest', 'rules'] as const)
+          .filter((item) => item !== 'quest' || hasQuest)
+          .map((item) => (
+            <button
+              key={item}
+              aria-pressed={tab === item}
+              onClick={() => {
+                setTab(item);
+                setPage(0);
+              }}
+            >
+              {{ cities: 'Villes', bonus: 'Bonus', quest: 'Objectif', rules: 'Partie' }[item]}
+            </button>
+          ))}
       </nav>
       {(tab === 'cities' || tab === 'bonus') && (
         <>

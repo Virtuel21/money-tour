@@ -118,6 +118,9 @@ Recette Chromium sur viewports simulés. Appareils physiques, Safari iOS et liai
 - PC 1920 × 1080 : clic Racheter → sélecteur identique à l’achat. Madrid avec deux maisons : prix 450 (300 au vendeur, 150 de construction), loyer 60 ; après validation, Léa 1 050, Max 1 800, uniquement Fin du tour. Portrait 390 × 844 : fenêtre 374 × 707, choix accessibles horizontalement, aucun débordement de page.
 - Rachat atomique testé pour terrain, une/deux/trois maisons et hôtel ; bâtiments existants conservés, seuls les niveaux manquants facturés, refus des offres invalides et de l’hôtel prématuré. Assurance : aucun débit/construction quand elle bloque, consommation unique. Rejeu réseau et animations successives identiques.
 - Tests de l’interface complète pour l’ouverture du sélecteur, les taunts pendant l’animation adverse, leur persistance au changement de tour et l’absence de message central. Sauvegardes v13 lisibles sans changement de leurs montants ; nouveaux salons v14 pour le format de commande de rachat.
-- 471 tests réussis. Couverture moteur : 97,17 % des lignes et 93,30 % des branches. Typage, lint, formatage, build et contrôles des assets/modèles validés.
+- PC : bouton − / + dans chaque volet joueur. Les volets réduits affichent uniquement le nom et le solde ; réouverture de l’inventaire vérifiée, choix conservé au changement de tour. Deux volets réduits et deux ouverts contrôlés en 1920 × 1080. Sur mobile 390 × 844, aucun bouton de réduction et aucun débordement horizontal.
+- Objectif secret accompli retiré du volet et du carnet mobile ; si son onglet était ouvert, retour à Villes. Confidentialité des objectifs adverses conservée.
+- Compilation de production : décalage de la zone cliquable du personnage conservé en état normal et pendant l’appui. Clic sur sa tête pendant le tour d’un bot, puis affichage unique du taunt vérifiés sur le build servi localement.
+- 473 tests réussis. Couverture moteur : 97,31 % des lignes et 93,47 % des branches. Typage, lint, formatage, build et contrôles des assets/modèles validés.
 
 Recette Chromium sur tailles simulées ; téléphone physique et Safari iOS non testés.

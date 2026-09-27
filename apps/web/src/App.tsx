@@ -137,6 +137,7 @@ export default function App() {
   const mobile = useMobile();
   const [overview, setOverview] = useState(false);
   const [inspectedOwner, setInspectedOwner] = useState<string | null>(null);
+  const [collapsedPlayers, setCollapsedPlayers] = useState<Record<string, boolean>>({});
   const [save, setSave] = useState<LocalSave | null>(() => previewScenario() ?? loadLocal());
   const [screen, setScreen] = useState<'menu' | 'game'>(() =>
     previewScenario() ? 'game' : 'menu',
@@ -753,7 +754,7 @@ export default function App() {
                 <article
                   key={p.id}
                   data-bank={p.id}
-                  className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''}`}
+                  className={`player-card ${current.currentPlayer === i ? 'active' : ''} ${p.eliminated ? 'eliminated' : ''} ${!mobile && collapsedPlayers[p.id] ? 'player-collapsed' : ''}`}
                   style={{ '--player-color': colors[i] } as React.CSSProperties}
                 >
                   <button
@@ -762,8 +763,28 @@ export default function App() {
                     aria-pressed={inspectedOwner === p.id}
                     onClick={() => setInspectedOwner(inspectedOwner === p.id ? null : p.id)}
                   />
+                  {!mobile && (
+                    <button
+                      className="player-collapse"
+                      aria-label={`${collapsedPlayers[p.id] ? 'Développer' : 'Réduire'} le volet de ${p.name}`}
+                      aria-expanded={!collapsedPlayers[p.id]}
+                      title={
+                        collapsedPlayers[p.id]
+                          ? 'Afficher les propriétés et les bonus'
+                          : 'Garder seulement le nom et le solde'
+                      }
+                      onClick={() =>
+                        setCollapsedPlayers((previous) => ({
+                          ...previous,
+                          [p.id]: !previous[p.id],
+                        }))
+                      }
+                    >
+                      <span aria-hidden="true">{collapsedPlayers[p.id] ? '+' : '−'}</span>
+                    </button>
+                  )}
                   <span className={`avatar portrait portrait-${i}`} aria-label={pawnNames[i]} />
-                  <div>
+                  <div className="player-summary">
                     <span className="player-name">
                       {p.name === 'Vous' && online ? `Joueur ${i + 1}` : p.name}{' '}
                       {p.insurance && (
@@ -790,37 +811,42 @@ export default function App() {
                     </span>
                     <strong>{p.eliminated ? 'Faillite' : money(p.cash, true)}</strong>
                   </div>
-                  <span className="property-count" title="Propriétés">
-                    ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length} ·
-                    Tour du plateau {p.laps + 1}
-                  </span>
-                  {p.islandTurns !== null && !p.eliminated && (
-                    <span
-                      className="island-remaining"
-                      title="Île perdue : un double, un billet ou la caution permettent de sortir plus tôt."
-                    >
-                      <span className="island-label">Île perdue · </span>
-                      {Math.max(0, current.config.maxIslandTurns - p.islandTurns)} tour(s) max
-                    </span>
-                  )}
-                  {!!p.fraudLiability && (
-                    <small className="fraud-risk" title="Jusqu’au prochain passage par Départ">
-                      ⚠ Taxe : {money(p.fraudLiability, true)}
-                    </small>
-                  )}
-                  <PlayerInventory
-                    state={current}
-                    player={p}
-                    onTile={chooseTile}
-                    onBonus={showBonus}
-                  />
-                  {p.id === (online?.self ?? active.id) && (
-                    <PrivateQuest
-                      key={p.id + current.turn}
-                      state={current}
-                      player={p}
-                      self={online?.self}
-                    />
+                  {(mobile || !collapsedPlayers[p.id]) && (
+                    <>
+                      <span className="property-count" title="Propriétés">
+                        ⌂{' '}
+                        {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}{' '}
+                        · Tour du plateau {p.laps + 1}
+                      </span>
+                      {p.islandTurns !== null && !p.eliminated && (
+                        <span
+                          className="island-remaining"
+                          title="Île perdue : un double, un billet ou la caution permettent de sortir plus tôt."
+                        >
+                          <span className="island-label">Île perdue · </span>
+                          {Math.max(0, current.config.maxIslandTurns - p.islandTurns)} tour(s) max
+                        </span>
+                      )}
+                      {!!p.fraudLiability && (
+                        <small className="fraud-risk" title="Jusqu’au prochain passage par Départ">
+                          ⚠ Taxe : {money(p.fraudLiability, true)}
+                        </small>
+                      )}
+                      <PlayerInventory
+                        state={current}
+                        player={p}
+                        onTile={chooseTile}
+                        onBonus={showBonus}
+                      />
+                      {p.id === (online?.self ?? active.id) && (
+                        <PrivateQuest
+                          key={p.id + current.turn}
+                          state={current}
+                          player={p}
+                          self={online?.self}
+                        />
+                      )}
+                    </>
                   )}
                 </article>
               ))}
