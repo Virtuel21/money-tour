@@ -34,6 +34,8 @@ export function previewScenario(): LocalSave | null {
       'duel',
       'alliance',
       'crisis',
+      'earthquake',
+      'island',
     ].includes(name)
   )
     return null;
@@ -71,6 +73,22 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'earthquake') {
+    state.config = {
+      ...state.config,
+      earthquakeChance: 100,
+      earthquakeMinRound: 0,
+      crisisChance: 0,
+    };
+    state.currentPlayer = 3;
+    state.phase = 'end';
+  }
+  if (name === 'island') {
+    state.phase = 'island';
+    player.islandTurns = 1;
+    player.position = state.config.board.find((t) => t.type === 'island')!.id;
+    state.players[1]!.bot = true;
+  }
   if (name === 'celebration') {
     state.properties[1] = { ownerId: 'p1', level: 2, championships: 1, championshipTurns: 4 };
   }

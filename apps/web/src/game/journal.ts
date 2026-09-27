@@ -63,6 +63,7 @@ export function eventText(event: GameEvent, state: GameState): string {
       return `${name} reçoit ${money(event.amount ?? 0)}.`;
     case 'alliance':
     case 'alliance_expired':
+    case 'earthquake':
     case 'crisis':
     case 'crisis_expired':
     case 'auction_started':

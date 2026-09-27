@@ -166,6 +166,40 @@ export class Soundscape {
   }
   effect(type: string): void {
     if (!this.prefs.effects || !this.context || !this.master) return;
+    const now = this.context.currentTime;
+    if (type === 'earthquake') {
+      // Layered low-frequency impacts: original procedural rumble, no downloaded asset.
+      for (let i = 0; i < 22; i++) {
+        this.tone(
+          35 + ((i * 17) % 49),
+          now + i * 0.12,
+          0.48,
+          0.13 * (1 - i / 26),
+          'sawtooth',
+          this.master,
+        );
+        this.tone(110 + ((i * 31) % 150), now + i * 0.12, 0.16, 0.035, 'triangle', this.master);
+      }
+      return;
+    }
+    if (type === 'casino-slots' || type === 'casino-roulette') {
+      for (let i = 0; i < 24; i++) {
+        const time = type === 'casino-roulette' ? i * 0.045 + i * i * 0.0035 : i * 0.1;
+        this.tone(
+          type === 'casino-slots' ? 180 + (i % 3) * 85 : 850 + (i % 4) * 70,
+          now + time,
+          0.045,
+          0.08,
+          'triangle',
+          this.master,
+        );
+      }
+      if (type === 'casino-slots')
+        [440, 554, 659].forEach((f, i) =>
+          this.tone(f, now + 2.5 + i * 0.3, 0.18, 0.12, 'square', this.master!),
+        );
+      return;
+    }
     if (type === 'coin-in' || type === 'coin-out') {
       const now = this.context.currentTime;
       const notes = type === 'coin-in' ? [1568, 2093, 2637, 3136] : [2637, 2093, 1760, 1319];
@@ -190,7 +224,6 @@ export class Soundscape {
     }
     const notes = melodies[type];
     if (!notes) return;
-    const now = this.context.currentTime;
     notes.forEach((frequency, index) =>
       this.tone(
         frequency,

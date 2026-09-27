@@ -7,7 +7,6 @@ import { AuctionView } from './game/AuctionView';
 import { AdventureBanner, PrivateQuest, PlayerInventory } from './game/AdventureHUD';
 import { ActionClock, GameClockContext } from './game/ActionClock';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
   chooseBotAction,
   config,
@@ -67,34 +66,17 @@ function Modal({
   title,
   children,
   onClose,
-  inline = false,
+  className = '',
 }: {
   title: string;
   children: React.ReactNode;
   onClose?: () => void;
-  inline?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
-    if (!inline) ref.current?.showModal();
+    ref.current?.showModal();
   }, []);
-  if (inline) {
-    const target = document.getElementById('property-inspector');
-    return target
-      ? createPortal(
-          <section className="property-inspector">
-            <div className="modal-heading">
-              <h2>{title}</h2>
-              <button className="icon-button" aria-label="Fermer la propriété" onClick={onClose}>
-                ×
-              </button>
-            </div>
-            {children}
-          </section>,
-          target,
-        )
-      : null;
-  }
   return (
     <dialog
       ref={ref}
@@ -102,7 +84,7 @@ function Modal({
         event.preventDefault();
         onClose?.();
       }}
-      className="modal"
+      className={`modal ${className}`}
     >
       <div className="modal-countdown">
         <ActionClock full />
@@ -638,7 +620,9 @@ export default function App() {
             </div>
           </main>
         ) : (
-          <main className="game-layout">
+          <main
+            className={`game-layout ${!interactionDisabled && options.some((a) => a.type === 'insure') ? 'insurance-selecting' : ''}`}
+          >
             {!paused && (
               <TurnBanner
                 key={`${current.turn}-${active.id}`}
@@ -726,7 +710,7 @@ export default function App() {
                           🛡
                         </span>
                       )}
-                      <small>
+                      <small className="player-seat-label">
                         {online?.self === p.id
                           ? 'VOUS'
                           : p.bot
@@ -742,6 +726,15 @@ export default function App() {
                     ⌂ {Object.values(current.properties).filter((v) => v.ownerId === p.id).length} ·
                     Tour du plateau {p.laps + 1}
                   </span>
+                  {p.islandTurns !== null && !p.eliminated && (
+                    <span
+                      className="island-remaining"
+                      title="Île perdue : un double, un billet ou la caution permettent de sortir plus tôt."
+                    >
+                      <span className="island-label">Île perdue · </span>
+                      {Math.max(0, current.config.maxIslandTurns - p.islandTurns)} tour(s) max
+                    </span>
+                  )}
                   {!!p.fraudLiability && (
                     <small className="fraud-risk" title="Jusqu’au prochain passage par Départ">
                       ⚠ Taxe : {money(p.fraudLiability, true)}
@@ -775,11 +768,13 @@ export default function App() {
                     overview={overview || paused || Boolean(inspectedOwner)}
                     inspectedOwner={inspectedOwner}
                     self={online?.self}
+                    insuranceFocus={
+                      !interactionDisabled && options.some((a) => a.type === 'insure')
+                    }
                     selecting={
                       !interactionDisabled &&
-                      ['championship', 'attack', 'travel', 'insurance', 'debt'].includes(
-                        current.phase,
-                      )
+                      (options.some((a) => a.type === 'insure') ||
+                        ['championship', 'attack', 'travel', 'debt'].includes(current.phase))
                     }
                     cue={cinema.frame.cue}
                     choices={interactionDisabled ? [] : options.map((a) => a.tile)}
@@ -845,7 +840,6 @@ export default function App() {
               </div>
             </section>
             <aside className="game-sidebar">
-              <div id="property-inspector" />
               {current.phase === 'championship' && !interactionDisabled && (
                 <section className="mondial-picker" aria-label="Choisir la ville du Mondial">
                   <strong>🏆 Où accueillir le Mondial ?</strong>
@@ -1165,6 +1159,14 @@ export default function App() {
                   adversaires : pierre, feuille, ciseaux avec choix secrets ; le gagnant remporte le
                   pot, une égalité relance les choix sans nouvelle mise jusqu’à un vainqueur.
                 </p>
+                <p>
+                  Tremblement de terre : 3 % à chaque nouveau tour de table éligible dès le
+                  quatrième, uniquement si des bâtiments existent et hors crise. Un joueur possédant
+                  des bâtiments, puis une de ses villes construites, sont tirés au sort. Une maison
+                  disparaît ; un hôtel redevient trois maisons. L’assurance de cette ville bloque le
+                  séisme une fois. Maximum deux séismes par partie, espacés d’au moins six tours de
+                  table.
+                </p>
                 <h3>À quatre, jouez en équipe</h3>
                 <p>
                   Les sièges 1 et 3 affrontent les sièges 2 et 4. Pas de loyer entre alliés ; les
@@ -1396,22 +1398,25 @@ export default function App() {
         )}
         {screen === 'game' && !paused && cinema.frame.cue.kind === 'notice' && (
           <Modal
+            className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}
             title={
-              cinema.frame.cue.reason === 'quest_completed'
-                ? 'Palier Mystère accompli !'
-                : cinema.frame.cue.reason === 'capital_revealed'
-                  ? 'La Capitale est révélée !'
-                  : cinema.frame.cue.reason === 'auction_started'
-                    ? 'Préparez vos enveloppes !'
-                    : cinema.frame.cue.reason === 'auction_result'
-                      ? 'Le résultat des enchères'
-                      : cinema.frame.cue.reason === 'duel_result'
-                        ? 'Le duel est joué !'
-                        : cinema.frame.cue.reason === 'crisis'
-                          ? 'Crise économique'
-                          : cinema.frame.cue.reason === 'alliance'
-                            ? 'Une alliance est née'
-                            : 'Votre aventure continue'
+              cinema.frame.cue.reason === 'earthquake'
+                ? 'Tremblement de terre !'
+                : cinema.frame.cue.reason === 'quest_completed'
+                  ? 'Palier Mystère accompli !'
+                  : cinema.frame.cue.reason === 'capital_revealed'
+                    ? 'La Capitale est révélée !'
+                    : cinema.frame.cue.reason === 'auction_started'
+                      ? 'Préparez vos enveloppes !'
+                      : cinema.frame.cue.reason === 'auction_result'
+                        ? 'Le résultat des enchères'
+                        : cinema.frame.cue.reason === 'duel_result'
+                          ? 'Le duel est joué !'
+                          : cinema.frame.cue.reason === 'crisis'
+                            ? 'Crise économique'
+                            : cinema.frame.cue.reason === 'alliance'
+                              ? 'Une alliance est née'
+                              : 'Votre aventure continue'
             }
           >
             <p className="event-notice">{cinema.frame.cue.message}</p>
@@ -1494,11 +1499,7 @@ export default function App() {
           </Modal>
         )}
         {tile && !offer && (
-          <Modal
-            title={tile.name}
-            inline={screen === 'game' && !mobile}
-            onClose={() => setSelected(null)}
-          >
+          <Modal title={tile.name} onClose={() => setSelected(null)}>
             <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
               {tile.type === 'city' ? (
                 <span

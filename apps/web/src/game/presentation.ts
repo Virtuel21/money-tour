@@ -65,8 +65,21 @@ export function presentation(
         casinoColor: String(event.color),
         casinoReels: event.reels as number[],
         jackpot: Boolean(event.jackpot),
-        sound: 'dice',
+        sound: event.game === 'slots' ? 'casino-slots' : 'casino-roulette',
       });
+    if (event.type === 'earthquake' && event.tile !== undefined) {
+      add({
+        kind: 'notice',
+        reason: 'earthquake',
+        tile: event.tile,
+        playerId: event.playerId,
+        message: String(event.message),
+        sound: 'earthquake',
+        duration: reduced ? 1800 : 3200,
+      });
+      visual.properties[event.tile] = { ...next.properties[event.tile]! };
+      add({ kind: 'settle', duration: 500 });
+    }
     const notice: Record<string, string> = {
       auction_started: String(event.message),
       auction_result: String(event.message),
@@ -93,7 +106,7 @@ export function presentation(
             event.message
           : '',
       insurance: 'Un jeton assurance vous attend. Choisissez une propriété à protéger.',
-      insured: 'Votre assurance a bloqué l’attaque ! Le jeton est consommé.',
+      insured: 'L’assurance a protégé la propriété ! Le jeton est consommé.',
       insured_tile: 'Cette propriété est maintenant assurée.',
       squatter: 'Vous passez sans payer de loyer !',
       expropriate: 'Expropriation : cette ville est à nouveau disponible.',
@@ -203,47 +216,49 @@ export function presentationMs(events: GameEvent[]): number {
       ms +
       (e.type === 'dice'
         ? 2000
-        : e.type === 'casino_result'
-          ? 3600
-          : [
-                'auction_started',
-                'auction_result',
-                'quest_completed',
-                'capital_revealed',
-                'alliance',
-                'alliance_expired',
-                'crisis',
-                'crisis_expired',
-                'duel_result',
-                'duel_cancelled',
-                'duel_forfeit',
-                'insurance',
-                'insured',
-                'insured_tile',
-                'squatter',
-                'expropriate',
-                'roaches',
-                'roaches_expired',
-                'karma',
-              ].includes(e.type)
-            ? 7600
-            : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) && (e.amount ?? 0) > 0
-              ? 1500
-              : ['turn', 'extra_roll'].includes(e.type)
-                ? 1400
-                : e.type === 'move'
-                  ? Math.abs(Number(e.steps ?? 0)) * 270
-                  : e.type === 'tax_notice'
-                    ? 5000
-                    : e.type === 'card'
-                      ? 5500
-                      : ['build', 'purchase', 'buyout'].includes(e.type)
-                        ? 2200
-                        : e.type === 'championship'
-                          ? 1500
-                          : e.type === 'island'
-                            ? 8640
-                            : 0),
+        : e.type === 'earthquake'
+          ? 3700
+          : e.type === 'casino_result'
+            ? 3600
+            : [
+                  'auction_started',
+                  'auction_result',
+                  'quest_completed',
+                  'capital_revealed',
+                  'alliance',
+                  'alliance_expired',
+                  'crisis',
+                  'crisis_expired',
+                  'duel_result',
+                  'duel_cancelled',
+                  'duel_forfeit',
+                  'insurance',
+                  'insured',
+                  'insured_tile',
+                  'squatter',
+                  'expropriate',
+                  'roaches',
+                  'roaches_expired',
+                  'karma',
+                ].includes(e.type)
+              ? 7600
+              : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) && (e.amount ?? 0) > 0
+                ? 1500
+                : ['turn', 'extra_roll'].includes(e.type)
+                  ? 1400
+                  : e.type === 'move'
+                    ? Math.abs(Number(e.steps ?? 0)) * 270
+                    : e.type === 'tax_notice'
+                      ? 5000
+                      : e.type === 'card'
+                        ? 5500
+                        : ['build', 'purchase', 'buyout'].includes(e.type)
+                          ? 2200
+                          : e.type === 'championship'
+                            ? 1500
+                            : e.type === 'island'
+                              ? 8640
+                              : 0),
     0,
   );
 }

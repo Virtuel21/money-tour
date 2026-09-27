@@ -16,7 +16,7 @@ export function playerBonuses(state: GameState, player: Player): BonusInfo[] {
       description:
         player.insurance.tile === null
           ? 'Choisissez une de vos propriétés pour y poser cette assurance. Elle ne protège aucun bien tant qu’elle n’est pas posée.'
-          : `Protège uniquement ${city(player.insurance.tile)} contre une expropriation, une destruction ou un rachat hostile. Le jeton est consommé après la première protection. Il ne dispense pas de payer les loyers et ne bloque pas les cafards.`,
+          : `Protège uniquement ${city(player.insurance.tile)} contre une expropriation, une destruction (y compris un séisme) ou un rachat hostile. Le jeton est consommé après la première protection. Il ne dispense pas de payer les loyers et ne bloque pas les cafards.`,
     });
   for (const id of [...player.escapeCards, ...(player.heldCards ?? [])]) {
     const card = state.config.cards.find((c) => c.id === id);

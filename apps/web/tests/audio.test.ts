@@ -65,6 +65,23 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
+it.each(['earthquake', 'casino-slots', 'casino-roulette'])(
+  'plays and cancels %s with effects preferences respected',
+  async (effect) => {
+    const sound = new Soundscape();
+    await sound.unlock();
+    sound.effect(effect);
+    expect(sources.length).toBeGreaterThan(20);
+    sound.stopEffects();
+    sources.forEach((s) => expect(s.disconnect).toHaveBeenCalledOnce());
+    const count = sources.length;
+    sound.configure({ effects: false, music: false, volume: 0.4 });
+    sound.effect(effect);
+    expect(sources).toHaveLength(count);
+    sound.close();
+  },
+);
+
 it('plays all three game songs in rotation and returns to looping menu music', async () => {
   const sound = new Soundscape();
   sound.configure({ effects: true, music: true, volume: 0.4 });

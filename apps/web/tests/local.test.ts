@@ -8,6 +8,7 @@ import {
   legacyConfigV9,
   legacyConfigV10,
   legacyConfigV11,
+  legacyConfigV12,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -22,6 +23,19 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('resumes v12 without adding earthquakes or renaming its cities', () => {
+    const save = newLocal({
+      config: legacyConfigV12 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v12', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+    expect(loadLocal()!.state.config.earthquakeChance).toBeUndefined();
+    expect(loadLocal()!.state.config.board.some((t) => t.name === 'Coimbra')).toBe(true);
+  });
   it('resumes v11 without changing its two casinos, three Chance spaces or duel rules', () => {
     const save = newLocal({
       config: legacyConfigV11 as GameConfig,
