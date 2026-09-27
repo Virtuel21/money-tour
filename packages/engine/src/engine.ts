@@ -1,4 +1,5 @@
 import { maybeEarthquake } from './earthquake.js';
+import { victoryThreats } from './victory-threats.js';
 import {
   initAdventure,
   twinMultiplier,
@@ -1485,6 +1486,29 @@ export function reduceGame(
   }
   checkVictory(next, events);
   if (!next.winner && !next.auction && activePlayer(next).eliminated) nextTurn(next, events, rng);
+  if (
+    events.some((event) =>
+      [
+        'purchase',
+        'buyout',
+        'sale',
+        'expropriate',
+        'auction_result',
+        'bankruptcy',
+        'quit',
+      ].includes(event.type),
+    )
+  ) {
+    const previous = new Set(victoryThreats(state).map((threat) => threat.key));
+    for (const threat of victoryThreats(next)) {
+      if (!previous.has(threat.key))
+        events.push({
+          type: 'victory_warning',
+          playerId: threat.playerIds[0],
+          message: threat.message,
+        });
+    }
+  }
   return { state: next, events };
 }
 

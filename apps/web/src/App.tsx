@@ -1,3 +1,6 @@
+import { victoryThreats } from '@money-tour/engine';
+import { TauntMenu, TauntToast } from './game/TauntMenu';
+import { TAUNT_COOLDOWN, TAUNT_DURATION, type Taunt, type TauntKind } from './game/taunts';
 import { eventText } from './game/journal';
 import type { BonusInfo } from './game/bonuses';
 import { MobileTiles } from './game/MobileTiles';
@@ -143,6 +146,7 @@ export default function App() {
     | 'pocket'
     | 'bonus'
     | 'journal'
+    | 'taunt'
     | null
   >(location.hash.includes('room=') ? 'online' : null);
   const [selectedBonus, setSelectedBonus] = useState<BonusInfo | null>(null);
@@ -150,10 +154,31 @@ export default function App() {
     setSelectedBonus(bonus);
     setModal('bonus');
   };
+  const [tauntTarget, setTauntTarget] = useState('');
+  const [visibleTaunt, setVisibleTaunt] = useState<Taunt | null>(null);
+  const [tauntReadyAt, setTauntReadyAt] = useState(0);
+  const seenTaunt = useRef('');
   const [createSalon, setCreateSalon] = useState(false);
   const [online, setOnline] = useState<SessionView | null>(null);
   const onlineSession = useRef<Session | null>(null);
   const onlineSeq = useRef(-1);
+  useEffect(() => {
+    const taunt = online?.taunts?.at(-1);
+    if (!taunt || seenTaunt.current === taunt.id) return;
+    seenTaunt.current = taunt.id;
+    setVisibleTaunt(taunt);
+    if (taunt.playerId === online?.self) setTauntReadyAt(Date.now() + TAUNT_COOLDOWN);
+  }, [online?.taunts, online?.self]);
+  useEffect(() => {
+    if (!visibleTaunt) return;
+    const timer = setTimeout(() => setVisibleTaunt(null), TAUNT_DURATION);
+    return () => clearTimeout(timer);
+  }, [visibleTaunt]);
+  useEffect(() => {
+    if (!tauntReadyAt) return;
+    const timer = setTimeout(() => setTauntReadyAt(0), Math.max(0, tauntReadyAt - Date.now()));
+    return () => clearTimeout(timer);
+  }, [tauntReadyAt]);
   const [audioPrefs, setAudioPrefs] = useState(loadAudio);
   const sound = useRef<Soundscape | null>(null);
   useEffect(() => {
@@ -184,6 +209,7 @@ export default function App() {
   useEffect(() => {
     setOverview(false);
     setInspectedOwner(null);
+    setModal((open) => (open === 'taunt' ? null : open));
   }, [turnKey]);
   const display = cinema.frame.state;
   useEffect(() => {
@@ -212,6 +238,32 @@ export default function App() {
   const current =
     screen === 'game' ? (rolling ? display : (online?.state ?? save?.state ?? demo)) : demo;
   const active = current.players[current.currentPlayer]!;
+  const warnings = victoryThreats(current);
+  const humans = current.players.filter((p) => !p.bot && !p.eliminated);
+  const tauntSender =
+    online?.self ??
+    (humans.length === 1
+      ? humans[0]!.id
+      : !active.bot && !active.eliminated
+        ? active.id
+        : undefined);
+  const sendTaunt = (kind: TauntKind) => {
+    if (!tauntSender || tauntReadyAt || current.winner) return;
+    if (onlineSession.current)
+      void onlineSession.current.taunt(kind, tauntTarget === tauntSender ? undefined : tauntTarget);
+    else {
+      const at = Date.now();
+      setVisibleTaunt({
+        id: crypto.randomUUID(),
+        playerId: tauntSender,
+        kind,
+        targetId: tauntTarget,
+        at,
+      });
+      setTauntReadyAt(at + TAUNT_COOLDOWN);
+    }
+    setModal(null);
+  };
   const decisionPlayer = current.players.find((p) => p.id === getDecisionPlayerId(current))!;
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
@@ -680,6 +732,19 @@ export default function App() {
                 </button>
               </div>
             </div>
+            {!mobile && (
+              <div className="shared-game-info">
+                <AdventureBanner state={current} />
+                {!!warnings.length && (
+                  <div className="victory-watch" role="status">
+                    {warnings.map((w) => (
+                      <p key={w.key}>⚠ {w.message}</p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            {visibleTaunt && <TauntToast state={current} taunt={visibleTaunt} />}
             <div className="players">
               {current.players.map((p, i) => (
                 <article
@@ -754,16 +819,36 @@ export default function App() {
                       self={online?.self}
                     />
                   )}
-                  {!mobile && i === 0 && <AdventureBanner state={current} />}
                 </article>
               ))}
             </div>
             <section className="board-area">
-              {mobile && <AdventureBanner state={current} />}
+              {mobile && (
+                <div className="mobile-shared-info">
+                  <AdventureBanner state={current} />
+                  {!!warnings.length && (
+                    <div className="victory-watch" role="status">
+                      {warnings.map((w) => (
+                        <p key={w.key}>⚠ {w.message}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="board-viewport">
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
                     state={display}
+                    onPlayer={
+                      tauntSender && !paused && !rolling && !current.winner
+                        ? (id) => {
+                            setTauntTarget(id);
+                            setSelected(null);
+                            setModal('taunt');
+                          }
+                        : undefined
+                    }
+                    taunt={visibleTaunt ?? undefined}
                     mobile={mobile}
                     overview={overview || paused || Boolean(inspectedOwner)}
                     inspectedOwner={inspectedOwner}
@@ -1400,23 +1485,25 @@ export default function App() {
           <Modal
             className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}
             title={
-              cinema.frame.cue.reason === 'earthquake'
-                ? 'Tremblement de terre !'
-                : cinema.frame.cue.reason === 'quest_completed'
-                  ? 'Palier Mystère accompli !'
-                  : cinema.frame.cue.reason === 'capital_revealed'
-                    ? 'La Capitale est révélée !'
-                    : cinema.frame.cue.reason === 'auction_started'
-                      ? 'Préparez vos enveloppes !'
-                      : cinema.frame.cue.reason === 'auction_result'
-                        ? 'Le résultat des enchères'
-                        : cinema.frame.cue.reason === 'duel_result'
-                          ? 'Le duel est joué !'
-                          : cinema.frame.cue.reason === 'crisis'
-                            ? 'Crise économique'
-                            : cinema.frame.cue.reason === 'alliance'
-                              ? 'Une alliance est née'
-                              : 'Votre aventure continue'
+              cinema.frame.cue.reason === 'victory_warning'
+                ? 'Monopole en vue !'
+                : cinema.frame.cue.reason === 'earthquake'
+                  ? 'Tremblement de terre !'
+                  : cinema.frame.cue.reason === 'quest_completed'
+                    ? 'Palier Mystère accompli !'
+                    : cinema.frame.cue.reason === 'capital_revealed'
+                      ? 'La Capitale est révélée !'
+                      : cinema.frame.cue.reason === 'auction_started'
+                        ? 'Préparez vos enveloppes !'
+                        : cinema.frame.cue.reason === 'auction_result'
+                          ? 'Le résultat des enchères'
+                          : cinema.frame.cue.reason === 'duel_result'
+                            ? 'Le duel est joué !'
+                            : cinema.frame.cue.reason === 'crisis'
+                              ? 'Crise économique'
+                              : cinema.frame.cue.reason === 'alliance'
+                                ? 'Une alliance est née'
+                                : 'Votre aventure continue'
             }
           >
             <p className="event-notice">{cinema.frame.cue.message}</p>
@@ -1498,6 +1585,21 @@ export default function App() {
             )}
           </Modal>
         )}
+        {modal === 'taunt' && tauntSender && screen === 'game' && (
+          <Modal
+            title="À vous de taquiner !"
+            className="taunt-modal"
+            onClose={() => setModal(null)}
+          >
+            <TauntMenu
+              state={current}
+              playerId={tauntSender}
+              targetId={tauntTarget}
+              cooling={!!tauntReadyAt}
+              onSend={sendTaunt}
+            />
+          </Modal>
+        )}
         {tile && !offer && (
           <Modal title={tile.name} onClose={() => setSelected(null)}>
             <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
@@ -1517,6 +1619,12 @@ export default function App() {
                     : 'Une escale spéciale de votre voyage.'}
               </p>
             </div>
+            {!!property?.roachTurns && (
+              <p className="roach-warning">
+                🪳 Hôtel de {tile.name} infesté · loyer −50 % · encore {property.roachTurns} retours
+                du tour de son propriétaire.
+              </p>
+            )}
             {tile.group && (
               <p className="group-detail">
                 Groupe {tile.group.slice(1)} ·{' '}

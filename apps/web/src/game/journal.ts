@@ -64,6 +64,7 @@ export function eventText(event: GameEvent, state: GameState): string {
     case 'alliance':
     case 'alliance_expired':
     case 'earthquake':
+    case 'victory_warning':
     case 'crisis':
     case 'crisis_expired':
     case 'auction_started':

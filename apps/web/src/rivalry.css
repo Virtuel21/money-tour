@@ -1,0 +1,278 @@
+.game-layout .player-card .mini-properties {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.estate-street {
+  min-width: 0;
+}
+.estate-street h4 {
+  margin: 2px 0 5px;
+  padding: 2px 7px;
+  border-left: 5px solid;
+  font-size: 12px;
+  color: #204250;
+}
+.estate-street-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+.game-layout .mini-property > .roach-badge {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  font-size: 11px;
+}
+.roach-badge,
+.roach-warning {
+  background: #fbe0ce;
+  color: #64290e;
+  border: 1px solid #a95430;
+  border-radius: 7px;
+  padding: 3px 6px;
+  font-weight: 800;
+}
+.roach-warning {
+  padding: 12px;
+}
+.pocket-cities > h3 {
+  grid-column: 1 / -1;
+  margin: 2px 0;
+}
+.shared-game-info {
+  position: absolute;
+  z-index: 12;
+  top: 65px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(580px, calc(100% - 2 * clamp(260px, 23vw, 470px) - 48px));
+}
+.shared-game-info .adventure-banner {
+  margin: 0;
+  padding: 7px 12px;
+  text-align: center;
+  background: #fff8e6;
+  border: 1px solid #bea15d;
+  border-radius: 12px;
+}
+.shared-game-info .adventure-banner > span,
+.shared-game-info .adventure-banner small {
+  display: none;
+}
+.shared-game-info .adventure-banner strong {
+  font-size: 13px;
+  line-height: 1.3;
+}
+.victory-watch {
+  background: #fff1c7;
+  border: 2px solid #a85716;
+  color: #542c10;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 800;
+  margin-top: 5px;
+}
+.victory-watch p {
+  margin: 0;
+}
+.game-layout .pawn-hit {
+  position: absolute;
+  z-index: 6;
+  transform: translate(-50%, -95%);
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  cursor: pointer;
+}
+.pawn-hit:disabled {
+  pointer-events: none;
+}
+.pawn-outline {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background-size: 200% 200%;
+  background-position: var(--pawn-position);
+}
+.pawn-hit:hover .pawn-outline,
+.pawn-hit:focus-visible .pawn-outline {
+  opacity: 1;
+  filter: drop-shadow(3px 0 0 var(--pawn-color)) drop-shadow(-3px 0 0 var(--pawn-color))
+    drop-shadow(0 3px 0 var(--pawn-color)) drop-shadow(0 -3px 0 var(--pawn-color));
+}
+.pawn-hit:focus-visible {
+  outline: 2px dashed #fffdf0;
+  outline-offset: 4px;
+}
+.pawn-taunt {
+  position: absolute;
+  z-index: 7;
+  width: 110px;
+  height: 110px;
+  object-fit: contain;
+  transform: translate(-50%, -90%);
+  filter: drop-shadow(0 4px 0 #fff8e5);
+  pointer-events: none;
+}
+.taunt-toast {
+  position: absolute;
+  z-index: 28;
+  top: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px 8px 5px;
+  max-width: min(420px, 90vw);
+  background: #fff9e9;
+  border: 3px solid #245b63;
+  border-radius: 22px;
+  box-shadow: 0 6px 0 #193f4b66;
+  pointer-events: none;
+}
+.taunt-toast img {
+  object-fit: contain;
+  width: 90px;
+  height: 90px;
+}
+.taunt-toast b,
+.taunt-toast span {
+  display: block;
+  color: #163c4b;
+}
+.taunt-toast span {
+  font-weight: 800;
+  margin-top: 5px;
+}
+.modal.taunt-modal {
+  width: min(900px, calc(100vw - 30px));
+  max-width: none;
+  background: #fff4d6;
+  border: 3px solid #235867;
+  border-radius: 26px;
+}
+.taunt-picker > p {
+  margin: 5px 0 18px;
+  text-align: center;
+}
+.taunt-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+.taunt-options button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #fffdf4;
+  color: #193e4e;
+  border: 2px solid #ba9c64;
+  border-radius: 18px;
+  box-shadow: 0 5px 0 #b99458;
+  padding: 6px 4px 10px;
+  min-width: 0;
+}
+.taunt-options button:hover:not(:disabled),
+.taunt-options button:focus-visible {
+  border-color: #1b7990;
+  background: #d5eeed;
+  transform: translateY(-3px);
+}
+.taunt-options img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+.taunt-options span {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.taunt-picker .taunt-hint {
+  font-size: 12px;
+  margin: 18px 0 0;
+}
+@media (min-width: 1001px) {
+  .game-layout .board-viewport {
+    box-sizing: border-box;
+    padding-top: 95px;
+  }
+  .game-layout .roll-status {
+    top: 128px;
+  }
+  .game-layout:has(.victory-watch) .roll-status {
+    top: 190px;
+  }
+}
+@media (max-width: 999px) {
+  .game-layout .board-area {
+    grid-template-rows: auto minmax(0, 1fr) 18px 44px;
+  }
+  .mobile-shared-info {
+    min-width: 0;
+  }
+  .game-layout .mobile-shared-info .adventure-banner {
+    min-height: 30px;
+    height: auto;
+    overflow: visible;
+  }
+  .mobile-shared-info .adventure-banner strong {
+    white-space: normal;
+    overflow: visible;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+  .victory-watch {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+  .taunt-toast {
+    top: 170px;
+    padding: 4px 10px 4px 2px;
+    font-size: 12px;
+  }
+  .taunt-toast img {
+    width: 64px;
+    height: 64px;
+  }
+  .pawn-taunt {
+    width: 74px;
+    height: 74px;
+  }
+  .taunt-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .taunt-options img {
+    max-height: 100px;
+  }
+  .taunt-options span {
+    font-size: 11px;
+  }
+  .taunt-picker > p {
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .taunt-options {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .taunt-options img {
+    max-height: 85px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .taunt-options button:hover:not(:disabled),
+  .taunt-options button:focus-visible {
+    transform: none;
+  }
+}

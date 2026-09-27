@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { adventureText, getRent, type GameState } from '@money-tour/engine';
 import { PrivateQuest } from './AdventureHUD';
 import { money } from './local';
+import { estateGroups } from './estate';
 
 /** A small paginated collection: the board never becomes a scrolling inventory. */
 export function MobilePocket({
@@ -26,12 +27,9 @@ export function MobilePocket({
   const [owner, setOwner] = useState(viewer.id);
   const [page, setPage] = useState(0);
   const player = state.players.find((p) => p.id === owner) ?? state.players[0]!;
-  const cities = state.config.board.filter((t) => state.properties[t.id]?.ownerId === owner);
+  const groups = estateGroups(state, owner);
   const bonuses = playerBonuses(state, player);
-  const pages = Math.max(
-    1,
-    Math.ceil((tab === 'cities' ? cities.length : bonuses.length) / (tab === 'cities' ? 4 : 2)),
-  );
+  const pages = Math.max(1, tab === 'cities' ? groups.length : Math.ceil(bonuses.length / 2));
   const index = Math.min(page, pages - 1);
   return (
     <div className="mobile-pocket">
@@ -67,13 +65,19 @@ export function MobilePocket({
           </div>
           {tab === 'cities' ? (
             <div className="pocket-cities">
-              {cities.slice(index * 4, index * 4 + 4).map((t) => (
+              {!!groups.length && <h3>{groups[index]![0]}</h3>}
+              {(groups[index]?.[1] ?? []).map((t) => (
                 <button key={t.id} style={{ borderTopColor: t.color }} onClick={() => onTile(t.id)}>
                   <b>{t.name}</b>
                   <span>Loyer {money(getRent(state, t.id), true)}</span>
+                  {!!state.properties[t.id]!.roachTurns && (
+                    <span className="roach-badge">
+                      🪳 {state.properties[t.id]!.roachTurns} tours · loyer −50 %
+                    </span>
+                  )}
                 </button>
               ))}
-              {!cities.length && <p>Aucune propriété pour le moment.</p>}
+              {!groups.length && <p>Aucune propriété pour le moment.</p>}
             </div>
           ) : (
             <div className="pocket-bonuses">

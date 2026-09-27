@@ -36,6 +36,7 @@ import {
 } from './schema';
 import type { Transport } from './transport';
 import { presentationMs } from '../game/presentation';
+import { TAUNT_COOLDOWN, taunts, type Taunt, type TauntKind } from '../game/taunts';
 
 const ZERO = '0'.repeat(64);
 class NeedsRandom extends Error {}
@@ -68,6 +69,7 @@ export function needsRandom(state: GameState | null, command: Command): boolean 
   }
 }
 export interface SessionView {
+  taunts?: Taunt[];
   state: GameState | null;
   members: Member[];
   host: string;
@@ -102,6 +104,8 @@ export interface SavedSession {
 
 /** All received messages are authenticated and processed in one serial queue. */
 export class Session {
+  taunts: Taunt[] = [];
+  private tauntTimes = new Map<string, number>();
   state: GameState | null = null;
   members: Member[] = [];
   host = '';
@@ -148,6 +152,7 @@ export class Session {
   }
   get view(): SessionView {
     return {
+      taunts: this.taunts,
       state: this.state,
       members: this.members,
       host: this.host,
@@ -248,6 +253,41 @@ export class Session {
       { ...unsigned, signature: await sign(this.user.privateKey, unsigned) },
       peer,
     );
+  }
+  private acceptTaunt(
+    playerId: string,
+    kind: TauntKind,
+    targetId: string | undefined,
+    id: string,
+  ): boolean {
+    const player = this.state?.players.find((p) => p.id === playerId);
+    if (
+      !player ||
+      player.bot ||
+      player.eliminated ||
+      this.state?.winner ||
+      !taunts.some((t) => t.id === kind)
+    )
+      return false;
+    if (targetId && !this.state?.players.some((p) => p.id === targetId && !p.eliminated))
+      return false;
+    const now = this.now(),
+      previous = this.tauntTimes.get(playerId);
+    if (previous !== undefined && now - previous < TAUNT_COOLDOWN) return false;
+    this.tauntTimes.set(playerId, now);
+    this.taunts = [
+      ...this.taunts.filter((t) => t.playerId !== playerId),
+      { id, playerId, kind, targetId, at: now },
+    ].slice(-4);
+    this.emit();
+    return true;
+  }
+  async taunt(kind: TauntKind, targetId?: string): Promise<void> {
+    this.enqueue(async () => {
+      if (this.acceptTaunt(this.user.id, kind, targetId, `${this.user.id}:${this.serial + 1}`))
+        await this.send({ type: 'taunt', kind, targetId });
+    });
+    await this.idle();
   }
   async rename(name: string): Promise<void> {
     const value = name.trim().slice(0, 20);
@@ -375,6 +415,10 @@ export class Session {
       return;
     }
     if (!this.members.some((m) => m.id === from)) return;
+    if (body.type === 'taunt') {
+      this.acceptTaunt(from, body.kind, body.targetId, stamp);
+      return;
+    }
     if (body.type === 'attest' && this.round?.ceremony.context.nonce === body.nonce) {
       this.round.attestations[from] = body.signature;
       await this.finishRound();

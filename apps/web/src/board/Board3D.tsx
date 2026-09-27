@@ -1,3 +1,4 @@
+import { tauntAsset, type Taunt } from '../game/taunts';
 import { scaledAmount } from '@money-tour/engine';
 import { cameraBounds, followPlayer } from './camera';
 import { useEffect, useId, useRef, useState } from 'react';
@@ -81,6 +82,8 @@ export default function Board({
   overview = false,
   self,
   inspectedOwner,
+  onPlayer,
+  taunt,
 }: {
   state: GameState;
   onTile: (id: number) => void;
@@ -94,6 +97,8 @@ export default function Board({
   overview?: boolean;
   self?: string;
   inspectedOwner?: string | null;
+  onPlayer?: (id: string) => void;
+  taunt?: Taunt;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const live = useRef({ state, cue, reducedMotion, choices, mobile, overview, selecting, self });
@@ -101,6 +106,9 @@ export default function Board({
   const update = useRef<() => void>(() => {});
   const [error, setError] = useState(''),
     [ready, setReady] = useState(false);
+  const [pawnAnchors, setPawnAnchors] = useState<
+    { x: number; y: number; width: number; height: number }[]
+  >([]);
   const [bankAnchors, setBankAnchors] = useState<{ x: number; y: number }[]>([]);
   const [anchors, setAnchors] = useState<{ x: number; y: number; points: string; angle: number }[]>(
     [],
@@ -535,6 +543,8 @@ export default function Board({
           );
         };
         projectLabels();
+        let pawnSignature = '',
+          lastPawnProjection = 0;
         const pawns = live.current.state.players.map((_, i) => {
           const pawn = new THREE.Group();
           const character = atlasSprite(travelers, i, 2, 2.55, 2.55);
@@ -715,6 +725,32 @@ export default function Board({
           camera.lookAt(focus);
           camera.updateProjectionMatrix();
           camera.updateMatrixWorld();
+          const pawnKey = [
+            camera.right,
+            camera.top,
+            camera.zoom,
+            focus.x,
+            focus.z,
+            ...pawns.flatMap((p) => [p.position.x, p.position.y, p.position.z, p.scale.x]),
+          ]
+            .map((n) => n.toFixed(2))
+            .join(':');
+          if (pawnKey !== pawnSignature && now - lastPawnProjection > 40) {
+            setPawnAnchors(
+              pawns.map((pawn) => {
+                const v = pawn.position.clone().project(camera);
+                return {
+                  x: (v.x + 1) * 50,
+                  y: (1 - v.y) * 50,
+                  width: ((2.55 * pawn.scale.x * camera.zoom) / (camera.right - camera.left)) * 100,
+                  height:
+                    ((2.55 * pawn.scale.y * camera.zoom) / (camera.top - camera.bottom)) * 100,
+                };
+              }),
+            );
+            pawnSignature = pawnKey;
+            lastPawnProjection = now;
+          }
           // DOM labels and touch polygons share the exact camera projection, including during hops.
           const signature = [focus.x, focus.z, camera.zoom, camera.right, camera.top]
             .map((v) => v.toFixed(3))
@@ -939,6 +975,52 @@ export default function Board({
               ))}
             </svg>
           )}
+          {!demo &&
+            !selecting &&
+            state.players.map(
+              (player, i) =>
+                !player.eliminated &&
+                pawnAnchors[i] && (
+                  <button
+                    key={player.id}
+                    className="pawn-hit"
+                    aria-label={`Taunts de ${player.name}`}
+                    disabled={!onPlayer}
+                    onClick={() => onPlayer?.(player.id)}
+                    style={
+                      {
+                        left: pawnAnchors[i]!.x + '%',
+                        top: pawnAnchors[i]!.y + '%',
+                        width: pawnAnchors[i]!.width + '%',
+                        height: pawnAnchors[i]!.height + '%',
+                        '--pawn-color': colors[i],
+                        '--pawn-position': `${i % 2 ? 100 : 0}% ${i < 2 ? 0 : 100}%`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span
+                      className="pawn-outline"
+                      style={{
+                        backgroundImage: `url(${import.meta.env.BASE_URL}textures/travelers-v3.webp)`,
+                      }}
+                    />
+                  </button>
+                ),
+            )}
+          {!demo &&
+            taunt &&
+            (() => {
+              const i = state.players.findIndex((p) => p.id === taunt.playerId),
+                a = pawnAnchors[i];
+              return a ? (
+                <img
+                  className="pawn-taunt"
+                  src={tauntAsset(i, taunt.kind)}
+                  alt=""
+                  style={{ left: a.x + '%', top: a.y - a.height + '%' }}
+                />
+              ) : null;
+            })()}
           <div className="board-labels" aria-hidden="true">
             {!demo &&
               state.players.map((p, i) => (
@@ -1014,7 +1096,7 @@ export default function Board({
                   )}
                   {!!state.properties[t.id]?.roachTurns && (
                     <small className="tile-condition">
-                      −50 % · {state.properties[t.id]?.roachTurns} tours
+                      🪳 −50 % · {state.properties[t.id]?.roachTurns} tours
                     </small>
                   )}
                   {state.properties[t.id]?.ownerId && (
