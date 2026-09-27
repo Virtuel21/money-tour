@@ -132,3 +132,19 @@ Recette Chromium sur tailles simulées ; téléphone physique et Safari iOS non 
 - 477 tests passent, dont conservation des règles v14, reprise d’une sauvegarde v14 sans modification de la séquence aléatoire, libellés compatibles et amplitude nulle en mouvement réduit. Couverture moteur : 97,31 % des lignes et 93,47 % des branches.
 - TypeScript, ESLint, build de production, budgets d’assets (19 731 095 / 20 000 000 octets) et bibliothèques de modèles validés.
 - Les dimensions Chromium ne remplacent pas une recette physique iOS/Safari ou Android ; celle-ci reste à faire.
+
+## Festival et vie du lagon — 27 septembre 2026
+
+- Scénario local `?scenario=festival-lagoon` : deux joueurs devant la scène, quatre villes en festival. Pions visibles et menu de réactions accessible. Drapeaux orientés vers la caméra, confettis conservés ; l'ancien indicateur sur le sol est retiré. Durée restante toujours disponible dans les fiches et bonus.
+- Paquebot et voilier en volumes arrondis, balancement doux, sillages et virages continus. Tests d'un circuit entier : coques dégagées des quatre îlots, des rives des plateaux de 26/28/30/32 cases et de l'autre bateau. La géométrie réelle est contrôlée contre la marge de navigation.
+- PC 1280 × 800, portraits 390 × 844 et 320 × 568, paysage 844 × 390 : rendu et commandes vérifiés, aucun débordement de page. Deux captures espacées du plateau en pause sont identiques. Le même arrêt des décorations s'applique à la réduction des animations ; reprise sans saut après un onglet masqué.
+- Géométries regroupées par matériau et texture de drapeau partagée ; aucun nouvel asset téléchargé. Budget statique inchangé : 19 731 096 / 20 000 000 octets.
+- Suite complète et test du drapeau : 493 tests. Typage, lint, compilation et contrôles assets/modèles réussis. Couverture moteur de la dernière passe : 97,17 % des lignes, 93,30 % des branches.
+
+### Complément — textes et pions (28 septembre)
+
+- `?scenario=utility-labels` place deux pions sur Île perdue, un sur Assurance et un sur Voyage. Les personnages sont projetés chaque frame au-dessus des textes HTML, sans second personnage WebGL superposé. La couche ne capture pas les clics et fonctionne pendant la sélection d'une case ; les zones de taunt restent alignées.
+- Vue globale mobile : suppression du minimum de 10 px, marges proportionnelles et voie distincte pour les plaques utilitaires. Les coins sont légèrement recentrés. Police et position de la vue zoomée conservées.
+- Mesure des rectangles orientés des noms : aucune intersection impliquant un nom utilitaire à 320 × 568, 390 × 844, 550 × 1056 et 844 × 390. Vérification séparée de la vue zoomée à 10 px, des quatre zones cliquables (écart nul à l'arrêt), du mouvement entre Île perdue et Berlin et de l'absence de débordement de page.
+
+Recette visuelle dans Chromium avec dimensions simulées ; téléphone physique et Safari iOS non testés.

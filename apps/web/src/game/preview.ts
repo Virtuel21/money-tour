@@ -12,6 +12,8 @@ export function previewScenario(): LocalSave | null {
       'quest',
       'travel',
       'travel-double',
+      'festival-lagoon',
+      'utility-labels',
       'build',
       'card',
       'crowded',
@@ -73,6 +75,20 @@ export function previewScenario(): LocalSave | null {
   state.phase = name === 'travel' ? 'travel' : name === 'build' ? 'property' : 'roll';
   player.travelPending = name === 'travel';
   player.laps = 1;
+  if (name === 'utility-labels') {
+    state.players.forEach((p, i) => {
+      p.position = [8, 8, 11, 24][i]!;
+    });
+  }
+  if (name === 'festival-lagoon') {
+    player.position = state.config.board.find((tile) => tile.type === 'championship')!.id;
+    state.players[1]!.position = player.position;
+    state.players[2]!.position = 5;
+    state.players[3]!.position = 21;
+    for (const id of [2, 10, 18, 26]) {
+      state.properties[id] = { ownerId: 'p1', level: 2, championships: 1, championshipTurns: 4 };
+    }
+  }
   for (const id of [1, 2]) state.properties[id]!.ownerId = 'p1';
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
