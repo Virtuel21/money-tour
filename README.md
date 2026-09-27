@@ -42,11 +42,17 @@ Le workflow `Deploy Pages` vérifie format, types, lint, tests, couverture, buil
 
 ## Jouer en ligne
 
+Un lien d'invitation ouvre directement le formulaire « Votre nom → Rejoindre le salon ». L'écran de connexion reste affiché jusqu'à l'arrivée de l'hôte, avec une nouvelle tentative et une aide réseau. Le menu **Comment jouer** propose une partie guidée de 27 escales : commandes mises en lumière, vrais achats, constructions, enchères et duels simulés, navigation libre et aucune modification de la partie sauvegardée.
+
+Les offres secrètes restent affichées pendant les synchronisations réseau. Le joueur qui tire une carte peut utiliser **J'ai lu · continuer** également en ligne ; les autres écrans gardent leur lecture automatique. Le délai de décision en ligne commence après les animations partagées.
+
 Sur l’accueil, choisissez votre nom et vos paramètres puis cliquez sur « Embarquer » : le salon est créé et affiche son lien et son code à copier. « Rejoindre un salon » permet de saisir un code existant. Le bouton « Jouer sur cet appareil · solo / local » conserve le jeu hors ligne. Partagez son lien ou son code de 32 caractères avec vos invités. L’hôte choisit la durée, les sièges et le mode 2v2 ; les places libres deviennent des bots. Au-delà de 30 secondes d’inactivité ou après une déconnexion, un bot prend le relais. « Reprendre mon siège » rend la main au propriétaire de la clé conservée dans ce navigateur.
 
 Le lien contient un secret aléatoire de 128 bits dans son fragment, non envoyé au serveur statique. Trystero 0.25.4 utilise Nostr pour la signalisation, WebRTC pour le jeu et un mot de passe dérivé pour le salon. Les données du jeu sont échangées entre pairs. Votre clé de reprise reste sur cet appareil (24 h), l’historique dans `sessionStorage`. L’effacement du stockage ou un autre navigateur ne permet pas de reprendre automatiquement le même siège. Ne jouez pas simultanément le même siège dans plusieurs onglets.
 
 ## Limites réseau et de confiance
+
+Pour les réseaux mobiles restrictifs, le déploiement peut fournir automatiquement des identifiants TURN temporaires via `VITE_TURN_CREDENTIALS_URL`. Voir le [diagnostic 4G/5G et la configuration du relais](docs/NETWORK_MOBILE.md). Aucun serveur TURN n'est inclus ; la recette sur réseaux physiques distincts reste nécessaire.
 
 - Sans TURN, certains NAT, réseaux d’entreprise et connexions 4G bloquent WebRTC. Le salon affiche un diagnostic et propose des paramètres TURN facultatifs. Fournissez vos propres paramètres ; ne publiez jamais des identifiants TURN durables dans le dépôt ou le site.
 - Gardez les onglets au premier plan sur mobile. Les relais Nostr publics et STUN peuvent être indisponibles. Aucun service public gratuit n’offre une garantie de disponibilité.

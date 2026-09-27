@@ -12,28 +12,40 @@ export function AuctionView({
   self,
   act,
   disabled,
+  gameKey,
 }: {
   state: GameState;
   self?: string;
   act: (a: GameAction) => void;
   disabled: boolean;
+  gameKey?: string;
 }) {
   const a = state.auction!,
     actor = state.players.find((p) => p.id === getDecisionPlayerId(state))!;
-  const canPlay = !disabled && !actor.bot && (!self || self === actor.id);
+  // Network ticks briefly mark the session busy. Keep the form mounted so a
+  // tick cannot steal keyboard focus or hide an offer while it is being typed.
+  const canPlay = !actor.bot && (!self || self === actor.id);
   const [amount, setAmount] = useState('50000');
   const [opened, setOpened] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const secrets = useRef<Record<string, { amount: number; salt: string }>>({});
-  const key = (id: string) => `money-tour.auction.${a.id}.${id}`;
+  const legacyKey = (id: string) => `money-tour.auction.${a.id}.${id}`;
+  const key = (id: string) =>
+    gameKey ? `money-tour.auction.${gameKey}.${a.id}.${id}` : legacyKey(id);
   useEffect(() => {
     setAmount('50000');
     setOpened(false);
-  }, [actor.id]);
+    setSubmitted(false);
+  }, [a.id, actor.id]);
   const secret = () => {
     try {
       return (
         secrets.current[actor.id] ??
-        (JSON.parse(sessionStorage.getItem(key(actor.id)) ?? 'null') as {
+        (JSON.parse(
+          sessionStorage.getItem(key(actor.id)) ??
+            (a.stage === 'reveal' ? sessionStorage.getItem(legacyKey(actor.id)) : null) ??
+            'null',
+        ) as {
           amount: number;
           salt: string;
         } | null)
@@ -43,20 +55,23 @@ export function AuctionView({
     }
   };
   const bid = () => {
-    const entry = {
+    if (disabled) return;
+    // A retry must reuse the same envelope: the previous commit may already
+    // have reached the host even when its acknowledgement has not arrived.
+    const entry = secret() ?? {
       amount: Number(amount),
       salt: Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) =>
         b.toString(16).padStart(2, '0'),
       ).join(''),
     };
     secrets.current[actor.id] = entry;
+    setAmount(String(entry.amount));
+    setSubmitted(true);
     try {
       sessionStorage.setItem(key(actor.id), JSON.stringify(entry));
     } catch {
       /* Kept in memory. */
     }
-    setOpened(false);
-    setAmount('');
     act({
       type: 'auction_commit',
       playerId: actor.id,
@@ -86,7 +101,18 @@ export function AuctionView({
         ))}
       </div>
       {!canPlay ? (
-        <p role="status">{actor.name} prépare son enveloppe. Les montants restent cachés.</p>
+        <div>
+          <p role="status">{actor.name} prépare son enveloppe. Les montants restent cachés.</p>
+          {self === actor.id && actor.bot && (
+            <button
+              className="primary"
+              disabled={disabled}
+              onClick={() => act({ type: 'set_control', playerId: actor.id, bot: false })}
+            >
+              Reprendre mon siège
+            </button>
+          )}
+        </div>
       ) : a.stage === 'commit' ? (
         <>
           {!self && !opened ? (
@@ -100,6 +126,8 @@ export function AuctionView({
                 <input
                   aria-label="Votre offre secrète"
                   type="number"
+                  inputMode="numeric"
+                  readOnly={submitted}
                   min="1"
                   max={actor.cash}
                   step="1000"
@@ -107,9 +135,16 @@ export function AuctionView({
                   onChange={(e) => setAmount(e.target.value)}
                 />
               </label>
+              {submitted && (
+                <p role="status">
+                  Enveloppe envoyée. En attendant la confirmation, un nouvel envoi conserve la même
+                  offre.
+                </p>
+              )}
               <button
                 className="primary"
                 disabled={
+                  disabled ||
                   !Number.isSafeInteger(Number(amount)) ||
                   Number(amount) < 1 ||
                   Number(amount) > actor.cash
@@ -120,7 +155,10 @@ export function AuctionView({
               </button>
             </>
           )}
-          <button onClick={() => act({ type: 'auction_pass', playerId: actor.id })}>
+          <button
+            disabled={disabled}
+            onClick={() => act({ type: 'auction_pass', playerId: actor.id })}
+          >
             Ne pas participer <ActionClock />
           </button>
         </>
@@ -133,6 +171,7 @@ export function AuctionView({
           {secret() && (
             <button
               className="primary"
+              disabled={disabled}
               onClick={() => {
                 const entry = secret();
                 if (entry) act({ type: 'auction_reveal', playerId: actor.id, ...entry });
@@ -142,7 +181,10 @@ export function AuctionView({
             </button>
           )}
           {!secret() && <p>Cette enveloppe n’est plus disponible sur cet appareil.</p>}
-          <button onClick={() => act({ type: 'auction_pass', playerId: actor.id })}>
+          <button
+            disabled={disabled}
+            onClick={() => act({ type: 'auction_pass', playerId: actor.id })}
+          >
             Retirer mon offre <ActionClock />
           </button>
         </>

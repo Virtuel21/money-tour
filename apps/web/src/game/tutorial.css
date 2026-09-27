@@ -1,0 +1,412 @@
+.guided-tutorial {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  color: #183b48;
+  background: #eef4ed;
+  overflow: auto;
+  box-sizing: border-box;
+}
+.guided-tutorial[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(220px, 1fr) auto;
+  gap: 12px;
+}
+.guided-tutorial > * {
+  min-width: 0;
+}
+.guided-tutorial::backdrop {
+  background: #102c3c;
+}
+.tutorial-dimmer {
+  position: fixed;
+  inset: 0;
+  background: #071c2cb3;
+  z-index: 1;
+}
+.tutorial-header,
+.tutorial-coach {
+  position: relative;
+  z-index: 3;
+  background: #fffaf0;
+  border-radius: 16px;
+}
+.tutorial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+}
+.tutorial-header label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+.tutorial-header select {
+  max-width: 260px;
+  min-width: 0;
+}
+.tutorial-accounts {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  background: #eef4ed;
+  border-radius: 12px;
+}
+.tutorial-accounts button {
+  display: grid;
+  gap: 4px;
+  min-width: 150px;
+  text-align: left;
+  background: #fffaf0;
+}
+.tutorial-accounts strong {
+  font-size: 22px;
+}
+.tutorial-accounts small {
+  font-size: 12px;
+}
+.tutorial-scene {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 16px;
+  min-height: 0;
+}
+.tutorial-board {
+  position: relative;
+  min-height: 220px;
+  background: #b5dbd3;
+  border-radius: 20px;
+}
+.tutorial-board .board-shell {
+  height: 100%;
+  min-height: 220px;
+}
+.tutorial-action {
+  background: #fffaf0;
+  border-radius: 20px;
+  padding: 14px;
+  overflow: auto;
+  min-height: 0;
+}
+.tutorial-action > button {
+  width: 100%;
+  margin: 8px 0;
+}
+.tutorial-action .purchase-cover .property-art {
+  height: 50px;
+}
+.tutorial-action .purchase-cover {
+  padding: 10px;
+}
+.tutorial-action .property-stats {
+  margin: 8px 0;
+}
+.tutorial-action .purchase-cover h3 {
+  font-size: 24px;
+  margin: 4px 0;
+}
+.tutorial-action .purchase-cover p:not(.eyebrow) {
+  display: none;
+}
+.tutorial-action .purchase-cover .eyebrow {
+  margin: 4px 0;
+}
+.tutorial-action .property-stats > div {
+  padding: 8px;
+}
+.tutorial-action .property-stats strong {
+  font-size: 20px;
+}
+.tutorial-action .purchase-cta,
+.tutorial-action .purchase-pass {
+  padding: 8px;
+  min-height: 38px;
+  margin-top: 6px;
+}
+.tutorial-action .purchase-cta > span:first-child {
+  font-size: 16px;
+}
+.tutorial-action .purchase-table {
+  font-size: 12px;
+}
+.tutorial-action .auction-property > span {
+  display: none;
+}
+.tutorial-action .auction-view > p:first-of-type {
+  display: none;
+}
+.tutorial-spotlit {
+  position: relative;
+  z-index: 2;
+  outline: 3px solid #f1c655;
+  outline-offset: 3px;
+  box-shadow: 0 0 28px #f9d95c80;
+}
+.tutorial-coach {
+  width: min(100%, 960px);
+  justify-self: center;
+  padding: 16px 24px;
+  box-shadow: 0 12px 50px #00182750;
+  box-sizing: border-box;
+}
+.tutorial-coach h2 {
+  font-size: 25px;
+  margin: 6px 0;
+}
+.tutorial-coach h2:focus {
+  outline: none;
+}
+.tutorial-coach p {
+  margin: 6px 0 10px;
+  line-height: 1.45;
+}
+.tutorial-task {
+  display: block;
+  font-size: 14px;
+}
+.tutorial-navigation {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+.tutorial-navigation .primary {
+  min-width: 210px;
+}
+.tutorial-progress {
+  height: 4px;
+  background: #dfdfd1;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.tutorial-progress span {
+  display: block;
+  background: #b88b24;
+  height: 100%;
+}
+.tutorial-destinations {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  display: flex;
+  gap: 6px;
+  overflow: auto;
+  padding: 6px;
+  background: #fffaf0ed;
+  border-radius: 12px;
+}
+.tutorial-destinations button {
+  flex: 0 0 auto;
+}
+@media (max-width: 700px) {
+  .guided-tutorial {
+    padding: max(8px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
+  }
+  .guided-tutorial[open] {
+    gap: 8px;
+    grid-template-rows: auto auto minmax(200px, 1fr) auto;
+  }
+  .tutorial-header {
+    padding: 6px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tutorial-header strong {
+    font-size: 12px;
+  }
+  .tutorial-header strong span {
+    display: none;
+  }
+  .tutorial-header label {
+    order: 3;
+    width: 100%;
+    font-size: 12px;
+  }
+  .tutorial-header select {
+    flex: 1;
+    max-width: none;
+    padding: 5px;
+  }
+  .tutorial-header button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .tutorial-accounts {
+    gap: 5px;
+  }
+  .tutorial-accounts button {
+    min-width: 0;
+    flex: 1;
+    padding: 7px;
+    font-size: 12px;
+  }
+  .tutorial-accounts strong {
+    font-size: 16px;
+  }
+  .tutorial-accounts small {
+    display: none;
+  }
+  .tutorial-scene {
+    display: block;
+    position: relative;
+    min-height: 200px;
+  }
+  .tutorial-board {
+    height: 100%;
+    min-height: 200px;
+  }
+  .tutorial-action {
+    position: absolute;
+    inset: 0;
+    width: min(100%, 450px);
+    margin: auto;
+    box-sizing: border-box;
+  }
+  .tutorial-action:not(.tutorial-spotlit) {
+    visibility: hidden;
+  }
+  .tutorial-coach {
+    padding: 10px 12px;
+  }
+  .tutorial-coach h2 {
+    font-size: 20px;
+  }
+  .tutorial-coach p {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+  .tutorial-coach small {
+    font-size: 10px;
+  }
+  .tutorial-navigation {
+    margin-top: 8px;
+  }
+  .tutorial-navigation button {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .tutorial-navigation .primary {
+    min-width: 0;
+  }
+  .tutorial-task {
+    font-size: 12px;
+  }
+  .tutorial-action .auction-view {
+    gap: 8px;
+  }
+  .tutorial-action .auction-property {
+    padding: 8px;
+  }
+  .tutorial-action .auction-property h3 {
+    font-size: 23px;
+    margin: 4px 0;
+  }
+  .tutorial-action .auction-view p {
+    font-size: 13px;
+    line-height: 1.4;
+    margin: 6px 0;
+  }
+  .tutorial-action .auction-view input {
+    font-size: 18px;
+    padding: 8px;
+  }
+}
+@media (max-height: 650px) {
+  .guided-tutorial[open] {
+    grid-template-rows: auto auto minmax(140px, 1fr) minmax(0, 35dvh);
+  }
+  .tutorial-scene,
+  .tutorial-board,
+  .tutorial-board .board-shell {
+    min-height: 0;
+  }
+  .tutorial-coach {
+    height: 100%;
+    overflow: auto;
+  }
+  .tutorial-navigation {
+    position: sticky;
+    bottom: -10px;
+    padding: 8px 0;
+    background: #fffaf0;
+  }
+  .tutorial-coach p {
+    font-size: 12px;
+  }
+  .tutorial-action {
+    padding: 8px;
+  }
+  .tutorial-action > .eyebrow {
+    margin: 0 0 4px;
+  }
+  .tutorial-action .auction-property {
+    padding: 2px;
+  }
+  .tutorial-action .auction-property h3 {
+    font-size: 16px;
+  }
+  .tutorial-action .auction-property p,
+  .tutorial-action .auction-seals {
+    display: none;
+  }
+  .tutorial-action .auction-view {
+    gap: 4px;
+    font-size: 12px;
+  }
+  .tutorial-action .auction-view button {
+    padding: 6px;
+    min-height: 34px;
+  }
+}
+@media (min-width: 701px) and (max-height: 500px) {
+  .guided-tutorial[open] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+  .tutorial-header,
+  .tutorial-accounts {
+    grid-column: 1 / -1;
+  }
+  .tutorial-header strong span {
+    display: none;
+  }
+  .tutorial-scene {
+    display: block;
+    position: relative;
+  }
+  .tutorial-board {
+    height: 100%;
+  }
+  .tutorial-action {
+    position: absolute;
+    inset: 0;
+  }
+  .tutorial-action:not(.tutorial-spotlit) {
+    visibility: hidden;
+  }
+  .tutorial-coach {
+    padding: 12px;
+  }
+  .tutorial-coach h2 {
+    font-size: 20px;
+  }
+  .tutorial-navigation button {
+    font-size: 12px;
+    padding: 8px;
+  }
+  .tutorial-navigation .primary {
+    min-width: 0;
+  }
+}

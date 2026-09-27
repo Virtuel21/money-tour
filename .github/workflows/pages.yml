@@ -11,6 +11,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      VITE_TURN_CREDENTIALS_URL: ${{ vars.VITE_TURN_CREDENTIALS_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
