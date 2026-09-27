@@ -11,8 +11,7 @@ import {
 } from '../src/network/crypto';
 import { MemoryNetwork, MemoryTransport } from '../src/network/transport';
 import { Session, type SavedSession } from '../src/network/session';
-import { getLegalActions } from '@money-tour/engine';
-import { presentationMs } from '../src/game/presentation';
+import { getDecisionPlayerId, getLegalActions } from '@money-tour/engine';
 
 describe('shared randomness', () => {
   it('requires identical commitments before reveal and verifies every secret', async () => {
@@ -294,18 +293,24 @@ describe('network sessions', () => {
     await flush();
     for (let turn = 0; turn < 75 && !host.state?.winner; turn++) {
       const state = host.state!;
-      const active = sessions.find((s) => s.user.id === state.players[state.currentPlayer]!.id)!;
+      const elapsedBefore = state.elapsedMs;
+      const active = sessions.find((s) => s.user.id === getDecisionPlayerId(state))!;
       const action = getLegalActions(state).find((a) => a.type !== 'quit');
       if (action) await active.intent(action);
       await flush();
-      // The browser waits for its presentation before the next decision.
-      // Keep both peers' heartbeats alive while advancing that same duration.
-      const wait = presentationMs(host.events) + 1100;
-      for (let elapsed = 0; elapsed < wait; elapsed += 1000) {
-        advance(Math.min(1000, wait - elapsed));
+      // A tick can itself announce a crisis or a timeout and queue another
+      // presentation. Wait for an authoritative clock tick, not just the
+      // duration of the last action's events, while keeping both peers alive.
+      for (
+        let seconds = 0;
+        seconds < 120 && !host.state?.winner && host.state!.elapsedMs === elapsedBefore;
+        seconds++
+      ) {
+        advance(1000);
         for (const session of sessions) await session.pulse();
         await flush();
       }
+      expect(host.state!.elapsedMs > elapsedBefore || Boolean(host.state!.winner)).toBe(true);
     }
     expect(host.state?.winner).not.toBeNull();
     expect(sessions[1]!.head).toBe(host.head);

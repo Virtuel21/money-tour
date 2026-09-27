@@ -5,6 +5,7 @@ import { expect, it, vi } from 'vitest';
 import { usePresentation } from '../src/game/usePresentation';
 import { tutorialScene } from '../src/game/tutorial';
 
+vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 it('can dismiss an online card early without its old timer advancing the following cue', async () => {
   vi.useFakeTimers();
   const state = tutorialScene('card');

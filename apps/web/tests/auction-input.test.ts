@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { AuctionView } from '../src/game/AuctionView';
 import { tutorialScene } from '../src/game/tutorial';
 
+vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 let root: Root;
 afterEach(async () => {
   await act(() => root?.unmount());

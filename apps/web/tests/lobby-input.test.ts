@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import OnlineLobby from '../src/network/OnlineLobby';
 import type { SessionView } from '../src/network/session';
 
+vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true);
 const mocked = vi.hoisted(() => ({
   joins: vi.fn(),
   closes: vi.fn(),
