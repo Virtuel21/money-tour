@@ -13,6 +13,8 @@ import { boardTileTitle, tileTitle } from '../game/tileTitle';
 import { concertSprite, festivalBeat } from './specialArt';
 import { advanceScenery, lagoonIslands } from './lagoon';
 import { festivalFlag, lagoonBoat } from './scenery';
+import { projectTileLabel } from './tileLabels';
+import { TileLabel } from './TileLabel';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
 const up = new THREE.Vector3(0, 1, 0);
@@ -115,9 +117,7 @@ export default function Board({
     { x: number; y: number; width: number; height: number }[]
   >([]);
   const [bankAnchors, setBankAnchors] = useState<{ x: number; y: number }[]>([]);
-  const [anchors, setAnchors] = useState<{ x: number; y: number; points: string; angle: number }[]>(
-    [],
-  );
+  const [anchors, setAnchors] = useState<{ points: string; matrix: number[] }[]>([]);
   useEffect(() => {
     const element = host.current!;
     let disposed = false;
@@ -559,28 +559,6 @@ export default function Board({
           setAnchors(
             live.current.state.config.board.map((t) => {
               const p = tileFrame(t.id, live.current.state.config.board.length);
-              const overviewWeight = live.current.mobile
-                ? THREE.MathUtils.clamp(1 - (camera.zoom - 1) / 0.8, 0, 1)
-                : 0;
-              // Give utility plaques their own lane in the tiny overview. Corner
-              // plaques move inward to separate the two meeting board edges.
-              const utilityOffset = THREE.MathUtils.lerp(
-                1.3,
-                p.corner ? 1.05 : 1.68,
-                overviewWeight,
-              );
-              const labelOffset = !['city', 'resort'].includes(t.type)
-                ? p.side < 2
-                  ? utilityOffset
-                  : -utilityOffset
-                : p.corner
-                  ? 0.85
-                  : 0.5;
-              const v = new THREE.Vector3(
-                p.x + p.normal.x * labelOffset,
-                0.32,
-                p.z + p.normal.z * labelOffset,
-              ).project(camera);
               const points = [
                 [-p.width / 2, -p.depth / 2],
                 [-p.width / 2, p.depth / 2],
@@ -592,23 +570,18 @@ export default function Board({
                   return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
                 })
                 .join(' ');
-              const alongX = p.side % 2 === 0;
-              const a = new THREE.Vector3(p.x, 0.3, p.z).project(camera);
-              const b = new THREE.Vector3(
-                p.x + (alongX ? 1 : 0),
-                0.3,
-                p.z + (alongX ? 0 : 1),
-              ).project(camera);
-              let angle =
-                (Math.atan2(
-                  (-(b.y - a.y) * element.clientHeight) / element.clientWidth,
-                  b.x - a.x,
-                ) *
-                  180) /
-                Math.PI;
-              if (angle > 90) angle -= 180;
-              if (angle < -90) angle += 180;
-              return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points, angle };
+              const matrix = projectTileLabel(
+                t.id,
+                live.current.state.config.board.length,
+                (point) => {
+                  const v = new THREE.Vector3(point.x, 0.29, point.z).project(camera);
+                  return {
+                    x: ((v.x + 1) * element.clientWidth) / 2,
+                    y: ((1 - v.y) * element.clientHeight) / 2,
+                  };
+                },
+              );
+              return { points, matrix };
             }),
           );
         };
@@ -863,7 +836,15 @@ export default function Board({
             lastPawnProjection = now;
           }
           // DOM labels and touch polygons share the exact camera projection, including during hops.
-          const signature = [focus.x, focus.z, camera.zoom, camera.right, camera.top]
+          const signature = [
+            focus.x,
+            focus.z,
+            camera.zoom,
+            camera.right,
+            camera.top,
+            element.clientWidth,
+            element.clientHeight,
+          ]
             .map((v) => v.toFixed(3))
             .join(':');
           if (signature !== projectionSignature && now - lastProjection > 32) {
@@ -1167,55 +1148,33 @@ export default function Board({
               <br />
               TOUR <span>✦</span>
             </div>
-            {state.config.board.map((t, i) => {
-              if (t.type === 'duel') return null;
-              const special = !['city', 'resort'].includes(t.type);
-              return (
-                <div
-                  key={t.id}
-                  data-tile-label={t.id}
-                  className={
-                    'city-label' +
-                    (special ? ' special-label' : '') +
-                    ((
-                      inspectedOwner
-                        ? state.properties[t.id]?.ownerId !== inspectedOwner
-                        : selecting && !choices.includes(t.id)
-                    )
-                      ? ' label-dimmed'
-                      : '')
-                  }
-                  style={
-                    {
-                      left: anchors[i]?.x + '%',
-                      top: anchors[i]?.y + '%',
-                      '--label-angle': (anchors[i]?.angle ?? 0) + 'deg',
-                      '--street-color': t.color ?? '#e4b63c',
-                    } as React.CSSProperties
-                  }
-                >
-                  <b>{boardTileTitle(t)}</b>
-                  {reservedCity(state, t.id) && (
-                    <small className="tile-condition">🔒 Enchère T10</small>
-                  )}
-                  {state.players.some((p) => p.insurance?.tile === t.id) && (
-                    <small className="tile-condition">🛡 Assurée</small>
-                  )}
-                  {!!state.properties[t.id]?.roachTurns && (
-                    <small className="tile-condition">
-                      🪳 −50 % · {state.properties[t.id]?.roachTurns} tours
-                    </small>
-                  )}
-                  {state.properties[t.id]?.ownerId && (
-                    <strong className="tile-rent" title="Loyer actuel">
-                      {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
+            {state.config.board.map((t, i) => (
+              <TileLabel
+                key={t.id}
+                id={t.id}
+                name={boardTileTitle(t)}
+                matrix={anchors[i]?.matrix}
+                dimmed={
+                  !!(inspectedOwner
+                    ? state.properties[t.id]?.ownerId !== inspectedOwner
+                    : selecting && !choices.includes(t.id))
+                }
+                conditions={[
+                  ...(reservedCity(state, t.id) ? ['Enchère T10'] : []),
+                  ...(state.players.some((p) => p.insurance?.tile === t.id) ? ['Assurée'] : []),
+                  ...(state.properties[t.id]?.roachTurns
+                    ? [`−50 % · ${state.properties[t.id]?.roachTurns} tours`]
+                    : []),
+                ]}
+                rent={
+                  state.properties[t.id]?.ownerId
+                    ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
                         getRent(state, t.id),
-                      )}
-                    </strong>
-                  )}
-                </div>
-              );
-            })}
+                      )
+                    : undefined
+                }
+              />
+            ))}
           </div>
         </>
       )}
