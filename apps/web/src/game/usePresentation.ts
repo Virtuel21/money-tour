@@ -9,6 +9,7 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
     state: initial,
     cue: { kind: 'settle', duration: 0 },
   });
+  const [dismissed, setDismissed] = useState(false);
   const [busy, setBusy] = useState(false);
   const authoritative = useRef(initial),
     latest = useRef(initial);
@@ -17,6 +18,7 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const advanceRef = useRef<() => void>(() => {});
   const advance = useCallback(() => {
+    setDismissed(false);
     if (timer.current) clearTimeout(timer.current);
     const next = queue.current.shift();
     if (!next) {
@@ -36,6 +38,7 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
   }, []);
   advanceRef.current = advance;
   const reset = useCallback((state: GameState) => {
+    setDismissed(false);
     if (timer.current) clearTimeout(timer.current);
     queue.current = [];
     running.current = false;
@@ -58,5 +61,10 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
     },
     [],
   );
-  return { frame, busy, present, reset, advance };
+  const dismiss = useCallback(() => {
+    // Only hide this client's overlay online; keep the shared presentation schedule intact.
+    if (onlineRef.current) setDismissed(true);
+    else advance();
+  }, [advance]);
+  return { frame, busy, present, reset, advance, dismiss, dismissed };
 }

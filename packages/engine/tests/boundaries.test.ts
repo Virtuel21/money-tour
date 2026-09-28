@@ -300,12 +300,6 @@ describe('snapshot invariants reject corrupted data', () => {
       },
     ],
     [
-      'resort championship',
-      (s) => {
-        own(s, 3, 'p1', 0, 1);
-      },
-    ],
-    [
       'negative championship',
       (s) => {
         own(s, 1, 'p1', 0, -1);

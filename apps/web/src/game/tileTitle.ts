@@ -23,3 +23,11 @@ export function festivalText(text?: string) {
     .replaceAll('Invitation sportive', 'Pass festival')
     .replaceAll('Mondial', 'Festival');
 }
+
+/** Keep explanations in saved cards consistent with property eligibility. */
+export function propertyRulesText(text?: string) {
+  return festivalText(text).replaceAll(
+    'Choisissez une ville adverse',
+    'Choisissez une ville ou une île adverse',
+  );
+}

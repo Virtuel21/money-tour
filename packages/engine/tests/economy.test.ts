@@ -121,9 +121,11 @@ describe('rent, acquisition premiums, and wealth', () => {
   it.each([
     [4, 4],
     [3, 0],
-  ])('protects hotel/resort tile %i from a buyout', (tile, level) => {
+  ])('allows buying out hotel/resort tile %i', (tile, level) => {
     const state = offer(own(game(), tile!, 'p2', level!), tile!);
-    expect(reduceGame(state, { type: 'buyout', playerId: 'p1' }, sequence()).error).toBeTruthy();
+    const result = reduceGame(state, { type: 'buyout', playerId: 'p1' }, sequence());
+    expect(result.error).toBeUndefined();
+    expect(result.state.properties[tile!]).toMatchObject({ ownerId: 'p1', level });
   });
 
   it('taxes real estate and current buildings, excluding cash and every marker', () => {

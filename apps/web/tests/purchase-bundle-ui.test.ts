@@ -75,3 +75,42 @@ it('allows an unlocked hotel but prevents a bundle exceeding the balance', async
   await act(() => buy.click());
   expect(onBuy).toHaveBeenCalledWith(2);
 });
+
+it.each(['resort', 'hotel'])(
+  'offers and completes a %s buyout without construction locks',
+  async (kind) => {
+    let state = game();
+    const tile =
+      kind === 'resort'
+        ? state.config.board.find((t) => t.type === 'resort')!
+        : state.config.board[5]!;
+    state.players[0]!.position = tile.id;
+    state.players[0]!.cash = 10000;
+    state.properties[tile.id] = { ownerId: 'b', level: kind === 'hotel' ? 4 : 0, championships: 0 };
+    const onBuy = vi.fn((level: number) => {
+      const result = reduceGame(state, { type: 'buyout', playerId: 'a', level });
+      expect(result.error).toBeUndefined();
+      state = result.state;
+    });
+    const host = document.createElement('div');
+    document.body.append(host);
+    root = createRoot(host);
+    await act(() =>
+      root.render(createElement(PurchaseDetails, { state, buyout: true, onBuy, onPass: vi.fn() })),
+    );
+    const buy = host.querySelector<HTMLButtonElement>('.purchase-cta')!;
+    expect(buy.disabled).toBe(false);
+    expect(buy.textContent).toContain(kind === 'resort' ? 'Racheter l’île' : 'Racheter avec hôtel');
+    expect(host.textContent).not.toContain('ne peut pas être racheté');
+    if (kind === 'hotel') {
+      const hotel = host.querySelectorAll<HTMLButtonElement>('.purchase-levels button')[4]!;
+      expect(hotel.disabled).toBe(false);
+      expect(hotel.getAttribute('aria-label')).not.toContain('verrouillé');
+    }
+    await act(() => buy.click());
+    expect(state.properties[tile.id]).toMatchObject({
+      ownerId: 'a',
+      level: kind === 'hotel' ? 4 : 0,
+    });
+  },
+);

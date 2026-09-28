@@ -557,7 +557,7 @@ export default function Board({
           const celebration = new THREE.Group();
           celebration.position.set(p.x, 0.29, p.z);
           celebration.rotation.y = p.angle;
-          if (tile.type === 'city') {
+          if (tile.type === 'city' || tile.type === 'resort') {
             const flag = festivalFlag(festivalFlags[0]?.texture);
             flag.group.position.set(-0.72, 0, -0.62);
             flag.group.rotation.y = -p.angle;
@@ -568,7 +568,7 @@ export default function Board({
           championships.push(celebration);
           const shower = new THREE.Group();
           shower.position.copy(celebration.position);
-          if (tile.type === 'city')
+          if (tile.type === 'city' || tile.type === 'resort')
             for (let k = 0; k < 18; k++) {
               const flake = new THREE.Mesh(
                 new THREE.PlaneGeometry(0.075, 0.13),

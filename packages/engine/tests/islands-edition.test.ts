@@ -56,6 +56,8 @@ describe('28-space island edition', () => {
   });
   it('collecting all four islands boosts rent and keeps the game running', () => {
     const s = game();
+    s.festivals = [];
+    s.config.festivalCount = 0;
     for (const t of s.config.board.filter((t) => t.type === 'resort'))
       s.properties[t.id]!.ownerId = 'p2';
     expect(getRent(s, 3)).toBe(500000);
@@ -123,7 +125,7 @@ describe('28-space island edition', () => {
   });
 });
 
-it('pays exactly one 300k salary on forward arrival at departure and allows only owned cities for Mondial', () => {
+it('pays exactly one 300k salary on forward arrival at departure and allows owned cities and islands for Mondial', () => {
   const s = game();
   s.players[0]!.position = 23;
   const arrived = reduceGame(s, { type: 'roll', playerId: 'p1' }, sequence(0.2, 0.4));
@@ -138,6 +140,7 @@ it('pays exactly one 300k salary on forward arrival at departure and allows only
   m.properties[5]!.ownerId = 'p2';
   expect(getLegalActions(m).filter((a) => a.type === 'place_championship')).toEqual([
     { type: 'place_championship', playerId: 'p1', tile: 1 },
+    { type: 'place_championship', playerId: 'p1', tile: 3 },
   ]);
   const rent = getRent(m, 1);
   const boosted = reduceGame(
