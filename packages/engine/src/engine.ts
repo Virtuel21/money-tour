@@ -50,6 +50,9 @@ import type {
   Winner,
 } from './types.js';
 
+const isProperty = (tile: Tile | undefined): boolean =>
+  tile?.type === 'city' || tile?.type === 'resort';
+
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 const activePlayer = (state: GameState): Player => state.players[state.currentPlayer]!;
 const tileAt = (state: GameState, id: number): Tile => state.config.board[id]!;
@@ -86,14 +89,14 @@ export function getRent(state: GameState, tileId: number): number {
   const tile = tileAt(state, tileId);
   const property = state.properties[tileId];
   if (!tile || !property?.ownerId) return 0;
-  if (tile.type === 'resort') {
-    const count = propertyTiles(state, property.ownerId).filter(
-      (item) => item.type === 'resort',
-    ).length;
-    return Math.floor((state.config.resortRents[count - 1] ?? 0) * (state.crisis ? 0.5 : 1));
-  }
+  const baseRent =
+    tile.type === 'resort'
+      ? (state.config.resortRents[
+          propertyTiles(state, property.ownerId).filter((item) => item.type === 'resort').length - 1
+        ] ?? 0)
+      : (tile.rents?.[property.level] ?? 0);
   return Math.floor(
-    (tile.rents?.[property.level] ?? 0) *
+    baseRent *
       (state.festivals.includes(tileId) ? state.config.festivalMultiplier : 1) *
       (1 + property.championships) *
       twinMultiplier(state, tileId) *
@@ -193,7 +196,7 @@ function validateConfig(config: GameConfig): void {
   if (
     !Number.isInteger(config.festivalCount) ||
     config.festivalCount < 0 ||
-    config.festivalCount > config.board.filter((tile) => tile.type === 'city').length
+    config.festivalCount > config.board.filter(isProperty).length
   )
     throw new Error('Invalid festival count.');
   if (config.initialMaxLevel < 0 || config.initialMaxLevel > config.hotelLevel)
@@ -267,7 +270,7 @@ export function createGame(
   if (!Number.isSafeInteger(durationMs) || durationMs <= 0)
     throw new Error('Duration must be a positive integer.');
   if (config.shuffleStreets) shuffleStreets(config, rng);
-  const candidates = config.board.filter((tile) => tile.type === 'city').map((tile) => tile.id);
+  const candidates = config.board.filter(isProperty).map((tile) => tile.id);
   const festivals: number[] = [];
   for (let index = 0; index < config.festivalCount; index += 1)
     festivals.push(candidates.splice(randomInt(rng, candidates.length), 1)[0]!);
@@ -369,7 +372,7 @@ export function getBuyoutQuote(
     tile = tileAt(state, player.position);
   const property = state.properties[tile.id],
     base = getPurchaseQuote(state, level);
-  if (!base || !property || tile.type !== 'city') return null;
+  if (!base || !property || !isProperty(tile)) return null;
   const land = Math.floor(getPropertyValue(state, tile.id) * state.config.buyoutMultiplier);
   const buildings = (tile.buildCosts ?? [])
     .slice(property.level + 1, level + 1)
@@ -380,7 +383,6 @@ export function getBuyoutQuote(
     state.phase === 'property' &&
     !!property.ownerId &&
     !allies(state, player.id, property.ownerId) &&
-    property.level < state.config.hotelLevel &&
     level >= property.level &&
     (level === property.level ||
       (state.config.bundledPurchase === true &&
@@ -513,7 +515,7 @@ export function getLegalActions(state: GameState): GameAction[] {
     )
       result.push(action('buy'));
     if (
-      tile.type === 'city' &&
+      isProperty(tile) &&
       !reservedCity(state, tile.id) &&
       !property?.ownerId &&
       heldCard(state, player, 'fraud') &&
@@ -524,8 +526,7 @@ export function getLegalActions(state: GameState): GameAction[] {
     if (
       property?.ownerId &&
       !allies(state, player.id, property.ownerId) &&
-      tile.type === 'city' &&
-      property.level < state.config.hotelLevel &&
+      isProperty(tile) &&
       player.cash >= Math.floor(getPropertyValue(state, tile.id) * state.config.buyoutMultiplier)
     )
       result.push(action('buyout'));
@@ -534,7 +535,7 @@ export function getLegalActions(state: GameState): GameAction[] {
   if (state.phase === 'championship') {
     if (player.cash >= state.config.championshipFee)
       for (const tile of propertyTiles(state, player.id))
-        if (tile.type === 'city')
+        if (isProperty(tile))
           result.push({ type: 'place_championship', playerId: player.id, tile: tile.id });
     result.push(action('finish'));
   }
@@ -842,7 +843,7 @@ function attackTargets(state: GameState): Tile[] {
   return state.config.board.filter((tile) => {
     const p = state.properties[tile.id];
     return (
-      tile.type === 'city' &&
+      isProperty(tile) &&
       p?.ownerId &&
       !allies(state, activePlayer(state).id, p.ownerId) &&
       (effect !== 'roaches' || p.level === state.config.hotelLevel)
@@ -1729,8 +1730,7 @@ export function validateState(state: GameState): string[] {
       (tile.type === 'resort' && property.level !== 0)
     )
       errors.push(`Invalid level on ${key}.`);
-    if (!safe(property.championships) || (tile.type === 'resort' && property.championships !== 0))
-      errors.push(`Invalid championship count on ${key}.`);
+    if (!safe(property.championships)) errors.push(`Invalid championship count on ${key}.`);
     if (
       property.roachTurns !== undefined &&
       (!safe(property.roachTurns) ||
@@ -1767,7 +1767,7 @@ export function validateState(state: GameState): string[] {
     state.festivals.length !==
       (state.adventure && state.adventure.twist !== 'festivals' ? 0 : state.config.festivalCount) ||
     new Set(state.festivals).size !== state.festivals.length ||
-    state.festivals.some((id) => tileAt(state, id)?.type !== 'city')
+    state.festivals.some((id) => !isProperty(tileAt(state, id)))
   )
     errors.push('Invalid festivals.');
   const cards = [

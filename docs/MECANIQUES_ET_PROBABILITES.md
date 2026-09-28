@@ -8,7 +8,7 @@
 
 ### Évolutions précédentes conservées
 
-- Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Hôtel toujours verrouillé avant cinq tours ; hôtel adverse non rachetable. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
+- Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Construction d’un hôtel verrouillée avant cinq tours ; rachat d’un hôtel existant possible dès le début, comme toutes les villes et îles. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
 - Taunts accessibles pendant les tours et animations adverses. Affichage unique de l’illustration au-dessus du personnage, sans message central.
 - Sur PC, chaque volet joueur peut être réduit au nom et au solde puis développé. Un objectif secret accompli disparaît du volet et du carnet mobile ; son gain reste acquis et sa réussite reste dans le journal.
 
@@ -77,7 +77,7 @@ Les deux nouveaux tarifs sont 140 et 340. Les anciens tarifs sont divisés par 1
 - Achat groupé : terrain + somme des constructions jusqu’au niveau sélectionné. Trois maisons ajoutent trois coûts unitaires au terrain ; l’hôtel en ajoute quatre. Rien n’est débité si le total dépasse le cash.
 - Un seul achat ou chantier par visite. Après validation, seule la fin de visite est proposée. Revenir sur sa ville rouvre la même fenêtre : choisir le niveau total souhaité, payer uniquement les constructions manquantes. Hôtel toujours verrouillé avant cinq tours complets.
 - Les maisons ne nécessitent pas la rue entière. L’hôtel n’est disponible qu’après cinq tours complets du plateau effectués par son propriétaire.
-- Rachat hostile : deux fois la valeur du terrain et de ses constructions, payé au propriétaire. Un hôtel empêche ce rachat. L’assurance peut le bloquer une fois.
+- Rachat hostile : deux fois la valeur du terrain et de ses constructions, payé au propriétaire. Toutes les villes, y compris les hôtels, et les îles sont éligibles. L’assurance peut le bloquer une fois.
 - Vente à la banque pour régler une dette : 50 % de la valeur terrain + bâtiments ; le bien redevient libre. La vente consomme une assurance attachée à ce bien.
 - Les loyers sont transférés, pas créés. Squatteur permet d’éviter un loyer. Le loyer affiché inclut les bonus et malus actifs.
 - Îles : chacune coûte 200. Posséder 1 / 2 / 3 / 4 îles donne un loyer de 50 / 100 / 200 / 500 pour chacune. Aucune construction sur les îles.
@@ -107,7 +107,7 @@ Un double vaut 6/36 = 16,67 % par lancer. Trois doubles sur trois lancers indép
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Départ (0)      | Prime de 300 en passant en avant                                                                                                                                                                                                                                            |
 | Île perdue (8)  | Sortie payante 200, carte de sortie gratuite ou tentative de double ; au plus trois tentatives. Le double de sortie ne donne pas de relance                                                                                                                                 |
-| Festival (16)   | 50 pour doubler le loyer d’une ville possédée pendant quatre retours de son propriétaire ; renouvellement sans empilement                                                                                                                                                   |
+| Festival (16)   | 50 pour doubler le loyer d’une ville ou île possédée pendant quatre retours de son propriétaire ; renouvellement sans empilement                                                                                                                                            |
 | Voyage (24)     | 50 à la place des dés au prochain tour, ou dès la relance obtenue par un double. Choix d’une destination légale libre ou alliée ; pas de propriété adverse. Déplacement en avant, prime Départ si franchi, résolution normale de la destination. Refuser conserve le lancer |
 | Assurance (11)  | Reçoit un jeton s’il n’en a pas. Pose unique sur son propre bien ; bloque une destruction, expropriation ou rachat hostile puis disparaît. Ne protège aucun autre bien. Une nouvelle visite après consommation peut redonner un jeton                                       |
 | Casino (7)      | Roulette ou machine à sous, 50 % chacune à l’arrivée ; règles détaillées ci-dessous                                                                                                                                                                                         |
@@ -142,12 +142,12 @@ Au premier tirage d’un paquet complet, chaque carte a exactement **1/23 = 4,34
 | Contrôle fiscal     | Payez 120 à la banque.                                                                                                                           | 1/23 (4,35 %)        |
 | Bourse de voyage    | Recevez 180.                                                                                                                                     | 1/23 (4,35 %)        |
 | Squatteur           | Gardez cette carte. Lors d’une prochaine visite chez un adversaire, utilisez-la pour ne payer aucun loyer.                                       | 1/23 (4,35 %)        |
-| Expropriation       | Choisissez une ville adverse : elle redevient libre, ses bâtiments disparaissent. Une assurance peut bloquer cette attaque.                      | 1/23 (4,35 %)        |
+| Expropriation       | Choisissez une ville ou île adverse : elle redevient libre, ses bâtiments disparaissent. Une assurance peut bloquer cette attaque.               | 1/23 (4,35 %)        |
 | Invasion de cafards | Choisissez un hôtel adverse. Son loyer est réduit de moitié pendant deux retours du propriétaire.                                                | 1/23 (4,35 %)        |
 | Fraude fiscale      | Gardez cette carte pour acheter une ville à moitié prix. Jusqu’au prochain passage par Départ, la Taxe vous réclamera deux fois son prix normal. | 1/23 (4,35 %)        |
 | Alliance temporaire | Choisissez un joueur. Vous recevez la moitié de ses gains jusqu’à la fin de son prochain tour.                                                   | 1/23 (4,35 %)        |
 
-Précisions : Fraude fiscale réduit uniquement le prix du terrain de 50 %, pas celui des bâtiments. Le risque fiscal vaut deux fois le prix normal du terrain jusqu’au prochain Départ ; plusieurs fraudes cumulent le risque. Une attaque sans cible légale n’apporte rien. Chantier contrarié vise la ville adverse avec le plus de maisons (sans hôtel), puis la plus forte valeur et enfin le plus petit indice en cas d’égalité ; l’assurance peut bloquer l’effet. Expropriation laisse choisir une ville adverse ; Cafards vise un hôtel et réduit son loyer pendant deux retours de son propriétaire. Les transferts Raid / Coup de filet sont plafonnés au cash disponible et épargnent les alliés.
+Précisions : Fraude fiscale réduit uniquement le prix du terrain de 50 %, pas celui des bâtiments. Le risque fiscal vaut deux fois le prix normal du terrain jusqu’au prochain Départ ; plusieurs fraudes cumulent le risque. Une attaque sans cible légale n’apporte rien. Chantier contrarié vise la ville adverse avec le plus de maisons (sans hôtel), puis la plus forte valeur et enfin le plus petit indice en cas d’égalité ; l’assurance peut bloquer l’effet. Expropriation laisse choisir une ville ou île adverse ; Cafards vise un hôtel et réduit son loyer pendant deux retours de son propriétaire. Les transferts Raid / Coup de filet sont plafonnés au cash disponible et épargnent les alliés.
 
 Distribution initiale du paquet :
 
@@ -232,3 +232,9 @@ La règle spéciale de partie est affichée en haut au centre. Les collections s
 Taunts : cinq expressions pour chacun des quatre personnages (rire, loyer, fausse tristesse, bisou, couronne). Survol/focus : contour dans sa couleur ; clic/tap sur tout le personnage : menu, même hors de son tour. En ligne ou seul face aux bots, le visage est toujours celui du joueur qui envoie ; sur un appareil partagé, cliquer un personnage humain choisit ses réactions. L’expéditeur reste le même si le tour change pendant le choix. Une seule illustration publique au-dessus du personnage pendant cinq secondes, délai minimal de huit secondes par expéditeur en réseau. Messages signés, sans texte libre, sans coût, récompense, consommation du hasard ou effet sur la partie. Les bots ne produisent pas de taunts automatiques.
 
 Les probabilités des cartes et événements ainsi que les montants restent inchangés par cette mise à jour.
+
+## Fermeture des annonces multijoueurs
+
+Fermer une carte, une taxe, un résultat de casino, un transfert ou une annonce masque uniquement la présentation locale. Le timer et les autres joueurs continuent sans changement. Les spectateurs peuvent masquer puis rouvrir un duel ou une enchère ; la fenêtre réapparaît lorsque leur décision est requise. Aucune action réseau de jeu n’est envoyée par la fermeture.
+
+Villes et îles privées peuvent être rachetées, accueillir un Festival, être assurées, achetées avec Fraude fiscale ou ciblées par Expropriation. Les règles de construction et les effets portant explicitement sur une maison ou un hôtel conservent leur cible : aucune construction n’est ajoutée sur les îles.

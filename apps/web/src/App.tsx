@@ -1,5 +1,6 @@
+import { useSpectatorDialog } from './game/useSpectatorDialog';
 import { victoryThreats } from '@money-tour/engine';
-import { tileTitle, festivalText } from './game/tileTitle';
+import { tileTitle, festivalText, propertyRulesText } from './game/tileTitle';
 import { TauntMenu } from './game/TauntMenu';
 import {
   TAUNT_COOLDOWN,
@@ -271,6 +272,10 @@ export default function App() {
     setModal(null);
   };
   const decisionPlayer = current.players.find((p) => p.id === getDecisionPlayerId(current))!;
+  const sharedDialog = useSpectatorDialog(
+    `${current.turn}:${current.phase}:${current.duel?.id ?? current.auction?.id ?? ''}:${current.duel?.stage ?? current.auction?.stage ?? ''}:${decisionPlayer.id}`,
+    !!online && online.self !== decisionPlayer.id,
+  );
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
     if (screen !== 'game' || (paused && action.type !== 'quit')) return;
@@ -448,7 +453,7 @@ export default function App() {
           : current.phase === 'casino'
             ? 'Roulette ou machine à sous : tentez le jackpot dans la fenêtre du casino.'
             : current.phase === 'attack'
-              ? 'Choisissez une ville adverse en surbrillance sur le plateau. Une assurance bloque l’expropriation, mais pas les cafards.'
+              ? 'Choisissez une propriété adverse en surbrillance sur le plateau. Une assurance bloque l’expropriation, mais pas les cafards.'
               : active.insurance?.tile === null &&
                   ['roll', 'end', 'property'].includes(current.phase)
                 ? 'Votre jeton assurance est disponible : cliquez sur une de vos propriétés en surbrillance pour la protéger.'
@@ -690,12 +695,12 @@ export default function App() {
                 color={colors[current.currentPlayer]!}
               />
             )}
-            {!paused && cinema.frame.cue.kind === 'money' && (
+            {!paused && !cinema.dismissed && cinema.frame.cue.kind === 'money' && (
               <MoneyFlight
                 cue={cinema.frame.cue}
                 state={current}
                 reduced={reduced}
-                onClose={cinema.advance}
+                onClose={cinema.dismiss}
               />
             )}
             <div className="game-top">
@@ -917,7 +922,7 @@ export default function App() {
                         : 'Votre aventure continue…'
                       : mobile && options.length && !interactionDisabled
                         ? current.phase === 'championship'
-                          ? 'Touchez une ville éclairée · Festival 50'
+                          ? 'Touchez une propriété éclairée · Festival 50'
                           : 'Touchez une case éclairée pour la choisir'
                         : display.dice.length
                           ? 'Dés : ' +
@@ -964,12 +969,12 @@ export default function App() {
             </section>
             <aside className="game-sidebar">
               {current.phase === 'championship' && !interactionDisabled && (
-                <section className="mondial-picker" aria-label="Choisir la ville du Festival">
+                <section className="mondial-picker" aria-label="Choisir la propriété du Festival">
                   <strong>🎸 Où accueillir le Festival ?</strong>
                   {options.length ? (
                     <>
                       <p>
-                        Vos villes sont éclairées. Cliquez sur une case ou une carte ci-dessous.
+                        Vos propriétés sont éclairées. Cliquez sur une case ou une carte ci-dessous.
                       </p>
                       <div>
                         {options.map((a) => (
@@ -983,17 +988,22 @@ export default function App() {
                   ) : (
                     <p>
                       {current.config.board.some(
-                        (t) => t.type === 'city' && current.properties[t.id]?.ownerId === active.id,
+                        (t) => current.properties[t.id]?.ownerId === active.id,
                       )
                         ? 'Il vous faut ' +
                           money(current.config.championshipFee, true) +
                           ' pour organiser le Festival.'
-                        : 'Achetez d’abord une ville : les îles ne peuvent pas accueillir le Festival.'}
+                        : 'Achetez d’abord une ville ou une île pour y organiser le Festival.'}
                     </p>
                   )}
                 </section>
               )}
 
+              {sharedDialog.hidden && ['duel', 'auction'].includes(current.phase) && (
+                <button className="secondary" onClick={sharedDialog.reopen}>
+                  Revoir {current.phase === 'duel' ? 'le duel' : 'les enchères'}
+                </button>
+              )}
               <section className="action-card">
                 <span className="eyebrow">
                   {paused
@@ -1034,7 +1044,7 @@ export default function App() {
                       )}
                     </strong>
                     <p>
-                      {festivalText(
+                      {propertyRulesText(
                         current.config.cards.find((c) => c.id === current.lastCard)?.description,
                       )}
                     </p>
@@ -1261,8 +1271,8 @@ export default function App() {
                 <p>
                   Construisez sur une ville à vous sans attendre la rue complète : jusqu’à trois
                   maisons, puis un hôtel après cinq tours complets du plateau. Chaque passage
-                  rapporte 300. Après le loyer, une ville adverse sans hôtel peut être rachetée au
-                  double de sa valeur foncière.
+                  rapporte 300. Après le loyer, toute ville adverse, même avec hôtel, et toute île
+                  peuvent être rachetées au double de sa valeur foncière.
                 </p>
                 <h3>3. Plusieurs façons de gagner</h3>
                 <p>
@@ -1297,8 +1307,8 @@ export default function App() {
                 <p>
                   L’assurance donne un jeton unique à placer sur un bien : il bloque une destruction
                   ou une expropriation, puis disparaît. Squatteur se garde pour éviter un loyer.
-                  Expropriation remet une ville adverse à la banque ; les cafards divisent le loyer
-                  d’un hôtel par deux pendant deux tours de son propriétaire.
+                  Expropriation remet une ville ou île adverse à la banque ; les cafards divisent le
+                  loyer d’un hôtel par deux pendant deux tours de son propriétaire.
                 </p>
                 <p>
                   Fraude fiscale permet un achat à moitié prix. Jusqu’au prochain passage Départ,
@@ -1489,8 +1499,9 @@ export default function App() {
           !modal &&
           !paused &&
           current.phase === 'duel' &&
+          !sharedDialog.hidden &&
           current.duel && (
-            <Modal title="Le grand duel">
+            <Modal title="Le grand duel" onClose={sharedDialog.onClose}>
               <DuelView
                 key={current.duel.id}
                 state={current}
@@ -1532,8 +1543,10 @@ export default function App() {
           !paused &&
           !modal &&
           current.phase === 'auction' &&
+          !sharedDialog.hidden &&
           current.auction && (
             <Modal
+              onClose={sharedDialog.onClose}
               title={
                 current.auction.kind === 'market' ? 'Le marché flottant' : 'Les appels d’offres'
               }
@@ -1553,51 +1566,57 @@ export default function App() {
             <CasinoView state={current} act={act} />
           </Modal>
         )}
-        {screen === 'game' && !paused && cinema.frame.cue.kind === 'casino' && (
-          <Modal title="Le casino joue pour vous" onClose={cinema.advance}>
-            <CasinoView
-              key={current.seq + '-casino'}
-              state={current}
-              cue={cinema.frame.cue}
-              act={act}
-            />
-            <button className="secondary" onClick={cinema.advance}>
-              Passer l’animation
-            </button>
-          </Modal>
-        )}
-        {screen === 'game' && !paused && cinema.frame.cue.kind === 'notice' && (
-          <Modal
-            onClose={cinema.advance}
-            className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}
-            title={
-              cinema.frame.cue.reason === 'victory_warning'
-                ? 'Monopole en vue !'
-                : cinema.frame.cue.reason === 'earthquake'
-                  ? 'Tremblement de terre !'
-                  : cinema.frame.cue.reason === 'quest_completed'
-                    ? 'Palier Mystère accompli !'
-                    : cinema.frame.cue.reason === 'capital_revealed'
-                      ? 'La Capitale est révélée !'
-                      : cinema.frame.cue.reason === 'auction_started'
-                        ? 'Préparez vos enveloppes !'
-                        : cinema.frame.cue.reason === 'auction_result'
-                          ? 'Le résultat des enchères'
-                          : cinema.frame.cue.reason === 'duel_result'
-                            ? 'Le duel est joué !'
-                            : cinema.frame.cue.reason === 'crisis'
-                              ? 'Crise économique'
-                              : cinema.frame.cue.reason === 'alliance'
-                                ? 'Une alliance est née'
-                                : 'Votre aventure continue'
-            }
-          >
-            <p className="event-notice">{cinema.frame.cue.message}</p>
-            <button className="primary" onClick={cinema.advance}>
-              Continuer
-            </button>
-          </Modal>
-        )}
+        {screen === 'game' &&
+          !paused &&
+          !cinema.dismissed &&
+          cinema.frame.cue.kind === 'casino' && (
+            <Modal title="Le casino joue pour vous" onClose={cinema.dismiss}>
+              <CasinoView
+                key={current.seq + '-casino'}
+                state={current}
+                cue={cinema.frame.cue}
+                act={act}
+              />
+              <button className="secondary" onClick={cinema.dismiss}>
+                Passer l’animation
+              </button>
+            </Modal>
+          )}
+        {screen === 'game' &&
+          !paused &&
+          !cinema.dismissed &&
+          cinema.frame.cue.kind === 'notice' && (
+            <Modal
+              onClose={cinema.dismiss}
+              className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}
+              title={
+                cinema.frame.cue.reason === 'victory_warning'
+                  ? 'Monopole en vue !'
+                  : cinema.frame.cue.reason === 'earthquake'
+                    ? 'Tremblement de terre !'
+                    : cinema.frame.cue.reason === 'quest_completed'
+                      ? 'Palier Mystère accompli !'
+                      : cinema.frame.cue.reason === 'capital_revealed'
+                        ? 'La Capitale est révélée !'
+                        : cinema.frame.cue.reason === 'auction_started'
+                          ? 'Préparez vos enveloppes !'
+                          : cinema.frame.cue.reason === 'auction_result'
+                            ? 'Le résultat des enchères'
+                            : cinema.frame.cue.reason === 'duel_result'
+                              ? 'Le duel est joué !'
+                              : cinema.frame.cue.reason === 'crisis'
+                                ? 'Crise économique'
+                                : cinema.frame.cue.reason === 'alliance'
+                                  ? 'Une alliance est née'
+                                  : 'Votre aventure continue'
+              }
+            >
+              <p className="event-notice">{cinema.frame.cue.message}</p>
+              <button className="primary" onClick={cinema.dismiss}>
+                Continuer
+              </button>
+            </Modal>
+          )}
         {screen === 'game' && !interactionDisabled && !modal && current.phase === 'rent' && (
           <Modal title="Un loyer… ou votre carte Squatteur ?">
             <p>
@@ -1774,7 +1793,7 @@ export default function App() {
                   : tile.type === 'island'
                     ? 'Jusqu’à trois tours sur l’île. Sortez par un double, un billet ou 200.'
                     : tile.type === 'championship'
-                      ? 'Pour 50, doublez le loyer d’une de vos villes pendant 4 de vos tours. Un nouveau Festival renouvelle la durée, sans cumuler le bonus.'
+                      ? 'Pour 50, doublez le loyer d’une de vos villes ou îles pendant 4 de vos tours. Un nouveau Festival renouvelle la durée, sans cumuler le bonus.'
                       : tile.type === 'travel'
                         ? 'Au prochain tour, voyagez pour 50 vers une case libre ou alliée.'
                         : tile.type === 'tax'
@@ -1787,8 +1806,8 @@ export default function App() {
             </button>
           </Modal>
         )}
-        {screen === 'game' && cinema.frame.cue.kind === 'tax' && (
-          <Modal title="Aïe… passage à la caisse !" onClose={cinema.advance}>
+        {screen === 'game' && !cinema.dismissed && cinema.frame.cue.kind === 'tax' && (
+          <Modal title="Aïe… passage à la caisse !" onClose={cinema.dismiss}>
             <div className="tax-reveal">
               <div className="tax-illustration" aria-hidden="true" />
               <small>LES ACTUALITÉS DÉCALÉES DE L’ARCHIPEL</small>
@@ -1808,7 +1827,7 @@ export default function App() {
               <strong className="tax-amount">{money(cinema.frame.cue.amount ?? 0)}</strong>
               <p>
                 {cinema.frame.cue.reason === 'fraud' ? (
-                  'Contrôle fiscal ! Votre achat à prix réduit entraîne une taxe égale à deux fois le prix normal de la ville. Le contrôle clôt ce risque.'
+                  'Contrôle fiscal ! Votre achat à prix réduit entraîne une taxe égale à deux fois le prix normal de la propriété. Le contrôle clôt ce risque.'
                 ) : (
                   <>
                     Taxe : {money(current.config.taxBase ?? 0, true)} +{' '}
@@ -1816,19 +1835,19 @@ export default function App() {
                   </>
                 )}
               </p>
-              <button className="primary" onClick={cinema.advance}>
+              <button className="primary" onClick={cinema.dismiss}>
                 Aïe, j’ai compris !
               </button>
             </div>
           </Modal>
         )}
-        {screen === 'game' && cinema.frame.cue.kind === 'card' && (
+        {screen === 'game' && !cinema.dismissed && cinema.frame.cue.kind === 'card' && (
           <Modal
             title={
               'Carte de ' +
               (current.players.find((p) => p.id === cinema.frame.cue.playerId)?.name ?? active.name)
             }
-            onClose={cinema.advance}
+            onClose={cinema.dismiss}
           >
             <div className="chance-reveal">
               <img
@@ -1841,11 +1860,11 @@ export default function App() {
                 )}
               </h2>
               <p>
-                {festivalText(
+                {propertyRulesText(
                   current.config.cards.find((c) => c.id === cinema.frame.cue.cardId)?.description,
                 )}
               </p>
-              <button className="primary" onClick={cinema.advance}>
+              <button className="primary" onClick={cinema.dismiss}>
                 J’ai lu · continuer
               </button>
             </div>

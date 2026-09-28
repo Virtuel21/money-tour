@@ -1,3 +1,4 @@
+import { propertyRulesText } from './tileTitle';
 import type { GameState, Player } from '@money-tour/engine';
 import { money } from './local';
 
@@ -23,7 +24,9 @@ export function playerBonuses(state: GameState, player: Player): BonusInfo[] {
     if (card)
       items.push({
         title: `▣ ${card.title}`,
-        description: card.description + ' Cette carte est consommée lors de son utilisation.',
+        description:
+          propertyRulesText(card.description) +
+          ' Cette carte est consommée lors de son utilisation.',
       });
   }
   if (player.fraudLiability)

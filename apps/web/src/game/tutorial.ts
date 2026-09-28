@@ -144,7 +144,7 @@ export const lessons = [
   {
     id: 'championship',
     title: 'Organiser un Festival',
-    text: 'Sur le coin Festival, choisissez une de vos villes et payez 50. Son loyer double pendant quatre retours de votre tour. Les doubles ne raccourcissent pas la durée. Un nouveau Festival renouvelle la durée sans cumuler le bonus.',
+    text: 'Sur le coin Festival, choisissez une de vos villes ou îles et payez 50. Son loyer double pendant quatre retours de votre tour. Les doubles ne raccourcissent pas la durée. Un nouveau Festival renouvelle la durée sans cumuler le bonus.',
     task: 'Organisez le Festival à Madrid.',
     target: 'board',
   },

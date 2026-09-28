@@ -300,7 +300,7 @@ describe('sealed one-off tenders', () => {
     expect(validateAdventure(bad)).not.toEqual([]);
   });
 });
-it('offers only owned cities on Mondial and applies 4-turn rent bonus', () => {
+it('offers owned cities and islands on Mondial and applies 4-turn rent bonus', () => {
   let s = game();
   s.players[0]!.position = 14;
   s.properties[1]!.ownerId = 'a';
@@ -309,7 +309,10 @@ it('offers only owned cities on Mondial and applies 4-turn rent bonus', () => {
   s = step(s, { type: 'roll', playerId: 'a' }, () => 0).state;
   expect(s.phase).toBe('championship');
   const choices = getLegalActions(s).filter((a) => a.type === 'place_championship');
-  expect(choices).toEqual([{ type: 'place_championship', playerId: 'a', tile: 1 }]);
+  expect(choices).toEqual([
+    { type: 'place_championship', playerId: 'a', tile: 1 },
+    { type: 'place_championship', playerId: 'a', tile: 4 },
+  ]);
   const base = getRent(s, 1);
   s = step(s, choices[0]!).state;
   expect(getRent(s, 1)).toBe(base * 2);

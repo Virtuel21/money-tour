@@ -76,7 +76,7 @@ it('rejects invalid, unaffordable, premature hotel and off-turn bundles without 
   s.players[0]!.laps = 5;
   expect(getBuyoutQuote(s, 4)!.canBuy).toBe(true);
   s.properties[5]!.level = 4;
-  expect(getBuyoutQuote(s, 4)!.available).toBe(false);
+  expect(getBuyoutQuote(s, 4)!.available).toBe(true);
 });
 it('lets insurance block the entire bundle once without debiting either party or building', () => {
   const s = game();

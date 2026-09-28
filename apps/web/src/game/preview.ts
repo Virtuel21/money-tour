@@ -41,6 +41,10 @@ export function previewScenario(): LocalSave | null {
       'island',
       'rivalry',
       'buyout',
+      'resort-buyout',
+      'hotel-buyout',
+      'resort-festival',
+      'resort-insurance',
       'taunt-out-of-turn',
     ].includes(name)
   )
@@ -257,6 +261,25 @@ export function previewScenario(): LocalSave | null {
       reveals: {},
       escrow: false,
     };
+  }
+  if (['resort-buyout', 'hotel-buyout', 'resort-festival', 'resort-insurance'].includes(name)) {
+    const tile = state.config.board.find(
+      (t) => t.type === (name === 'hotel-buyout' ? 'city' : 'resort'),
+    )!;
+    player.position = tile.id;
+    state.phase =
+      name === 'resort-festival'
+        ? 'championship'
+        : name === 'resort-insurance'
+          ? 'end'
+          : 'property';
+    player.cash = 5000;
+    state.properties[tile.id] = {
+      ownerId: name.endsWith('buyout') ? 'p2' : 'p1',
+      level: name === 'hotel-buyout' ? 4 : 0,
+      championships: 0,
+    };
+    if (name === 'resort-insurance') player.insurance = { tile: null };
   }
   if (name === 'alliance') state.phase = 'alliance';
   if (name === 'crisis') state.crisis = { remaining: state.players.map((p) => p.id) };

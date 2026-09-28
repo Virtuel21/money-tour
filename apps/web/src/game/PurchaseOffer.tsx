@@ -77,7 +77,9 @@ export function PurchaseDetails({
         <div>
           <small>
             {buyout
-              ? 'RACHETER CETTE VILLE'
+              ? tile.type === 'resort'
+                ? 'RACHETER CETTE ÎLE'
+                : 'RACHETER CETTE VILLE'
               : owned
                 ? 'AMÉLIORER MA VILLE'
                 : tile.type === 'resort'
@@ -96,8 +98,10 @@ export function PurchaseDetails({
                 key={index}
                 aria-pressed={level === index}
                 disabled={!getQuote(index)?.available}
-                className={index === 4 && hotelLocked ? 'level-locked' : ''}
-                aria-label={`${labels[index]} : loyer ${money(getQuote(index)!.rent, true)}${index === 4 && hotelLocked ? ', hôtel verrouillé' : ''}`}
+                className={
+                  index === 4 && hotelLocked && !getQuote(index)?.available ? 'level-locked' : ''
+                }
+                aria-label={`${labels[index]} : loyer ${money(getQuote(index)!.rent, true)}${index === 4 && hotelLocked && !getQuote(index)?.available ? ', hôtel verrouillé' : ''}`}
                 onClick={() => setLevel(index)}
               >
                 <BuildingIllustration level={index} />
@@ -119,7 +123,7 @@ export function PurchaseDetails({
                     </svg>
                   )}
                 </span>
-                {index === 4 && hotelLocked && (
+                {index === 4 && hotelLocked && !getQuote(index)?.available && (
                   <span className="level-lock">
                     Après {state.config.hotelUnlockLaps ?? 1} tours
                   </span>
@@ -139,7 +143,7 @@ export function PurchaseDetails({
           </div>
           <p className="purchase-rule">
             {modern
-              ? 'Maisons sans rue complète. Hôtel après 5 tours du plateau.'
+              ? 'Maisons sans rue complète. Construction d’un hôtel après 5 tours du plateau. Un hôtel existant peut être racheté avant.'
               : 'Rue complète requise. Deux maisons maximum avant le premier passage Départ.'}{' '}
             {buyout
               ? `Rachat à ${state.players.find((p) => p.id === state.properties[tile.id]?.ownerId)?.name} : ${money(quote.land, true)}. Les bâtiments existants sont conservés ; seuls les nouveaux sont ajoutés au prix. Un chantier par visite.`
@@ -189,29 +193,19 @@ export function PurchaseDetails({
           <ActionClock />
         </button>
       </div>
-      {tile.type === 'city' && (
-        <p className="purchase-buyout">
-          {level === state.config.hotelLevel ? (
-            'Un hôtel ne peut pas être racheté par un adversaire.'
-          ) : (
-            <>
-              Rachat par un adversaire :{' '}
-              <strong>
-                {money(
-                  Math.floor(
-                    (tile.price! +
-                      (tile.buildCosts ?? [])
-                        .slice(1, level + 1)
-                        .reduce((sum, cost) => sum + cost, 0)) *
-                      state.config.buyoutMultiplier,
-                  ),
-                  true,
-                )}
-              </strong>
-            </>
+      <p className="purchase-buyout">
+        Rachat par un adversaire :{' '}
+        <strong>
+          {money(
+            Math.floor(
+              (tile.price! +
+                (tile.buildCosts ?? []).slice(1, level + 1).reduce((sum, cost) => sum + cost, 0)) *
+                state.config.buyoutMultiplier,
+            ),
+            true,
           )}
-        </p>
-      )}
+        </strong>
+      </p>
       {onFraud && getLegalActions(state).some((a) => a.type === 'buy_fraud') && (
         <>
           <button

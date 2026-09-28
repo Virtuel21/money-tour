@@ -10,7 +10,7 @@ const scene = vi.hoisted(() => ({
   state: null as GameState | null,
   busy: false,
   cue: { kind: 'hop', duration: 0 } as Cue,
-  advance: vi.fn(),
+  dismiss: vi.fn(),
 }));
 vi.mock('../src/game/preview', () => ({
   previewScenario: () => ({ version: 1, seed: 'app-test', state: scene.state }),
@@ -21,7 +21,7 @@ vi.mock('../src/game/usePresentation', () => ({
     busy: scene.busy,
     present: vi.fn(),
     reset: vi.fn(),
-    advance: scene.advance,
+    dismiss: scene.dismiss,
   }),
 }));
 vi.mock('../src/board/Board3D', () => ({
@@ -61,7 +61,7 @@ afterEach(async () => {
   document.body.innerHTML = '';
   vi.useRealTimers();
   scene.cue = { kind: 'hop', duration: 0 };
-  scene.advance.mockClear();
+  scene.dismiss.mockClear();
 });
 async function mount() {
   vi.useFakeTimers();
@@ -107,7 +107,7 @@ it.each(['notice', 'card', 'tax', 'casino', 'money'] as const)(
     );
     expect(close).not.toBeNull();
     await act(() => close!.click());
-    expect(scene.advance).toHaveBeenCalledOnce();
+    expect(scene.dismiss).toHaveBeenCalledOnce();
     expect(scene.state).toEqual(before);
   },
 );
@@ -120,7 +120,7 @@ it('lets Escape dismiss an announcement', async () => {
   await act(() =>
     host.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true })),
   );
-  expect(scene.advance).toHaveBeenCalledOnce();
+  expect(scene.dismiss).toHaveBeenCalledOnce();
 });
 it('opens the buyout picker from the game CTA without transferring the property first', async () => {
   scene.state = game();

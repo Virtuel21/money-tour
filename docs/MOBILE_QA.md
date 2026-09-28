@@ -171,3 +171,11 @@ Recette visuelle dans Chromium avec dimensions simulées ; téléphone physique 
 - Le groupe des îlots et bateaux est adapté aux anciens plateaux plus petits afin de dégager les nouveaux sols. Le test de navigation contrôle la coque pendant un circuit entier contre cette nouvelle limite, pour 26/28/30/32 cases.
 - Recette Chromium : rendu Full HD 1920 × 1080 et fenêtre 1280 × 612 ; achat de Madrid avec apparition du sol et du loyer 15. Tests de géométrie pour les noms, les orientations horizontales, les constructions et le redimensionnement proportionnel.
 - Vue globale mobile 390 × 844 : plateau entier et aucun débordement du document. `pnpm check` réussi : 506 tests dans 50 fichiers, typage, lint, build et contrôles assets/modèles. Couverture moteur : 97,31 % des lignes et 93,47 % des branches. Validation Chromium uniquement, sans téléphone physique ni Safari.
+
+## Éligibilité des propriétés et annonces locales — 28 septembre 2026
+
+- Matrice automatique pour les 18 villes et 4 îles : rachat avec paiement correct du vendeur, conservation des niveaux (y compris hôtel), Festival et renouvellement sans cumul, expiration après quatre retours, assurance consommée une seule fois, Fraude fiscale et Expropriation. Les loyers des îles intègrent les bonus de Festival et la crise.
+- Relecture des commandes de rachat, Festival et assurance sur deux états réseau identiques : mêmes résultats pour une île et un hôtel. Tests d’interface du sélecteur de rachat et de ses boutons.
+- Deux vues React indépendantes avec faux timers : fermeture locale de carte, taxe, casino, annonce et paiement sans raccourcir les timers ni masquer la seconde vue. Dismissal spectateur du duel/des enchères conservé pendant les ticks ; réapparition lorsque sa décision est requise. Les fermetures par bouton et Échap dans App restent testées.
+- Recette navigateur Chromium à 1280 × 720 : rachat de Bali (400 versés à Max, île transférée à Léa), Festival sur Bali (loyer 50 → 100, quatre tours), choix de Bali pour l’assurance, sélecteur de rachat d’un hôtel existant à 600 avant cinq tours.
+- `pnpm check` réussi : 606 tests dans 52 fichiers, typage, lint, couverture, build et contrôles assets/modèles. Tests réseau en mémoire et vues simulées, sans prétendre à une partie testée entre deux appareils distants.
