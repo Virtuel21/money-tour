@@ -11,9 +11,14 @@ import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
 import { boardTileTitle, tileTitle } from '../game/tileTitle';
 import { concertSprite, festivalBeat } from './specialArt';
-import { advanceScenery, lagoonIslands } from './lagoon';
+import { advanceScenery, lagoonIslands, lagoonScale } from './lagoon';
 import { festivalFlag, lagoonBoat } from './scenery';
-import { projectTileLabel } from './tileLabels';
+import {
+  projectTileLabels,
+  tileLabelRegions,
+  tileDecorationPoint,
+  type TileLabelAnchors,
+} from './tileLabels';
 import { TileLabel } from './TileLabel';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
@@ -117,7 +122,7 @@ export default function Board({
     { x: number; y: number; width: number; height: number }[]
   >([]);
   const [bankAnchors, setBankAnchors] = useState<{ x: number; y: number }[]>([]);
-  const [anchors, setAnchors] = useState<{ points: string; matrix: number[] }[]>([]);
+  const [anchors, setAnchors] = useState<{ points: string; labels: TileLabelAnchors }[]>([]);
   useEffect(() => {
     const element = host.current!;
     let disposed = false;
@@ -350,10 +355,13 @@ export default function Board({
           return sprite;
         };
         // Detailed pre-rendered dioramas: a fixed three-quarter camera lets the art retain its fine detail.
+        const lagoon = new THREE.Group();
+        lagoon.scale.setScalar(lagoonScale(live.current.state.config.board.length));
+        resources.add(lagoon);
         lagoonIslands.forEach(({ x, z }, i) => {
           const island = atlasSprite(architecture, i + 2, 3, 3.05, 3.05);
           island.position.set(x!, 0.08, z!);
-          resources.add(island);
+          lagoon.add(island);
         });
         const sea = new THREE.Mesh(
           new THREE.BoxGeometry(shape.x * 2 - shape.depth, 0.06, shape.z * 2 - shape.depth),
@@ -362,7 +370,7 @@ export default function Board({
         sea.position.y = 0.02;
         resources.add(sea);
         const boats = [lagoonBoat('cruise', 0), lagoonBoat('sail', 1)];
-        boats.forEach((boat) => resources.add(boat.root));
+        boats.forEach((boat) => lagoon.add(boat.root));
         for (let i = 0; i < 34; i++) {
           const ripple = new THREE.Mesh(
             new THREE.PlaneGeometry(0.22 + (i % 3) * 0.13, 0.045),
@@ -381,12 +389,32 @@ export default function Board({
           confetti: THREE.Group[] = [];
         const festivalFlags: ReturnType<typeof festivalFlag>[] = [];
         const concertBeats: { value: number }[] = [];
+        const rentQuays = new Map<number, THREE.Group>();
         for (const tile of live.current.state.config.board) {
           const p = tileFrame(tile.id, live.current.state.config.board.length),
             cell = clone('tile');
           cell.position.set(p.x, 0, p.z);
           cell.scale.set(p.width / 1.66, 1, p.depth / 1.66);
           resources.add(cell);
+          if (['city', 'resort'].includes(tile.type)) {
+            const r = tileLabelRegions(tile.id, live.current.state.config.board.length);
+            const quay = new THREE.Group();
+            const edge = new THREE.Mesh(
+              new THREE.BoxGeometry(r.width + 0.06, 0.16, 1.5),
+              new THREE.MeshStandardMaterial({ color: '#537e80', roughness: 0.9 }),
+            );
+            const floor = new THREE.Mesh(
+              new THREE.BoxGeometry(r.width, 0.05, 1.44),
+              new THREE.MeshStandardMaterial({ color: '#fff1cc', roughness: 0.9 }),
+            );
+            floor.position.y = 0.1;
+            quay.add(edge, floor);
+            quay.position.set(r.rent.x, 0.16, r.rent.z);
+            quay.rotation.y = p.angle;
+            quay.visible = !!live.current.state.properties[tile.id]?.ownerId;
+            resources.add(quay);
+            rentQuays.set(tile.id, quay);
+          }
           const illustratedTile =
             tile.type === 'chance'
               ? chanceArt
@@ -456,7 +484,12 @@ export default function Board({
           resources.add(outline);
           borders.push(outline);
           const city = new THREE.Group();
-          city.position.set(p.x - p.normal.x * 0.85, 0.26, p.z - p.normal.z * 0.85);
+          const cityPosition = tileDecorationPoint(
+            tile.id,
+            live.current.state.config.board.length,
+            0.85,
+          );
+          city.position.set(cityPosition.x, 0.26, cityPosition.z);
           city.rotation.y = p.angle;
           resources.add(city);
           buildings.push(city);
@@ -486,7 +519,12 @@ export default function Board({
           if (tile.type === 'resort') {
             const palm = clone('palm');
             palm.scale.setScalar(0.9);
-            palm.position.set(p.x - p.normal.x * 0.65, 0.26, p.z - p.normal.z * 0.65);
+            const palmPosition = tileDecorationPoint(
+              tile.id,
+              live.current.state.config.board.length,
+              0.65,
+            );
+            palm.position.set(palmPosition.x, 0.26, palmPosition.z);
             resources.add(palm);
           }
           if (
@@ -570,9 +608,10 @@ export default function Board({
                   return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
                 })
                 .join(' ');
-              const matrix = projectTileLabel(
+              const labels = projectTileLabels(
                 t.id,
                 live.current.state.config.board.length,
+                t.type === 'start' || t.type === 'championship',
                 (point) => {
                   const v = new THREE.Vector3(point.x, 0.29, point.z).project(camera);
                   return {
@@ -581,7 +620,7 @@ export default function Board({
                   };
                 },
               );
-              return { points, matrix };
+              return { points, labels };
             }),
           );
         };
@@ -643,6 +682,8 @@ export default function Board({
             const prop = game.properties[tile.id],
               owner = game.players.findIndex((p) => p.id === prop?.ownerId);
             trims[i]!.visible = owner >= 0;
+            const quay = rentQuays.get(tile.id);
+            if (quay) quay.visible = owner >= 0;
             (trims[i]!.material as THREE.MeshStandardMaterial).color.set(
               colors[owner] ?? '#ffffff',
             );
@@ -1148,33 +1189,35 @@ export default function Board({
               <br />
               TOUR <span>✦</span>
             </div>
-            {state.config.board.map((t, i) => (
-              <TileLabel
-                key={t.id}
-                id={t.id}
-                name={boardTileTitle(t)}
-                matrix={anchors[i]?.matrix}
-                dimmed={
-                  !!(inspectedOwner
-                    ? state.properties[t.id]?.ownerId !== inspectedOwner
-                    : selecting && !choices.includes(t.id))
-                }
-                conditions={[
-                  ...(reservedCity(state, t.id) ? ['Enchère T10'] : []),
-                  ...(state.players.some((p) => p.insurance?.tile === t.id) ? ['Assurée'] : []),
-                  ...(state.properties[t.id]?.roachTurns
-                    ? [`−50 % · ${state.properties[t.id]?.roachTurns} tours`]
-                    : []),
-                ]}
-                rent={
-                  state.properties[t.id]?.ownerId
-                    ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
-                        getRent(state, t.id),
-                      )
-                    : undefined
-                }
-              />
-            ))}
+            {state.config.board.map((t, i) => {
+              return (
+                <TileLabel
+                  key={t.id}
+                  id={t.id}
+                  name={boardTileTitle(t)}
+                  anchors={anchors[i]?.labels}
+                  dimmed={
+                    !!(inspectedOwner
+                      ? state.properties[t.id]?.ownerId !== inspectedOwner
+                      : selecting && !choices.includes(t.id))
+                  }
+                  conditions={[
+                    ...(reservedCity(state, t.id) ? ['Enchère T10'] : []),
+                    ...(state.players.some((p) => p.insurance?.tile === t.id) ? ['Assurée'] : []),
+                    ...(state.properties[t.id]?.roachTurns
+                      ? [`−50 % · ${state.properties[t.id]?.roachTurns} tours`]
+                      : []),
+                  ]}
+                  rent={
+                    state.properties[t.id]?.ownerId
+                      ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
+                          getRent(state, t.id),
+                        )
+                      : undefined
+                  }
+                />
+              );
+            })}
           </div>
         </>
       )}

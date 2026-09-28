@@ -1,41 +1,77 @@
 import { tileFrame } from './layout';
 
-export const labelSize = { width: 240, height: 160 };
-type Point = { x: number; y: number };
+type Point = { x: number; z: number };
+type Screen = { x: number; y: number };
+export type TileLabelAnchors = { name: number[]; rent: number[]; condition: number[] };
 
-/** A fixed strip on the outer half of every tile, clear of the building lane. */
-export function tileLabelPlane(id: number, count: number) {
-  const tile = tileFrame(id, count);
-  const alongX = tile.side % 2 === 0;
-  const width = (alongX ? tile.width : tile.depth) * 0.88;
-  const depth = (alongX ? tile.depth : tile.width) * 0.4;
-  const center = {
-    x: tile.x + tile.normal.x * 0.77,
-    z: tile.z + tile.normal.z * 0.77,
-  };
-  // Both text axes stay readable from the fixed camera, on all four sides.
-  const u = alongX ? { x: width, z: 0 } : { x: 0, z: -width };
-  const v = alongX ? { x: 0, z: depth } : { x: depth, z: 0 };
-  const origin = { x: center.x - (u.x + v.x) / 2, z: center.z - (u.z + v.z) / 2 };
-  return { origin, u, v };
+export function tileLabelRegions(id: number, count: number) {
+  const t = tileFrame(id, count);
+  const alongX = t.side % 2 === 0;
+  const across = alongX ? { x: 1, z: 0 } : { x: 0, z: -1 };
+  const down = alongX ? { x: 0, z: 1 } : { x: 1, z: 0 };
+  const width = (alongX ? t.width : t.depth) * 0.9;
+  const name = { x: t.x - down.x * 1.24, z: t.z - down.z * 1.24 };
+  const rent = { x: t.x - t.normal.x * 2.53, z: t.z - t.normal.z * 2.53 };
+  return { tile: t, across, down, width, name, rent };
 }
 
-/** Affine projection of a tile's text plane, in CSS pixels, without screen-size clamps. */
-export function projectTileLabel(
-  id: number,
-  count: number,
-  project: (point: { x: number; z: number }) => Point,
+function plane(
+  center: Point,
+  across: Point,
+  down: Point,
+  width: number,
+  depth: number,
+  height: number,
+  project: (point: Point) => Screen,
 ) {
-  const { origin, u, v } = tileLabelPlane(id, count);
-  const a = project(origin);
-  const b = project({ x: origin.x + u.x, z: origin.z + u.z });
-  const c = project({ x: origin.x + v.x, z: origin.z + v.z });
+  const o = {
+    x: center.x - (across.x * width) / 2 - (down.x * depth) / 2,
+    z: center.z - (across.z * width) / 2 - (down.z * depth) / 2,
+  };
+  const a = project(o),
+    b = project({ x: o.x + across.x * width, z: o.z + across.z * width }),
+    c = project({ x: o.x + down.x * depth, z: o.z + down.z * depth });
   return [
-    (b.x - a.x) / labelSize.width,
-    (b.y - a.y) / labelSize.width,
-    (c.x - a.x) / labelSize.height,
-    (c.y - a.y) / labelSize.height,
+    (b.x - a.x) / 240,
+    (b.y - a.y) / 240,
+    (c.x - a.x) / height,
+    (c.y - a.y) / height,
     a.x,
     a.y,
   ];
+}
+
+export function projectTileLabels(
+  id: number,
+  count: number,
+  horizontalCorner: boolean,
+  project: (point: Point) => Screen,
+): TileLabelAnchors {
+  const r = tileLabelRegions(id, count);
+  let name = plane(r.name, r.across, r.down, r.width, 0.62, 60, project);
+  const rent = plane(r.rent, r.across, r.down, r.width, 1.36, 120, project);
+  const condition = plane(
+    { x: r.tile.x - r.down.x * 0.73, z: r.tile.z - r.down.z * 0.73 },
+    r.across,
+    r.down,
+    r.width,
+    0.3,
+    36,
+    project,
+  );
+  if (horizontalCorner) {
+    // Place the corners' labels on the front of the tile, clear of the stage.
+    const c = project({ x: r.tile.x + 0.25, z: r.tile.z + 0.25 });
+    const span = project({ x: r.tile.x + r.tile.width, z: r.tile.z });
+    const origin = project(r.tile);
+    const s = (Math.hypot(span.x - origin.x, span.y - origin.y) * 0.65) / 240;
+    name = [s, 0, 0, s, c.x - s * 120, c.y - s * 30];
+  }
+  return { name, rent, condition };
+}
+
+// Keep buildings below the name strip in screen reading order on all four sides.
+export function tileDecorationPoint(id: number, count: number, inset: number) {
+  const { tile, down } = tileLabelRegions(id, count);
+  return { x: tile.x + down.x * inset, z: tile.z + down.z * inset };
 }

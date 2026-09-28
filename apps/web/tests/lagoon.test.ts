@@ -4,6 +4,7 @@ import {
   boatRadius,
   islandRadius,
   lagoonIslands,
+  lagoonScale,
   sailingLoopLength,
   sailingPose,
 } from '../src/board/lagoon';
@@ -24,8 +25,9 @@ describe('lagoon navigation', () => {
           );
         for (const count of [26, 28, 30, 32]) {
           const board = boardShape(count);
-          expect(Math.abs(boat.x) + boatRadius).toBeLessThan(board.x - board.depth / 2);
-          expect(Math.abs(boat.z) + boatRadius).toBeLessThan(board.z - board.depth / 2);
+          const scale = lagoonScale(count);
+          expect((Math.abs(boat.x) + boatRadius) * scale).toBeLessThan(board.x - 2.53 - 0.75);
+          expect((Math.abs(boat.z) + boatRadius) * scale).toBeLessThan(board.z - 2.53 - 0.75);
         }
       }
     }

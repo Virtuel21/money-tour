@@ -1,3 +1,5 @@
+import { boardShape } from './layout';
+
 /** Keep navigation and scenery on the same map, including legacy boards. */
 export const lagoonIslands = [
   { x: -2.5, z: -1.6 },
@@ -10,6 +12,17 @@ export const boatRadius = 0.75;
 const width = 5.4,
   depth = 4.65,
   radius = 0.95;
+
+/** Leave room for the rent quays, even when loading a smaller legacy board. */
+export function lagoonScale(count: number) {
+  const board = boardShape(count);
+  const quayReach = 2.53 + 0.75 + 0.1;
+  return Math.min(
+    1,
+    (board.x - quayReach) / (width + boatRadius),
+    (board.z - quayReach) / (depth + boatRadius),
+  );
+}
 const horizontal = 2 * (width - radius),
   vertical = 2 * (depth - radius);
 const arc = (Math.PI * radius) / 2;
