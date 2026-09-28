@@ -1160,14 +1160,15 @@ export default function App() {
                   La règle spéciale de cette partie est affichée au-dessus du plateau.
                 </small>
               </section>
-              <section className="live-actions" aria-label="Dernières actions">
-                <button onClick={() => setModal('journal')}>Toutes les actions ↗</button>
+              <details className="live-actions">
+                <summary>Historique de la partie</summary>
                 <ol aria-live="polite">
                   {history.slice(0, 3).map((entry, i) => (
                     <li key={i}>{entry}</li>
                   ))}
                 </ol>
-              </section>
+                <button onClick={() => setModal('journal')}>Toutes les actions ↗</button>
+              </details>
               <div className="tip">
                 <b>Le saviez-vous ?</b>
                 <p>Les quatre îles réunies rapportent 500 de loyer à chaque visite adverse.</p>

@@ -148,3 +148,11 @@ Recette Chromium sur tailles simulées ; téléphone physique et Safari iOS non 
 - Mesure des rectangles orientés des noms : aucune intersection impliquant un nom utilitaire à 320 × 568, 390 × 844, 550 × 1056 et 844 × 390. Vérification séparée de la vue zoomée à 10 px, des quatre zones cliquables (écart nul à l'arrêt), du mouvement entre Île perdue et Berlin et de l'absence de débordement de page.
 
 Recette visuelle dans Chromium avec dimensions simulées ; téléphone physique et Safari iOS non testés.
+
+## Interface desktop compacte — 28 septembre 2026
+
+- Historique replié par défaut dans un volet natif accessible au clavier. Les trois dernières actions apparaissent à son ouverture ; le journal complet reste accessible. Ouverture, fermeture avec Entrée et ouverture du journal vérifiées dans Chromium.
+- Fiches desktop plafonnées à 320 px, portraits et propriétés compacts ; alerte fiscale sur une ligne de grille complète. Bandeau d'action plafonné à 460 px et espace réservé sous le rendu du plateau. Le bouton et son décompte ne nécessitent plus de défilement interne pour lancer les dés.
+- Scène de contrôle `?scenario=showcase` : rendu vérifié en 1920 × 1080, 1920 × 940 (barres du navigateur), 1280 × 720 et 1280 × 612. En 1920 × 940 et 1280 × 612, les centres des 32 cases restent hors des rectangles des fiches, des commandes et de la règle commune. Ces dimensions sont des viewports CSS simulés, pas une validation du réglage de zoom de Windows.
+- Portrait 390 × 844 et 320 × 568, paysage 844 × 390 : aucune extension des dimensions du document au-delà du viewport. Volet ouvert et fermé vérifié ; lancer 4 + 5 exécuté depuis le bouton compact, arrivée à Paris et entrées du journal observées. Aucun téléphone physique ni Safari testé.
+- `pnpm check` réussi avec pnpm 10.32.1 : 493 tests dans 49 fichiers, typage, lint, build et contrôles des assets/modèles. Couverture moteur : 97,31 % des lignes et 93,47 % des branches.
