@@ -4,5 +4,6 @@ import './styles.css';
 import './mobile.css';
 import './play-layout.css';
 import './rivalry.css';
+import './board/tile-labels.css';
 
 createRoot(document.getElementById('root')!).render(<App />);

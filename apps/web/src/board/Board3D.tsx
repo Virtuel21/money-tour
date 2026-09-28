@@ -11,8 +11,15 @@ import { streetSurface } from './surfaces';
 import { colors } from '../game/local';
 import { boardTileTitle, tileTitle } from '../game/tileTitle';
 import { concertSprite, festivalBeat } from './specialArt';
-import { advanceScenery, lagoonIslands } from './lagoon';
+import { advanceScenery, lagoonIslands, lagoonScale } from './lagoon';
 import { festivalFlag, lagoonBoat } from './scenery';
+import {
+  projectTileLabels,
+  tileLabelRegions,
+  tileDecorationPoint,
+  type TileLabelAnchors,
+} from './tileLabels';
+import { TileLabel } from './TileLabel';
 
 import { boardShape, tileFrame, tilePoint, wealthPoints } from './layout';
 const up = new THREE.Vector3(0, 1, 0);
@@ -115,9 +122,7 @@ export default function Board({
     { x: number; y: number; width: number; height: number }[]
   >([]);
   const [bankAnchors, setBankAnchors] = useState<{ x: number; y: number }[]>([]);
-  const [anchors, setAnchors] = useState<{ x: number; y: number; points: string; angle: number }[]>(
-    [],
-  );
+  const [anchors, setAnchors] = useState<{ points: string; labels: TileLabelAnchors }[]>([]);
   useEffect(() => {
     const element = host.current!;
     let disposed = false;
@@ -350,10 +355,13 @@ export default function Board({
           return sprite;
         };
         // Detailed pre-rendered dioramas: a fixed three-quarter camera lets the art retain its fine detail.
+        const lagoon = new THREE.Group();
+        lagoon.scale.setScalar(lagoonScale(live.current.state.config.board.length));
+        resources.add(lagoon);
         lagoonIslands.forEach(({ x, z }, i) => {
           const island = atlasSprite(architecture, i + 2, 3, 3.05, 3.05);
           island.position.set(x!, 0.08, z!);
-          resources.add(island);
+          lagoon.add(island);
         });
         const sea = new THREE.Mesh(
           new THREE.BoxGeometry(shape.x * 2 - shape.depth, 0.06, shape.z * 2 - shape.depth),
@@ -362,7 +370,7 @@ export default function Board({
         sea.position.y = 0.02;
         resources.add(sea);
         const boats = [lagoonBoat('cruise', 0), lagoonBoat('sail', 1)];
-        boats.forEach((boat) => resources.add(boat.root));
+        boats.forEach((boat) => lagoon.add(boat.root));
         for (let i = 0; i < 34; i++) {
           const ripple = new THREE.Mesh(
             new THREE.PlaneGeometry(0.22 + (i % 3) * 0.13, 0.045),
@@ -381,12 +389,32 @@ export default function Board({
           confetti: THREE.Group[] = [];
         const festivalFlags: ReturnType<typeof festivalFlag>[] = [];
         const concertBeats: { value: number }[] = [];
+        const rentQuays = new Map<number, THREE.Group>();
         for (const tile of live.current.state.config.board) {
           const p = tileFrame(tile.id, live.current.state.config.board.length),
             cell = clone('tile');
           cell.position.set(p.x, 0, p.z);
           cell.scale.set(p.width / 1.66, 1, p.depth / 1.66);
           resources.add(cell);
+          if (['city', 'resort'].includes(tile.type)) {
+            const r = tileLabelRegions(tile.id, live.current.state.config.board.length);
+            const quay = new THREE.Group();
+            const edge = new THREE.Mesh(
+              new THREE.BoxGeometry(r.width + 0.06, 0.16, 1.5),
+              new THREE.MeshStandardMaterial({ color: '#537e80', roughness: 0.9 }),
+            );
+            const floor = new THREE.Mesh(
+              new THREE.BoxGeometry(r.width, 0.05, 1.44),
+              new THREE.MeshStandardMaterial({ color: '#fff1cc', roughness: 0.9 }),
+            );
+            floor.position.y = 0.1;
+            quay.add(edge, floor);
+            quay.position.set(r.rent.x, 0.16, r.rent.z);
+            quay.rotation.y = p.angle;
+            quay.visible = !!live.current.state.properties[tile.id]?.ownerId;
+            resources.add(quay);
+            rentQuays.set(tile.id, quay);
+          }
           const illustratedTile =
             tile.type === 'chance'
               ? chanceArt
@@ -456,7 +484,12 @@ export default function Board({
           resources.add(outline);
           borders.push(outline);
           const city = new THREE.Group();
-          city.position.set(p.x - p.normal.x * 0.85, 0.26, p.z - p.normal.z * 0.85);
+          const cityPosition = tileDecorationPoint(
+            tile.id,
+            live.current.state.config.board.length,
+            0.85,
+          );
+          city.position.set(cityPosition.x, 0.26, cityPosition.z);
           city.rotation.y = p.angle;
           resources.add(city);
           buildings.push(city);
@@ -486,7 +519,12 @@ export default function Board({
           if (tile.type === 'resort') {
             const palm = clone('palm');
             palm.scale.setScalar(0.9);
-            palm.position.set(p.x - p.normal.x * 0.65, 0.26, p.z - p.normal.z * 0.65);
+            const palmPosition = tileDecorationPoint(
+              tile.id,
+              live.current.state.config.board.length,
+              0.65,
+            );
+            palm.position.set(palmPosition.x, 0.26, palmPosition.z);
             resources.add(palm);
           }
           if (
@@ -559,28 +597,6 @@ export default function Board({
           setAnchors(
             live.current.state.config.board.map((t) => {
               const p = tileFrame(t.id, live.current.state.config.board.length);
-              const overviewWeight = live.current.mobile
-                ? THREE.MathUtils.clamp(1 - (camera.zoom - 1) / 0.8, 0, 1)
-                : 0;
-              // Give utility plaques their own lane in the tiny overview. Corner
-              // plaques move inward to separate the two meeting board edges.
-              const utilityOffset = THREE.MathUtils.lerp(
-                1.3,
-                p.corner ? 1.05 : 1.68,
-                overviewWeight,
-              );
-              const labelOffset = !['city', 'resort'].includes(t.type)
-                ? p.side < 2
-                  ? utilityOffset
-                  : -utilityOffset
-                : p.corner
-                  ? 0.85
-                  : 0.5;
-              const v = new THREE.Vector3(
-                p.x + p.normal.x * labelOffset,
-                0.32,
-                p.z + p.normal.z * labelOffset,
-              ).project(camera);
               const points = [
                 [-p.width / 2, -p.depth / 2],
                 [-p.width / 2, p.depth / 2],
@@ -592,23 +608,19 @@ export default function Board({
                   return (corner.x + 1) * 50 + ',' + (1 - corner.y) * 50;
                 })
                 .join(' ');
-              const alongX = p.side % 2 === 0;
-              const a = new THREE.Vector3(p.x, 0.3, p.z).project(camera);
-              const b = new THREE.Vector3(
-                p.x + (alongX ? 1 : 0),
-                0.3,
-                p.z + (alongX ? 0 : 1),
-              ).project(camera);
-              let angle =
-                (Math.atan2(
-                  (-(b.y - a.y) * element.clientHeight) / element.clientWidth,
-                  b.x - a.x,
-                ) *
-                  180) /
-                Math.PI;
-              if (angle > 90) angle -= 180;
-              if (angle < -90) angle += 180;
-              return { x: (v.x + 1) * 50, y: (1 - v.y) * 50, points, angle };
+              const labels = projectTileLabels(
+                t.id,
+                live.current.state.config.board.length,
+                t.type === 'start' || t.type === 'championship',
+                (point) => {
+                  const v = new THREE.Vector3(point.x, 0.29, point.z).project(camera);
+                  return {
+                    x: ((v.x + 1) * element.clientWidth) / 2,
+                    y: ((1 - v.y) * element.clientHeight) / 2,
+                  };
+                },
+              );
+              return { points, labels };
             }),
           );
         };
@@ -670,6 +682,8 @@ export default function Board({
             const prop = game.properties[tile.id],
               owner = game.players.findIndex((p) => p.id === prop?.ownerId);
             trims[i]!.visible = owner >= 0;
+            const quay = rentQuays.get(tile.id);
+            if (quay) quay.visible = owner >= 0;
             (trims[i]!.material as THREE.MeshStandardMaterial).color.set(
               colors[owner] ?? '#ffffff',
             );
@@ -863,7 +877,15 @@ export default function Board({
             lastPawnProjection = now;
           }
           // DOM labels and touch polygons share the exact camera projection, including during hops.
-          const signature = [focus.x, focus.z, camera.zoom, camera.right, camera.top]
+          const signature = [
+            focus.x,
+            focus.z,
+            camera.zoom,
+            camera.right,
+            camera.top,
+            element.clientWidth,
+            element.clientHeight,
+          ]
             .map((v) => v.toFixed(3))
             .join(':');
           if (signature !== projectionSignature && now - lastProjection > 32) {
@@ -1168,52 +1190,32 @@ export default function Board({
               TOUR <span>✦</span>
             </div>
             {state.config.board.map((t, i) => {
-              if (t.type === 'duel') return null;
-              const special = !['city', 'resort'].includes(t.type);
               return (
-                <div
+                <TileLabel
                   key={t.id}
-                  data-tile-label={t.id}
-                  className={
-                    'city-label' +
-                    (special ? ' special-label' : '') +
-                    ((
-                      inspectedOwner
-                        ? state.properties[t.id]?.ownerId !== inspectedOwner
-                        : selecting && !choices.includes(t.id)
-                    )
-                      ? ' label-dimmed'
-                      : '')
+                  id={t.id}
+                  name={boardTileTitle(t)}
+                  anchors={anchors[i]?.labels}
+                  dimmed={
+                    !!(inspectedOwner
+                      ? state.properties[t.id]?.ownerId !== inspectedOwner
+                      : selecting && !choices.includes(t.id))
                   }
-                  style={
-                    {
-                      left: anchors[i]?.x + '%',
-                      top: anchors[i]?.y + '%',
-                      '--label-angle': (anchors[i]?.angle ?? 0) + 'deg',
-                      '--street-color': t.color ?? '#e4b63c',
-                    } as React.CSSProperties
+                  conditions={[
+                    ...(reservedCity(state, t.id) ? ['Enchère T10'] : []),
+                    ...(state.players.some((p) => p.insurance?.tile === t.id) ? ['Assurée'] : []),
+                    ...(state.properties[t.id]?.roachTurns
+                      ? [`−50 % · ${state.properties[t.id]?.roachTurns} tours`]
+                      : []),
+                  ]}
+                  rent={
+                    state.properties[t.id]?.ownerId
+                      ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
+                          getRent(state, t.id),
+                        )
+                      : undefined
                   }
-                >
-                  <b>{boardTileTitle(t)}</b>
-                  {reservedCity(state, t.id) && (
-                    <small className="tile-condition">🔒 Enchère T10</small>
-                  )}
-                  {state.players.some((p) => p.insurance?.tile === t.id) && (
-                    <small className="tile-condition">🛡 Assurée</small>
-                  )}
-                  {!!state.properties[t.id]?.roachTurns && (
-                    <small className="tile-condition">
-                      🪳 −50 % · {state.properties[t.id]?.roachTurns} tours
-                    </small>
-                  )}
-                  {state.properties[t.id]?.ownerId && (
-                    <strong className="tile-rent" title="Loyer actuel">
-                      {new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 3 }).format(
-                        getRent(state, t.id),
-                      )}
-                    </strong>
-                  )}
-                </div>
+                />
               );
             })}
           </div>

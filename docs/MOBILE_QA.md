@@ -148,3 +148,26 @@ Recette Chromium sur tailles simulées ; téléphone physique et Safari iOS non 
 - Mesure des rectangles orientés des noms : aucune intersection impliquant un nom utilitaire à 320 × 568, 390 × 844, 550 × 1056 et 844 × 390. Vérification séparée de la vue zoomée à 10 px, des quatre zones cliquables (écart nul à l'arrêt), du mouvement entre Île perdue et Berlin et de l'absence de débordement de page.
 
 Recette visuelle dans Chromium avec dimensions simulées ; téléphone physique et Safari iOS non testés.
+
+## Interface desktop compacte — 28 septembre 2026
+
+- Historique replié par défaut dans un volet natif accessible au clavier. Les trois dernières actions apparaissent à son ouverture ; le journal complet reste accessible. Ouverture, fermeture avec Entrée et ouverture du journal vérifiées dans Chromium.
+- Fiches desktop plafonnées à 320 px, portraits et propriétés compacts ; alerte fiscale sur une ligne de grille complète. Bandeau d'action plafonné à 460 px et espace réservé sous le rendu du plateau. Le bouton et son décompte ne nécessitent plus de défilement interne pour lancer les dés.
+- Scène de contrôle `?scenario=showcase` : rendu vérifié en 1920 × 1080, 1920 × 940 (barres du navigateur), 1280 × 720 et 1280 × 612. En 1920 × 940 et 1280 × 612, les centres des 32 cases restent hors des rectangles des fiches, des commandes et de la règle commune. Ces dimensions sont des viewports CSS simulés, pas une validation du réglage de zoom de Windows.
+- Portrait 390 × 844 et 320 × 568, paysage 844 × 390 : aucune extension des dimensions du document au-delà du viewport. Volet ouvert et fermé vérifié ; lancer 4 + 5 exécuté depuis le bouton compact, arrivée à Paris et entrées du journal observées. Aucun téléphone physique ni Safari testé.
+- `pnpm check` réussi avec pnpm 10.32.1 : 493 tests dans 49 fichiers, typage, lint, build et contrôles des assets/modèles. Couverture moteur : 97,31 % des lignes et 93,47 % des branches.
+
+## Libellés contenus dans les cases — 28 septembre 2026
+
+- Les noms, indications et loyers utilisent désormais un plan SVG projeté par la même caméra que les cases. Une bande occupe la moitié extérieure de chaque case, hors de la rangée des constructions. Les noms et les loyers gardent des emplacements fixes, même lorsqu'une assurance, une réservation ou des cafards sont présents.
+- Les longues chaînes sont ajustées à la largeur disponible à partir de leur mesure typographique. La projection complète conserve l'orientation du sol ; la taille suit celle de la case sans minimum en pixels qui déborde en vue globale. Les noms complets restent accessibles dans la fiche de propriété et par les boutons du plateau.
+- Scène showcase : inspection visuelle en 1920 × 1080, 1280 × 612 et 390 × 844 (suivi puis vue globale). Mesure DOM des quatre coins des 32 plans de texte : tous contenus dans leur case, en Full HD et en vue globale mobile. Le redimensionnement recalcule aussi les matrices lorsque le rapport largeur/hauteur reste identique.
+- Dix tests géométriques supplémentaires couvrent les plateaux de 26/28/30/32 cases, cinq viewports, trois niveaux de zoom, les orientations lisibles et le redimensionnement proportionnel. `pnpm check` : 503 tests réussis, typage, lint, build et contrôles assets/modèles validés. Recette Chromium uniquement.
+
+## Loyers sur sols côté eau — option B retenue (28 septembre 2026)
+
+- Option B intégrée par défaut, sans paramètre de prévisualisation : un sol apparaît côté lagon pour chaque ville ou île privée achetée. Le loyer, agrandi et ajusté à la largeur disponible, est séparé du nom, des bâtiments et du liseré du propriétaire.
+- Noms dans la bande supérieure visuelle de chaque case, dans les quatre orientations. Festival et Départ restent horizontaux à l'écran. Constructions, terrains et palmiers des côtés inférieurs décalés sous les noms ; positions des côtés supérieurs conservées.
+- Le groupe des îlots et bateaux est adapté aux anciens plateaux plus petits afin de dégager les nouveaux sols. Le test de navigation contrôle la coque pendant un circuit entier contre cette nouvelle limite, pour 26/28/30/32 cases.
+- Recette Chromium : rendu Full HD 1920 × 1080 et fenêtre 1280 × 612 ; achat de Madrid avec apparition du sol et du loyer 15. Tests de géométrie pour les noms, les orientations horizontales, les constructions et le redimensionnement proportionnel.
+- Vue globale mobile 390 × 844 : plateau entier et aucun débordement du document. `pnpm check` réussi : 506 tests dans 50 fichiers, typage, lint, build et contrôles assets/modèles. Couverture moteur : 97,31 % des lignes et 93,47 % des branches. Validation Chromium uniquement, sans téléphone physique ni Safari.

@@ -23,7 +23,7 @@
   .game-layout .players .player-card.player-collapsed {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
-    width: clamp(200px, 17vw, 300px);
+    width: var(--player-panel-width);
     padding: 12px 16px;
     overflow: visible;
   }
@@ -226,9 +226,13 @@
   margin: 18px 0 0;
 }
 @media (min-width: 1001px) {
+  .game-layout .shared-game-info {
+    width: min(580px, calc(100% - 2 * var(--player-panel-width) - 48px));
+  }
   .game-layout .board-viewport {
     box-sizing: border-box;
     padding-top: 95px;
+    padding-bottom: 140px;
   }
   .game-layout .roll-status {
     top: 128px;

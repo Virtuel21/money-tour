@@ -1,0 +1,21 @@
+/* Labels scale with their projected tile or rent quay. */
+.tile-face-label {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 240px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  pointer-events: none;
+  fill: #102f3c;
+  font-family: Arial, sans-serif;
+}
+.tile-face-label.label-dimmed {
+  opacity: 0.22;
+}
+.tile-face-label[data-label-kind='rent'] text {
+  paint-order: stroke fill;
+  stroke: #fff9e8;
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}

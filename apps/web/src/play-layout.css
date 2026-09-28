@@ -507,6 +507,7 @@
     display: none;
   }
   .app .game-layout {
+    --player-panel-width: clamp(220px, 18vw, 320px);
     position: relative;
     display: block;
     padding: 0;
@@ -533,15 +534,15 @@
   .game-layout .players .player-card {
     position: absolute;
     z-index: 12;
-    width: clamp(260px, 23vw, 470px);
-    max-height: calc(50dvh - 28px);
+    width: var(--player-panel-width);
+    max-height: calc(50dvh - 48px);
     overflow-y: auto;
     min-height: 98px;
-    padding: clamp(12px, 1vw, 22px);
+    padding: 10px;
     margin: 0;
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: 58px minmax(0, 1fr);
+    grid-template-columns: 44px minmax(0, 1fr);
     gap: 5px 10px;
     background: #fffaf0f5;
   }
@@ -562,24 +563,25 @@
     right: 16px;
   }
   .game-layout .players .player-card .avatar {
-    width: 58px;
-    height: 58px;
+    width: 44px;
+    height: 44px;
   }
   .game-layout .players .player-card strong {
-    font-size: clamp(24px, 1.5vw, 32px);
+    font-size: 22px;
   }
   .game-layout .players .player-card .property-count {
     grid-column: 1 / -1;
-    font-size: 14px;
+    font-size: 12px;
   }
   .game-layout .player-card .player-inventory,
-  .game-layout .player-card .private-quest {
+  .game-layout .player-card .private-quest,
+  .game-layout .player-card > .fraud-risk {
     display: block;
     grid-column: 1 / -1;
     min-width: 0;
   }
   .game-layout .player-card .player-name {
-    font-size: clamp(18px, 1.2vw, 26px);
+    font-size: 17px;
     overflow-wrap: anywhere;
   }
   .game-layout .player-card .mini-properties {
@@ -590,20 +592,20 @@
   }
   .game-layout .mini-property {
     display: grid;
-    grid-template-columns: 26px minmax(0, 1fr);
-    padding: 6px;
-    min-height: 58px;
+    grid-template-columns: 18px minmax(0, 1fr);
+    padding: 5px 4px;
+    min-height: 44px;
     text-align: left;
   }
   .game-layout .mini-property > span {
     grid-row: span 2;
-    font-size: 22px;
+    font-size: 18px;
   }
   .game-layout .mini-property b {
-    font-size: clamp(13px, 0.9vw, 18px);
+    font-size: 12px;
   }
   .game-layout .mini-property small {
-    font-size: 13px;
+    font-size: 12px;
   }
   .game-layout .empty-estate {
     font-size: 13px;
@@ -617,7 +619,7 @@
     padding: 8px;
   }
   .game-layout .player-profile {
-    height: 82px;
+    height: 60px;
   }
   .game-layout .board-area,
   .game-layout .board-area.zoomed {
@@ -691,8 +693,9 @@
     bottom: 14px;
     left: 50%;
     transform: translateX(-50%);
-    width: min(660px, calc(100% - 2 * clamp(260px, 23vw, 470px) - 48px));
-    max-height: 30dvh;
+    width: min(460px, calc(100% - 2 * var(--player-panel-width) - 48px));
+    max-height: 40dvh;
+    gap: 6px;
     z-index: 15;
     overflow: auto;
   }
@@ -700,6 +703,7 @@
     display: none;
   }
   .game-layout .action-card {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -708,7 +712,8 @@
     transform: none;
     width: 100%;
     box-sizing: border-box;
-    padding: 10px 16px;
+    padding: 8px 12px 12px;
+    border-radius: 18px;
   }
   .game-layout .action-card h2 {
     font-size: 14px;
@@ -745,7 +750,7 @@
   .game-layout .action-card .actions button > span:first-child {
     font-size: 15px;
   }
-  .game-layout .action-card .actions .action-clock {
+  .game-layout .action-card .actions .cta-clock {
     font-size: 11px;
   }
   .game-layout .board-watermark,
@@ -756,11 +761,23 @@
 
 /* Public activity stays readable without covering the board. */
 .live-actions {
+  flex: 0 0 auto;
   background: #fffbed;
   color: #143849;
   border-radius: 14px;
   padding: 8px 12px;
   font-size: 13px;
+}
+.live-actions > summary {
+  cursor: pointer;
+  color: #145361;
+  font-weight: 800;
+  padding: 4px 0;
+}
+.live-actions > summary:focus-visible {
+  outline: 2px solid #145361;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 .live-actions > button {
   color: #145361;
@@ -772,7 +789,7 @@
   padding: 0;
   margin: 4px 0 0;
   list-style: none;
-  max-height: 66px;
+  max-height: 120px;
   overflow-y: auto;
 }
 .live-actions li {
@@ -816,9 +833,6 @@
   }
   .live-actions ol {
     max-height: 32px;
-  }
-  .live-actions > button {
-    display: none;
   }
 }
 .insurance-spotlight {
