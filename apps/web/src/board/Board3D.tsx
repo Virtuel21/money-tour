@@ -1253,9 +1253,12 @@ export default function Board({
                   key={t.id}
                   id={t.id}
                   name={boardTileTitle(t)}
-                  insured={state.players.some(
-                    (p) => p.insurance?.tile === t.id && p.id === state.properties[t.id]?.ownerId,
-                  )}
+                  insured={
+                    badgeStyle !== 'outline' &&
+                    state.players.some(
+                      (p) => p.insurance?.tile === t.id && p.id === state.properties[t.id]?.ownerId,
+                    )
+                  }
                   anchors={anchors[i]?.labels}
                   dimmed={
                     !!(inspectedOwner

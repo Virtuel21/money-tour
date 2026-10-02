@@ -12,6 +12,7 @@ export function InsuranceBadge({
   variant?: InsuranceStyle;
   tile: number;
 }) {
+  if (variant === 'outline') return null;
   return (
     <svg
       data-insurance-tile={tile}
@@ -25,7 +26,7 @@ export function InsuranceBadge({
       )}
       <path
         d="M120 15 186 39V86C186 123 160 149 120 168 80 149 54 123 54 86V39Z"
-        fill={variant === 'outline' ? '#fff7df' : color}
+        fill={color}
         stroke="#102f3c"
         strokeWidth="13"
         strokeLinejoin="round"
@@ -40,7 +41,7 @@ export function InsuranceBadge({
       <path
         d="m88 87 23 25 42-47"
         fill="none"
-        stroke={variant === 'outline' ? color : '#fff'}
+        stroke="#fff"
         strokeWidth="17"
         strokeLinecap="round"
         strokeLinejoin="round"

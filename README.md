@@ -91,4 +91,4 @@ Une règle tirée au sort par partie (villes jumelles, festivals, héritage, mar
 
 Les quatre îles comptent ensemble comme une rue complète pour le triple monopole : deux rues de villes + les quatre îles suffisent. Les avertissements de victoire et le mode équipes suivent cette règle. Les anciennes sauvegardes restent lisibles et bénéficient de la correction.
 
-La ville mise aux enchères est surlignée avant l'ouverture de la fenêtre et le reste jusqu'au résultat. On peut fermer puis rouvrir les offres ; une seule validation suffit, le dépouillement est automatique. Les propriétés assurées reçoivent un bouclier et un contour aux couleurs du propriétaire. Voir la recette dans `docs/MOBILE_QA.md`.
+La ville mise aux enchères est surlignée avant l'ouverture de la fenêtre et le reste jusqu'au résultat. On peut fermer puis rouvrir les offres ; une seule validation suffit, le dépouillement est automatique. Les propriétés assurées reçoivent un contour en pointillé à la couleur du propriétaire, sans bouclier. Voir la recette dans `docs/MOBILE_QA.md`.
