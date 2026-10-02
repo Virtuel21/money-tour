@@ -1,13 +1,16 @@
 import { scaledAmount } from '@money-tour/engine';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   auctionCommitment,
   getDecisionPlayerId,
   type GameAction,
   type GameState,
 } from '@money-tour/engine';
+import { auctionOfferKey, readAuctionOffer, saveAuctionOffer } from './auctionOffers';
 import { ActionClock } from './ActionClock';
 import { money } from './local';
+const drafts = new Map<string, string>();
+
 export function AuctionView({
   state,
   self,
@@ -26,35 +29,22 @@ export function AuctionView({
   // Network ticks briefly mark the session busy. Keep the form mounted so a
   // tick cannot steal keyboard focus or hide an offer while it is being typed.
   const canPlay = !actor.bot && (!self || self === actor.id);
-  const [amount, setAmount] = useState(String(scaledAmount(state.config, 50000)));
+  const draftKey = auctionOfferKey(a.id, actor.id, gameKey);
+  const initialAmount = () =>
+    String(
+      readAuctionOffer(state, actor.id, gameKey)?.amount ??
+        drafts.get(draftKey) ??
+        scaledAmount(state.config, 50000),
+    );
+  const [amount, setAmount] = useState(initialAmount);
   const [opened, setOpened] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const secrets = useRef<Record<string, { amount: number; salt: string }>>({});
-  const legacyKey = (id: string) => `money-tour.auction.${a.id}.${id}`;
-  const key = (id: string) =>
-    gameKey ? `money-tour.auction.${gameKey}.${a.id}.${id}` : legacyKey(id);
+  const [submitted, setSubmitted] = useState(!!readAuctionOffer(state, actor.id, gameKey));
   useEffect(() => {
-    setAmount(String(scaledAmount(state.config, 50000)));
+    setAmount(initialAmount());
     setOpened(false);
-    setSubmitted(false);
+    setSubmitted(!!readAuctionOffer(state, actor.id, gameKey));
   }, [a.id, actor.id]);
-  const secret = () => {
-    try {
-      return (
-        secrets.current[actor.id] ??
-        (JSON.parse(
-          sessionStorage.getItem(key(actor.id)) ??
-            (a.stage === 'reveal' ? sessionStorage.getItem(legacyKey(actor.id)) : null) ??
-            'null',
-        ) as {
-          amount: number;
-          salt: string;
-        } | null)
-      );
-    } catch {
-      return null;
-    }
-  };
+  const secret = () => readAuctionOffer(state, actor.id, gameKey);
   const bid = () => {
     if (disabled) return;
     // A retry must reuse the same envelope: the previous commit may already
@@ -65,14 +55,9 @@ export function AuctionView({
         b.toString(16).padStart(2, '0'),
       ).join(''),
     };
-    secrets.current[actor.id] = entry;
+    saveAuctionOffer(a.id, actor.id, entry, gameKey);
     setAmount(String(entry.amount));
     setSubmitted(true);
-    try {
-      sessionStorage.setItem(key(actor.id), JSON.stringify(entry));
-    } catch {
-      /* Kept in memory. */
-    }
     act({
       type: 'auction_commit',
       playerId: actor.id,
@@ -133,14 +118,14 @@ export function AuctionView({
                   max={actor.cash}
                   step={scaledAmount(state.config, 1000)}
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    setAmount(e.target.value);
+                    drafts.set(draftKey, e.target.value);
+                  }}
                 />
               </label>
               {submitted && (
-                <p role="status">
-                  Enveloppe envoyée. En attendant la confirmation, un nouvel envoi conserve la même
-                  offre.
-                </p>
+                <p role="status">Offre envoyée. Un nouvel envoi conserve le même montant.</p>
               )}
               <button
                 className="primary"
@@ -152,7 +137,7 @@ export function AuctionView({
                 }
                 onClick={bid}
               >
-                Sceller mon offre <ActionClock />
+                Envoyer mon offre <ActionClock />
               </button>
             </>
           )}
@@ -165,29 +150,18 @@ export function AuctionView({
         </>
       ) : (
         <>
-          <p>
-            Toutes les offres sont verrouillées. {actor.name}, transmettez votre enveloppe pour le
-            dépouillement.
+          <p role="status">
+            Toutes les offres sont verrouillées. Dépouillement automatique en cours…
           </p>
-          {secret() && (
+          {!secret() && <p>Cette enveloppe n’est plus disponible sur cet appareil.</p>}
+          {!secret() && (
             <button
-              className="primary"
               disabled={disabled}
-              onClick={() => {
-                const entry = secret();
-                if (entry) act({ type: 'auction_reveal', playerId: actor.id, ...entry });
-              }}
+              onClick={() => act({ type: 'auction_pass', playerId: actor.id })}
             >
-              Transmettre mon enveloppe <ActionClock />
+              Continuer sans cette offre <ActionClock />
             </button>
           )}
-          {!secret() && <p>Cette enveloppe n’est plus disponible sur cet appareil.</p>}
-          <button
-            disabled={disabled}
-            onClick={() => act({ type: 'auction_pass', playerId: actor.id })}
-          >
-            Retirer mon offre <ActionClock />
-          </button>
         </>
       )}
     </div>

@@ -19,3 +19,39 @@
   stroke-width: 5px;
   stroke-linejoin: round;
 }
+
+.insurance-badge {
+  overflow: visible;
+}
+.board-hit-polygons polygon.auction-highlight,
+.board-hit-polygons polygon.auction-highlight:hover {
+  fill: #ffd75055;
+  stroke: #ffb900;
+  stroke-width: 4px;
+  vector-effect: non-scaling-stroke;
+  paint-order: stroke fill;
+  filter: drop-shadow(0 0 5px #fff5c3);
+}
+.auction-board-prompt {
+  padding: 8px 12px;
+  border: 2px solid #d6a222;
+  border-radius: 14px;
+  background: #fff7df;
+  color: #102f3c;
+  text-align: center;
+}
+.auction-board-prompt p {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.auction-board-prompt button {
+  min-height: 44px;
+  width: 100%;
+}
+
+.board-hit-polygons polygon.insured-outline {
+  stroke: var(--insurance-color);
+  stroke-width: 3px;
+  stroke-dasharray: 7 4;
+  vector-effect: non-scaling-stroke;
+}

@@ -206,6 +206,32 @@ it('keeps event notices five seconds longer, including reduced-motion mode', () 
       (reduced ? 800 : 2600) + 5000,
     );
     expect(presentationMs([{ type: 'crisis' }])).toBe(7600);
-    expect(presentationMs([{ type: 'auction_started' }])).toBe(7600);
+    expect(presentationMs([{ type: 'auction_result' }])).toBe(7600);
   }
+});
+
+it('shows the auction property during the short introduction and shares its timing online', () => {
+  const before = game();
+  const next = structuredClone(before);
+  next.phase = 'auction';
+  next.auction = {
+    id: 'intro',
+    tile: 5,
+    kind: 'tender',
+    resume: 'roll',
+    participants: ['a', 'b'],
+    stage: 'commit',
+    commitments: {},
+    bids: {},
+    passed: [],
+  };
+  const events = [{ type: 'auction_started', tile: 5, message: 'Madrid aux enchères' }];
+  for (const reduced of [false, true]) {
+    const frames = presentation(before, next, events, reduced);
+    expect(frames[0]!.state.auction?.tile).toBe(5);
+    expect(frames[0]!.state.phase).toBe('auction');
+    expect(frames[0]!.cue.duration).toBe(1800);
+    expect(presentationMs(events)).toBe(1800);
+  }
+  expect(before.auction).toBeUndefined();
 });

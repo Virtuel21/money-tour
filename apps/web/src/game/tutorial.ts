@@ -60,8 +60,8 @@ export const lessons = [
   {
     id: 'auction',
     title: 'Une offre vraiment secrète',
-    text: 'Lors d’un appel d’offres, chacun choisit à son tour un montant dans la limite de son cash. Scellez votre offre, puis transmettez l’enveloppe quand tous ont choisi. Seul le gagnant paie ; une égalité est départagée au hasard. Les montants ne figurent pas dans l’annonce publique.',
-    task: 'Saisissez une offre, scellez-la puis transmettez-la. Sacha participe automatiquement.',
+    text: 'Lors d’un appel d’offres, chacun choisit à son tour un montant dans la limite de son cash. Envoyez votre offre une seule fois : le dépouillement est automatique quand tous ont choisi. Seul le gagnant paie ; une égalité est départagée au hasard. Les montants ne figurent pas dans l’annonce publique.',
+    task: 'Saisissez une offre et envoyez-la. Sacha participe automatiquement.',
     target: 'action',
   },
   {
@@ -186,7 +186,7 @@ export const lessons = [
   {
     id: 'victory',
     title: 'Prêt pour votre vrai voyage',
-    text: 'Gagnez en réunissant trois rues complètes, toutes les propriétés achetables d’un côté (île comprise), ou en restant le dernier joueur solvable. À la fin du chrono, le plus grand patrimoine gagne ; une égalité est partagée. Vous pouvez relancer ce tutoriel depuis Comment jouer.',
+    text: 'Gagnez en réunissant trois rues complètes (les quatre îles comptent comme une rue), toutes les propriétés achetables d’un côté (île comprise), ou en restant le dernier joueur solvable. À la fin du chrono, le plus grand patrimoine gagne ; une égalité est partagée. Vous pouvez relancer ce tutoriel depuis Comment jouer.',
     task: 'Consultez les patrimoines, puis terminez le tutoriel.',
     target: 'accounts',
   },

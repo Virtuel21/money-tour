@@ -29,6 +29,7 @@ export function previewScenario(): LocalSave | null {
       'casino',
       'slots',
       'insurance',
+      'insured-properties',
       'squatter',
       'fraud',
       'expropriate',
@@ -97,6 +98,17 @@ export function previewScenario(): LocalSave | null {
   for (const id of [9, 10]) state.properties[id]!.ownerId = 'p2';
   state.properties[9]!.level = 2;
   state.properties[10]!.level = 4;
+  if (name === 'insured-properties') {
+    state.players.forEach((p, i) => {
+      const id = [1, 10, 20, 26][i]!;
+      p.insurance = { tile: id };
+      p.position = id;
+      state.properties[id] = { ownerId: p.id, level: [3, 4, 0, 2][i]!, championships: 0 };
+    });
+    state.properties[1]!.roachTurns = 2;
+    state.properties[10]!.championships = 1;
+    state.properties[10]!.championshipTurns = 4;
+  }
   if (name === 'travel-double') {
     player.position = 20;
     const result = reduceGame(state, { type: 'roll', playerId: player.id }, () => 0.2);

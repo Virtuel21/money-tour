@@ -86,3 +86,9 @@ Les dés 3D roulent dans un écrin séparé du décor. Les icônes conservent de
 Une règle tirée au sort par partie (villes jumelles, festivals, héritage, marché flottant ou capitale cachée), un objectif personnel à 100 k et un appel d’offres à enveloppes scellées. Le HUD affiche la règle, les propriétés miniatures et les bonus. Le Mondial éclaire les villes éligibles et offre un sélecteur latéral ; les annonces durent cinq secondes de plus.
 
 [Règles détaillées et limites de confidentialité](docs/ADVENTURE_RULES.md). Les sauvegardes des anciennes éditions conservent leurs règles ; commencer une nouvelle partie pour activer ces mécaniques. Les offres et objectifs sont masqués dans l’interface ; l’état et les révélations vérifiables restent inspectables dans le protocole pair-à-pair. Les soldes publics permettent de déduire l’offre gagnante.
+
+### Correction des collections et des enchères (v16)
+
+Les quatre îles comptent ensemble comme une rue complète pour le triple monopole : deux rues de villes + les quatre îles suffisent. Les avertissements de victoire et le mode équipes suivent cette règle. Les anciennes sauvegardes restent lisibles et bénéficient de la correction.
+
+La ville mise aux enchères est surlignée avant l'ouverture de la fenêtre et le reste jusqu'au résultat. On peut fermer puis rouvrir les offres ; une seule validation suffit, le dépouillement est automatique. Les propriétés assurées reçoivent un contour en pointillé à la couleur du propriétaire, sans bouclier. Voir la recette dans `docs/MOBILE_QA.md`.

@@ -971,3 +971,43 @@
     align-self: center;
   }
 }
+
+/* Keep both bid actions visible on short phones, including a pending acknowledgement. */
+@media (max-width: 999px) and (max-height: 700px) and (orientation: portrait) {
+  .modal .auction-view {
+    gap: 6px;
+  }
+  .modal .auction-property {
+    padding: 6px;
+    border-top-width: 6px;
+  }
+  .modal .auction-property > span {
+    display: none;
+  }
+  .modal .auction-property h3 {
+    font-size: 20px;
+  }
+  .modal .auction-view p {
+    margin: 4px 0;
+  }
+  .modal .auction-seals {
+    margin: 2px 0;
+  }
+  .modal .auction-seals span {
+    padding: 5px;
+  }
+  .modal .auction-view input {
+    margin: 4px 0;
+    min-height: 44px;
+  }
+  .modal .auction-view button {
+    margin-top: 0;
+    min-height: 44px;
+  }
+}
+@media (max-width: 999px) and (orientation: landscape) {
+  .modal .auction-view > p[role='status'] {
+    grid-column: 2;
+    grid-row: auto;
+  }
+}

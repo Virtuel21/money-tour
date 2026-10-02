@@ -2,7 +2,13 @@ import { tileFrame } from './layout';
 
 type Point = { x: number; z: number };
 type Screen = { x: number; y: number };
-export type TileLabelAnchors = { name: number[]; rent: number[]; condition: number[] };
+export type TileLabelAnchors = {
+  name: number[];
+  rent: number[];
+  condition: number[];
+  insurance: number[];
+  insuredRent: number[];
+};
 
 export function tileLabelRegions(id: number, count: number) {
   const t = tileFrame(id, count);
@@ -67,7 +73,35 @@ export function projectTileLabels(
     const s = (Math.hypot(span.x - origin.x, span.y - origin.y) * 0.65) / 240;
     name = [s, 0, 0, s, c.x - s * 120, c.y - s * 30];
   }
-  return { name, rent, condition };
+  // The rent quay is an unobstructed lane, separate from names, buildings and pawns.
+  const center = project({
+    x: r.rent.x + r.across.x * r.width * 0.31,
+    z: r.rent.z + r.across.z * r.width * 0.31,
+  });
+  const edge = project({
+    x: r.rent.x + r.across.x * r.width * 0.71,
+    z: r.rent.z + r.across.z * r.width * 0.71,
+  });
+  const badgeWidth = Math.hypot(edge.x - center.x, edge.y - center.y);
+  // Face the camera, like the pawns: the shield remains recognisable at every angle.
+  const insurance = [
+    badgeWidth / 240,
+    0,
+    0,
+    (badgeWidth * 1.12) / 180,
+    center.x - badgeWidth / 2,
+    center.y - badgeWidth * 0.56,
+  ];
+  const insuredRent = plane(
+    { x: r.rent.x - r.across.x * r.width * 0.2, z: r.rent.z - r.across.z * r.width * 0.2 },
+    r.across,
+    r.down,
+    r.width * 0.57,
+    1.36,
+    120,
+    project,
+  );
+  return { name, rent, condition, insurance, insuredRent };
 }
 
 // Keep buildings below the name strip in screen reading order on all four sides.

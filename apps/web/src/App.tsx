@@ -1,3 +1,5 @@
+import { useAuctionDialog } from './game/useAuctionDialog';
+import { useAuctionReveal } from './game/useAuctionReveal';
 import { useSpectatorDialog } from './game/useSpectatorDialog';
 import { victoryThreats } from '@money-tour/engine';
 import { tileTitle, festivalText, propertyRulesText } from './game/tileTitle';
@@ -138,6 +140,7 @@ for (const [id, ownerId, level] of [
 export default function App() {
   const mobile = useMobile();
   const [overview, setOverview] = useState(false);
+  const [boardReady, setBoardReady] = useState(false);
   const [inspectedOwner, setInspectedOwner] = useState<string | null>(null);
   const [collapsedPlayers, setCollapsedPlayers] = useState<Record<string, boolean>>({});
   const [save, setSave] = useState<LocalSave | null>(() => previewScenario() ?? loadLocal());
@@ -275,6 +278,15 @@ export default function App() {
   const sharedDialog = useSpectatorDialog(
     `${current.turn}:${current.phase}:${current.duel?.id ?? current.auction?.id ?? ''}:${current.duel?.stage ?? current.auction?.stage ?? ''}:${decisionPlayer.id}`,
     !!online && online.self !== decisionPlayer.id,
+  );
+  const auctionDialog = useAuctionDialog(
+    current.auction?.id,
+    `${current.auction?.stage}:${decisionPlayer.id}`,
+    boardReady &&
+      screen === 'game' &&
+      (!rolling || cinema.frame.cue.reason === 'auction_started') &&
+      !paused &&
+      !modal,
   );
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
@@ -418,6 +430,13 @@ export default function App() {
     decisionPlayer.bot ||
     Boolean(current.winner) ||
     Boolean(online && (online.self !== decisionPlayer.id || online.busy || online.blocked));
+  useAuctionReveal(
+    current,
+    online?.self,
+    act,
+    screen !== 'game' || interactionDisabled,
+    online?.self ?? save?.seed,
+  );
   const offerKey = [save?.seed, active.id, current.turn, active.position].join(':');
   const eligibleOffer =
     screen === 'game' && !interactionDisabled && !modal
@@ -879,6 +898,8 @@ export default function App() {
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
                     state={display}
+                    onReady={() => setBoardReady(true)}
+                    auctionTile={current.auction?.tile}
                     onPlayer={
                       canTaunt
                         ? (id) => {
@@ -893,7 +914,7 @@ export default function App() {
                     }
                     taunt={visibleTaunt ?? undefined}
                     mobile={mobile}
-                    overview={overview || paused || Boolean(inspectedOwner)}
+                    overview={overview || paused || Boolean(inspectedOwner) || !!current.auction}
                     inspectedOwner={inspectedOwner}
                     self={online?.self}
                     insuranceFocus={
@@ -999,10 +1020,27 @@ export default function App() {
                 </section>
               )}
 
-              {sharedDialog.hidden && ['duel', 'auction'].includes(current.phase) && (
+              {sharedDialog.hidden && current.phase === 'duel' && (
                 <button className="secondary" onClick={sharedDialog.reopen}>
-                  Revoir {current.phase === 'duel' ? 'le duel' : 'les enchères'}
+                  Revoir le duel
                 </button>
+              )}
+              {current.auction && auctionDialog.hidden && (
+                <div className="auction-board-prompt">
+                  <p role="status">
+                    {current.config.board[current.auction.tile]!.name} est surlignée sur le plateau.
+                  </p>
+                  <button
+                    className="primary"
+                    onClick={auctionDialog.reopen}
+                    disabled={rolling || paused}
+                  >
+                    {current.auction.stage === 'commit'
+                      ? 'Enchérir sur '
+                      : 'Revoir les enchères · '}
+                    {current.config.board[current.auction.tile]!.name}
+                  </button>
+                </div>
               )}
               <section className="action-card">
                 <span className="eyebrow">
@@ -1277,9 +1315,11 @@ export default function App() {
                 <h3>3. Plusieurs façons de gagner</h3>
                 <p>
                   Possédez toutes les propriétés achetables d’un côté, île comprise, ou complétez
-                  trois rues pour gagner. Les quatre îles réunies donnent un loyer de 500, sans
-                  terminer la partie. Vous gagnez aussi si tous vos adversaires font faillite. À la
-                  fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.
+                  trois rues pour gagner. Les quatre îles réunies comptent comme une rue complète :
+                  deux rues de villes et les quatre îles donnent donc le triple monopole. Elles
+                  donnent aussi un loyer de 500. Vous gagnez aussi si tous vos adversaires font
+                  faillite. À la fin du chrono, le plus grand patrimoine gagne ; une égalité se
+                  partage.
                 </p>
                 <h3>4. Des escales qui changent tout</h3>
                 <p>
@@ -1543,10 +1583,10 @@ export default function App() {
           !paused &&
           !modal &&
           current.phase === 'auction' &&
-          !sharedDialog.hidden &&
+          !auctionDialog.hidden &&
           current.auction && (
             <Modal
-              onClose={sharedDialog.onClose}
+              onClose={auctionDialog.close}
               title={
                 current.auction.kind === 'market' ? 'Le marché flottant' : 'Les appels d’offres'
               }
@@ -1585,7 +1625,8 @@ export default function App() {
         {screen === 'game' &&
           !paused &&
           !cinema.dismissed &&
-          cinema.frame.cue.kind === 'notice' && (
+          cinema.frame.cue.kind === 'notice' &&
+          cinema.frame.cue.reason !== 'auction_started' && (
             <Modal
               onClose={cinema.dismiss}
               className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}

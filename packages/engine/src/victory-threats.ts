@@ -1,4 +1,5 @@
 import type { GameState } from './types.js';
+import { monopolyGroups } from './monopoly.js';
 
 export interface VictoryThreat {
   key: string;
@@ -15,9 +16,7 @@ export function victoryThreats(state: GameState): VictoryThreat[] {
       ? [...new Set(living.map((p) => p.team))].map((team) => living.filter((p) => p.team === team))
       : living.map((p) => [p]);
   const cities = state.config.board.filter((t) => t.type === 'city');
-  const groups = [...new Set(cities.map((t) => t.group))].map((group) =>
-    cities.filter((t) => t.group === group),
-  );
+  const groups = monopolyGroups(state.config);
   return collections.flatMap((players) => {
     const ids = players.map((p) => p.id);
     const owns = (id: number) => ids.includes(state.properties[id]?.ownerId ?? '');

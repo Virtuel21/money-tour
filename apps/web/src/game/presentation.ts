@@ -55,6 +55,10 @@ export function presentation(
   };
   let departure: GameEvent | undefined;
   for (const [index, event] of events.entries()) {
+    if (event.type === 'auction_started' && next.auction) {
+      visual.auction = structuredClone(next.auction);
+      visual.phase = 'auction';
+    }
     if (event.type === 'casino_result')
       add({
         kind: 'casino',
@@ -119,7 +123,7 @@ export function presentation(
       add({
         kind: 'notice',
         reason: event.type,
-        duration: (reduced ? 800 : 2600) + 5000,
+        duration: event.type === 'auction_started' ? 1800 : (reduced ? 800 : 2600) + 5000,
         playerId: event.playerId,
         tile: event.tile,
         message: notice[event.type],
@@ -216,50 +220,53 @@ export function presentationMs(events: GameEvent[]): number {
       ms +
       (e.type === 'dice'
         ? 2000
-        : e.type === 'earthquake'
-          ? 3700
-          : e.type === 'casino_result'
-            ? 3600
-            : [
-                  'auction_started',
-                  'auction_result',
-                  'quest_completed',
-                  'capital_revealed',
-                  'alliance',
-                  'alliance_expired',
-                  'crisis',
-                  'crisis_expired',
-                  'victory_warning',
-                  'duel_result',
-                  'duel_cancelled',
-                  'duel_forfeit',
-                  'insurance',
-                  'insured',
-                  'insured_tile',
-                  'squatter',
-                  'expropriate',
-                  'roaches',
-                  'roaches_expired',
-                  'karma',
-                ].includes(e.type)
-              ? 7600
-              : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) && (e.amount ?? 0) > 0
-                ? 1500
-                : ['turn', 'extra_roll'].includes(e.type)
-                  ? 1400
-                  : e.type === 'move'
-                    ? Math.abs(Number(e.steps ?? 0)) * 270
-                    : e.type === 'tax_notice'
-                      ? 5000
-                      : e.type === 'card'
-                        ? 5500
-                        : ['build', 'purchase', 'buyout'].includes(e.type)
-                          ? 2200
-                          : e.type === 'championship'
-                            ? 1500
-                            : e.type === 'island'
-                              ? 8640
-                              : 0),
+        : e.type === 'auction_started'
+          ? 1800
+          : e.type === 'earthquake'
+            ? 3700
+            : e.type === 'casino_result'
+              ? 3600
+              : [
+                    'auction_started',
+                    'auction_result',
+                    'quest_completed',
+                    'capital_revealed',
+                    'alliance',
+                    'alliance_expired',
+                    'crisis',
+                    'crisis_expired',
+                    'victory_warning',
+                    'duel_result',
+                    'duel_cancelled',
+                    'duel_forfeit',
+                    'insurance',
+                    'insured',
+                    'insured_tile',
+                    'squatter',
+                    'expropriate',
+                    'roaches',
+                    'roaches_expired',
+                    'karma',
+                  ].includes(e.type)
+                ? 7600
+                : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) &&
+                    (e.amount ?? 0) > 0
+                  ? 1500
+                  : ['turn', 'extra_roll'].includes(e.type)
+                    ? 1400
+                    : e.type === 'move'
+                      ? Math.abs(Number(e.steps ?? 0)) * 270
+                      : e.type === 'tax_notice'
+                        ? 5000
+                        : e.type === 'card'
+                          ? 5500
+                          : ['build', 'purchase', 'buyout'].includes(e.type)
+                            ? 2200
+                            : e.type === 'championship'
+                              ? 1500
+                              : e.type === 'island'
+                                ? 8640
+                                : 0),
     0,
   );
 }

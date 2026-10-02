@@ -11,6 +11,7 @@ import {
   legacyConfigV12,
   legacyConfigV13,
   legacyConfigV14,
+  legacyConfigV15,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -25,6 +26,17 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('resumes a v15 save with its board, economy and random sequence intact', () => {
+    const save = newLocal({
+      config: legacyConfigV15 as GameConfig,
+      players: [
+        { id: 'a', name: 'A' },
+        { id: 'b', name: 'B' },
+      ],
+    });
+    data.set('money-tour.local.v15', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+  });
   it('resumes v14 without changing the economy or random stream for Festival artwork', () => {
     const save = newLocal({
       config: legacyConfigV14 as GameConfig,
