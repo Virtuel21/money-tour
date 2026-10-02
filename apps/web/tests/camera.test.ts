@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { cameraBounds, followPlayer } from '../src/board/camera';
+import { cameraBounds, cameraZoom, followPlayer } from '../src/board/camera';
 
 describe('mobile camera', () => {
+  it('applies personal zoom to desktop framing and mobile following without changing the aspect ratio', () => {
+    const desktop = cameraBounds(1920, 1080, false);
+    const mobile = cameraBounds(390, 480, true);
+    expect(cameraZoom(desktop.halfWidth, false, 100, false)).toBe(1);
+    expect(cameraZoom(desktop.halfWidth, false, 150, false)).toBe(1.5);
+    expect(cameraZoom(mobile.halfWidth, true, 150, false)).toBeCloseTo(
+      cameraZoom(mobile.halfWidth, true, 100, false) * 1.5,
+    );
+  });
+  it('keeps every tile in frame when choosing a destination, bidding, or highlighting a collection', () => {
+    expect(cameraZoom(17, true, 160, true)).toBe(1);
+    expect(cameraZoom(17, false, 70, true)).toBe(0.7);
+  });
   it.each([
     [1440, 900],
     [3440, 1440],

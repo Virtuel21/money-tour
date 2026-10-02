@@ -1,6 +1,9 @@
+import { normalizeBoardZoom } from '../board/camera';
+
 export interface ComfortPreferences {
   pace: 'normal' | 'fast';
   largeText: boolean;
+  boardZoom: number;
 }
 export function loadComfort(): ComfortPreferences {
   try {
@@ -8,9 +11,10 @@ export function loadComfort(): ComfortPreferences {
     return {
       pace: value?.pace === 'fast' ? 'fast' : 'normal',
       largeText: value?.largeText === true,
+      boardZoom: normalizeBoardZoom(value?.boardZoom),
     };
   } catch {
-    return { pace: 'normal', largeText: false };
+    return { pace: 'normal', largeText: false, boardZoom: 100 };
   }
 }
 export function saveComfort(value: ComfortPreferences) {

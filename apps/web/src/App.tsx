@@ -7,6 +7,7 @@ import { BuildingIllustration } from './game/BuildingIllustration';
 import { architectureForCity, architectureLabels } from './game/architecture';
 import { EventCelebration } from './game/EventCelebration';
 import { loadComfort, saveComfort } from './game/comfort';
+import { MIN_BOARD_ZOOM, MAX_BOARD_ZOOM, normalizeBoardZoom } from './board/camera';
 import { ContextTip } from './game/ContextTip';
 import { GameResults } from './game/GameResults';
 import { rematchOptions } from './game/gameStats';
@@ -718,7 +719,13 @@ export default function App() {
                 <b>∞ POSSIBILITÉS</b>
               </span>
               <Suspense fallback={<div className="board-shell">Préparation de l’archipel…</div>}>
-                <Board state={demo} onTile={setSelected} reducedMotion demo />
+                <Board
+                  state={demo}
+                  onTile={setSelected}
+                  reducedMotion
+                  demo
+                  zoomPercent={comfort.boardZoom}
+                />
               </Suspense>
               <div className="map-caption">
                 <span>✦ Créé pour les bons moments</span>
@@ -943,6 +950,7 @@ export default function App() {
                 <Suspense fallback={<div className="board-shell">Préparation du plateau…</div>}>
                   <Board
                     state={display}
+                    zoomPercent={comfort.boardZoom}
                     onReady={() => setBoardReady(true)}
                     auctionTile={current.auction?.tile}
                     strategicTiles={strategicTiles}
@@ -1507,6 +1515,69 @@ export default function App() {
         {modal === 'settings' && (
           <Modal title="Votre confort de voyage" onClose={() => setModal(null)}>
             <div className="comfort-options">
+              <section className="board-zoom-setting" aria-label="Réglage du zoom">
+                <div className="board-zoom-heading">
+                  <label htmlFor="board-zoom">Zoom du plateau</label>
+                  <output htmlFor="board-zoom">{comfort.boardZoom} %</output>
+                </div>
+                <div className="board-zoom-controls">
+                  <button
+                    type="button"
+                    aria-label="Réduire le zoom"
+                    disabled={comfort.boardZoom <= MIN_BOARD_ZOOM}
+                    onClick={() =>
+                      setComfort((old) => ({
+                        ...old,
+                        boardZoom: normalizeBoardZoom(old.boardZoom - 5),
+                      }))
+                    }
+                  >
+                    −
+                  </button>
+                  <input
+                    id="board-zoom"
+                    type="range"
+                    min={MIN_BOARD_ZOOM}
+                    max={MAX_BOARD_ZOOM}
+                    step="5"
+                    value={comfort.boardZoom}
+                    aria-valuetext={`${comfort.boardZoom} %`}
+                    aria-describedby="board-zoom-help"
+                    onChange={(e) =>
+                      setComfort((old) => ({
+                        ...old,
+                        boardZoom: normalizeBoardZoom(Number(e.target.value)),
+                      }))
+                    }
+                  />
+                  <button
+                    type="button"
+                    aria-label="Augmenter le zoom"
+                    disabled={comfort.boardZoom >= MAX_BOARD_ZOOM}
+                    onClick={() =>
+                      setComfort((old) => ({
+                        ...old,
+                        boardZoom: normalizeBoardZoom(old.boardZoom + 5),
+                      }))
+                    }
+                  >
+                    +
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  className="secondary board-zoom-reset"
+                  disabled={comfort.boardZoom === 100}
+                  onClick={() => setComfort((old) => ({ ...old, boardZoom: 100 }))}
+                >
+                  Revenir à 100 %
+                </button>
+                <p id="board-zoom-help">
+                  Réglage personnel, mémorisé sur cet appareil. Le zoom s’applique au plateau et au
+                  suivi du pion. Une vue complète est conservée pour les enchères et le repérage des
+                  cases.
+                </p>
+              </section>
               <label className="field">
                 Rythme des animations
                 <select
