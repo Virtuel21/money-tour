@@ -267,6 +267,11 @@ export function createGame(
     )
       throw new Error('Team games require two teams of two players.');
   }
+  if (
+    options.presentationPace !== undefined &&
+    !['normal', 'fast'].includes(options.presentationPace)
+  )
+    throw new Error('Invalid presentation pace.');
   const durationMs = options.durationMs ?? config.durationMs;
   if (!Number.isSafeInteger(durationMs) || durationMs <= 0)
     throw new Error('Duration must be a positive integer.');
@@ -280,6 +285,7 @@ export function createGame(
     if (tile.type === 'city' || tile.type === 'resort')
       properties[tile.id] = { ownerId: null, level: 0, championships: 0 };
   const state: GameState = {
+    ...(options.presentationPace ? { presentationPace: options.presentationPace } : {}),
     version: config.version,
     config,
     mode,
@@ -584,6 +590,7 @@ function credit(
   amount: number,
   events: GameEvent[],
   reason: string,
+  debtReason?: string,
 ): void {
   if (playerId) {
     const player = owner(state, playerId);
@@ -596,6 +603,7 @@ function credit(
     tile: activePlayer(state).position,
     amount,
     reason,
+    ...(debtReason ? { debtReason } : {}),
   });
   if (playerId && ['rent', 'attack', 'bankruptcy'].includes(reason))
     shareGain(state, playerId, amount, events);
@@ -634,6 +642,7 @@ function bankrupt(state: GameState, player: Player, events: GameEvent[]): void {
     Math.min(available, debt?.amount ?? 0),
     events,
     'bankruptcy',
+    debt?.reason,
   );
   player.cash = 0;
   releaseAssets(state, player);
@@ -1686,6 +1695,8 @@ function opportunity(state: GameState, tileId: number): number {
 
 export function validateState(state: GameState): string[] {
   const errors: string[] = validateAdventure(state);
+  if (state.presentationPace !== undefined && !['normal', 'fast'].includes(state.presentationPace))
+    errors.push('Invalid presentation pace.');
   const safe = (value: number): boolean => Number.isSafeInteger(value) && value >= 0;
   if (!state.players[state.currentPlayer]) errors.push('Invalid active player index.');
   if (new Set(state.players.map((player) => player.id)).size !== state.players.length)

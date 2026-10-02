@@ -1,3 +1,4 @@
+import { accumulateStats, newGameStats, rematchOptions, type GameStats } from '../game/gameStats';
 import {
   chooseBotAction,
   isLegalPlayerAction,
@@ -50,8 +51,19 @@ export function execute(
     : () => {
         throw new NeedsRandom();
       };
-  if (command.type === 'start') {
-    if (state) throw new Error('Already started');
+  if (command.type === 'start' || command.type === 'rematch') {
+    if (command.type === 'start' && state) throw new Error('Already started');
+    if (command.type === 'rematch') {
+      if (!state?.winner) throw new Error('Game not finished');
+      const expected = rematchOptions(state);
+      // Restoring a human seat from bot control is allowed; table and rules are fixed.
+      expected.players = expected.players.map((p) => ({
+        ...p,
+        bot: command.options.players.find((next) => next.id === p.id)?.bot ?? p.bot,
+      }));
+      if (canonical(expected) !== canonical(command.options))
+        throw new Error('Rematch settings changed');
+    }
     return { state: createGame(command.options, rng), events: [] };
   }
   if (!state) throw new Error('Not started');
@@ -69,6 +81,7 @@ export function needsRandom(state: GameState | null, command: Command): boolean 
   }
 }
 export interface SessionView {
+  stats?: GameStats;
   taunts?: Taunt[];
   state: GameState | null;
   members: Member[];
@@ -104,6 +117,7 @@ export interface SavedSession {
 
 /** All received messages are authenticated and processed in one serial queue. */
 export class Session {
+  stats: GameStats | undefined;
   taunts: Taunt[] = [];
   private tauntTimes = new Map<string, number>();
   state: GameState | null = null;
@@ -152,6 +166,7 @@ export class Session {
   }
   get view(): SessionView {
     return {
+      stats: this.stats,
       taunts: this.taunts,
       state: this.state,
       members: this.members,
@@ -547,7 +562,12 @@ export class Session {
       if (peer) await this.send({ type: 'intent', intent }, peer);
     }
   }
-  async start(count: number, teams: boolean, durationMs: number): Promise<void> {
+  async start(
+    count: number,
+    teams: boolean,
+    durationMs: number,
+    presentationPace: 'normal' | 'fast' = 'normal',
+  ): Promise<void> {
     this.enqueue(async () => {
       if (!this.isHost || this.state) return;
       if (teams) count = 4;
@@ -574,12 +594,41 @@ export class Session {
       await this.propose(
         commandSchema.parse({
           type: 'start',
-          options: { players, mode: teams ? 'teams' : 'free-for-all', durationMs },
+          options: {
+            players,
+            mode: teams ? 'teams' : 'free-for-all',
+            durationMs,
+            presentationPace,
+          },
         }),
       );
     });
   }
+  async rematch(): Promise<void> {
+    this.enqueue(async () => {
+      if (!this.isHost || !this.state?.winner) return;
+      const options = rematchOptions(this.state);
+      options.players = options.players.map((player) => ({
+        ...player,
+        bot: this.members.some((member) => member.id === player.id)
+          ? !this.connected().includes(player.id)
+          : true,
+      }));
+      await this.propose(commandSchema.parse({ type: 'rematch', options }));
+    });
+  }
   private async permitted(command: Command): Promise<boolean> {
+    if (command.type === 'rematch') {
+      if (!this.state?.winner) return false;
+      const previous = rematchOptions(this.state);
+      previous.players = previous.players.map((player) => ({
+        ...player,
+        bot: this.members.some((member) => member.id === player.id)
+          ? (command.options.players.find((p) => p.id === player.id)?.bot ?? true)
+          : true,
+      }));
+      return canonical(previous) === canonical(command.options);
+    }
     if (command.type === 'start')
       return (
         !this.state &&
@@ -601,7 +650,7 @@ export class Session {
       this.blocked ||
       this.busy ||
       this.round ||
-      this.state?.winner ||
+      (this.state?.winner && command.type !== 'rematch') ||
       !(await this.permitted(command))
     )
       return;
@@ -819,6 +868,17 @@ export class Session {
     }
     const result = execute(this.state, frame.command, seed);
     if ((await hash(result.state)) !== frame.result) throw new Error('Hash d’état invalide');
+    this.stats =
+      frame.command.type === 'action' && this.state
+        ? accumulateStats(this.stats, this.state, result.state, result.events)
+        : newGameStats(result.state);
+    if (frame.command.type === 'rematch') {
+      this.taunts = [];
+      this.tauntTimes.clear();
+      this.presentationUntil = 0;
+      this.exclusions.clear();
+      this.lastTick = this.now();
+    }
     this.state = result.state;
     if (
       frame.command.type === 'action' &&
@@ -829,7 +889,9 @@ export class Session {
     this.events = result.events;
     if (live && result.events.length) {
       this.presentationUntil =
-        Math.max(this.now(), this.presentationUntil) + presentationMs(result.events) + 100;
+        Math.max(this.now(), this.presentationUntil) +
+        presentationMs(result.events, this.state.presentationPace ?? 'normal') +
+        100;
       this.lastBot = this.presentationUntil;
     }
     this.head = frame.result;

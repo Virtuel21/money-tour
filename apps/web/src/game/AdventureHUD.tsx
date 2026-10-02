@@ -10,10 +10,13 @@ import {
 } from '@money-tour/engine';
 import { money } from './local';
 import { estateGroups } from './estate';
+import { GameIcon } from './GameIcon';
 export function AdventureBanner({ state }: { state: GameState }) {
   return (
     <section className="adventure-banner" aria-label="Règle spéciale de cette partie">
-      <span>✦ CETTE PARTIE</span>
+      <span>
+        <GameIcon name="sparkles" /> CETTE PARTIE
+      </span>
       <strong>{adventureText(state)}</strong>
       {state.adventure && (
         <small>
@@ -43,7 +46,9 @@ export function PrivateQuest({
     <section className="private-quest" aria-label="Mon objectif secret">
       {opened ? (
         <>
-          <strong>🔒 {rule.title}</strong>
+          <strong>
+            <GameIcon name="lock" /> {rule.title}
+          </strong>
           <span>
             {Math.min(q.progress, rule.goal)} / {rule.goal} · Récompense{' '}
             {money(scaledAmount(state.config, 100000))}
@@ -54,7 +59,7 @@ export function PrivateQuest({
         </>
       ) : (
         <button aria-expanded={false} onClick={() => setOpened(true)}>
-          🔒 {player.name} · voir mon objectif secret
+          <GameIcon name="lock" /> {player.name} · voir mon objectif secret
         </button>
       )}
     </section>
@@ -88,13 +93,22 @@ export function PlayerInventory({
                   title={`${t.name} · loyer ${money(getRent(state, t.id))}`}
                 >
                   <span>
-                    {t.type === 'resort' ? '🏝' : state.properties[t.id]!.level === 4 ? '▥' : '⌂'}
+                    <GameIcon
+                      name={
+                        t.type === 'resort'
+                          ? 'island'
+                          : state.properties[t.id]!.level === state.config.hotelLevel
+                            ? 'hotel'
+                            : 'house'
+                      }
+                    />
                   </span>
                   <b>{t.name}</b>
                   <small>{money(getRent(state, t.id), true)}</small>
                   {!!state.properties[t.id]!.roachTurns && (
                     <span className="roach-badge">
-                      🪳 {state.properties[t.id]!.roachTurns} tours · −50 %
+                      <GameIcon name="bug" /> Cafards · {state.properties[t.id]!.roachTurns} tours ·
+                      −50 %
                     </span>
                   )}
                 </button>
@@ -107,7 +121,7 @@ export function PlayerInventory({
       <div className="bonus-tokens" aria-label={`Bonus et malus de ${player.name}`}>
         {playerBonuses(state, player).map((bonus, index) => (
           <button key={index} onClick={() => onBonus?.(bonus)} title={bonus.description}>
-            {bonus.title}
+            <GameIcon name={bonus.icon ?? 'info'} /> {bonus.title}
           </button>
         ))}
       </div>

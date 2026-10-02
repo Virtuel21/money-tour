@@ -1,0 +1,147 @@
+.app {
+  --ui-text-scale: 1;
+}
+.app.text-large .modal {
+  font-size: 1.125rem;
+}
+.app.text-large .modal p,
+.app.text-large .modal label {
+  font-size: 1.05rem;
+}
+.app.text-large .purchase-rule,
+.app.text-large .purchase-wallet {
+  font-size: 0.95rem;
+}
+.comfort-options {
+  display: grid;
+  gap: 1rem;
+}
+.comfort-options select {
+  min-height: 44px;
+  width: 100%;
+}
+.comfort-options .field {
+  margin: 0;
+}
+.property-hero > .building-illustration {
+  width: 160px;
+  height: 125px;
+}
+.strategy-board-note {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 7;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 95%;
+  padding: 0.4rem 0.7rem;
+  border-radius: 12px;
+  background: #fff6d9;
+  color: #173c4a;
+  box-shadow: 0 3px 14px #173c4a25;
+}
+.strategy-board-note button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.4rem;
+}
+.game-layout .board-controls .strategy-button {
+  background: #fff2c4;
+}
+@media (max-width: 680px) {
+  .strategy-board-note {
+    bottom: 75px;
+    width: max-content;
+    max-width: calc(100% - 20px);
+    font-size: 0.85rem;
+  }
+  .game-layout .board-controls {
+    flex-wrap: wrap;
+  }
+  .game-layout .board-controls > button {
+    flex: 1 1 28%;
+  }
+  .app.text-large .modal {
+    width: min(96vw, 560px);
+  }
+}
+
+@media (max-width: 999px) and (orientation: portrait) {
+  .game-layout .board-controls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .game-layout .board-controls button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    min-height: 44px;
+    font-size: 10px;
+    line-height: 1.1;
+  }
+  .game-layout .board-controls button .game-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+.app.text-large .property-insight,
+.app.text-large .strategy-progress {
+  font-size: 1.06rem;
+}
+
+@media (min-width: 1000px) and (min-height: 850px) {
+  .game-layout .board-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 300px;
+    top: 53%;
+    right: 18px;
+  }
+  .game-layout .board-controls button {
+    min-height: 40px;
+    padding: 5px;
+    font-size: 12px;
+  }
+}
+
+.routine-notice {
+  position: fixed;
+  z-index: 40;
+  top: 6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(30rem, calc(100vw - 1rem));
+  padding: 0.65rem;
+  background: #fff9e9;
+  color: #173c4a;
+  border: 1px solid #a8c8c5;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px #173c4a25;
+}
+.routine-notice p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+.routine-notice button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0.35rem;
+}
+.strategy-button small {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 999px) and (orientation: landscape) {
+  .game-layout .board-controls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .game-layout .board-controls button {
+    min-width: 0;
+    font-size: 10px;
+  }
+}

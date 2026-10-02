@@ -1,0 +1,170 @@
+.strategy-progress,
+.property-insight {
+  --strategy-ink: #173d4d;
+  color: var(--strategy-ink);
+  background: #fffaf0;
+  border: 1px solid #d4cab4;
+  border-radius: 16px;
+  padding: 14px;
+  font-size: calc(14px * var(--ui-text-scale, 1));
+  line-height: 1.45;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.strategy-progress header,
+.property-insight header {
+  display: grid;
+  gap: 4px;
+}
+.strategy-progress header > span {
+  font-size: 0.88em;
+}
+.strategy-progress header > strong {
+  font-size: 1.18em;
+}
+.strategy-meter {
+  height: 7px;
+  border-radius: 8px;
+  background: #dfdfd3;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.strategy-meter i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #247864;
+}
+.strategy-money,
+.property-insight dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+.strategy-money dt,
+.property-insight dt {
+  font-size: 0.86em;
+}
+.strategy-money dd,
+.property-insight dd {
+  margin: 2px 0 0;
+  font-size: 1.25em;
+  font-weight: 800;
+}
+.strategy-progress .strategy-note {
+  font-size: 0.88em;
+  margin: 8px 0;
+}
+.strategy-progress summary {
+  min-height: 44px;
+  align-content: center;
+  cursor: pointer;
+  font-weight: 700;
+}
+.strategy-progress summary:focus-visible {
+  outline: 3px solid #236a97;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.strategy-collections {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.strategy-collections > li {
+  border-top: 1px solid #e1d9c8;
+  padding: 8px 0;
+}
+.strategy-collection-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.strategy-collection-title > strong {
+  flex: 1;
+}
+.strategy-collection-title > span {
+  font-size: 0.86em;
+}
+.strategy-progress button,
+.property-insight button {
+  font: inherit;
+  cursor: pointer;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid #d4cab4;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--strategy-ink);
+}
+.strategy-collections p {
+  margin: 4px 0 0;
+}
+.strategy-progress .strategy-destination {
+  padding: 4px 5px;
+  margin: 3px 2px;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.strategy-destination small {
+  font-size: 0.88em;
+}
+.strategy-alternatives {
+  margin-top: 8px;
+}
+.property-insight {
+  margin: 12px 0;
+}
+.property-insight header span {
+  font-size: 0.9em;
+}
+.property-insight p {
+  font-size: 0.93em;
+  margin: 8px 0;
+}
+.property-modifiers {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  margin: 8px 0;
+}
+.property-modifiers li {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+.property-collection-value {
+  border-top: 1px solid #e1d9c8;
+  padding-top: 10px;
+}
+.property-neighbours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mobile-pocket .strategy-progress {
+  margin-top: 8px;
+}
+.mobile-pocket nav {
+  flex-wrap: wrap;
+}
+.mobile-pocket nav button {
+  min-height: 44px;
+}
+.mobile-tile-list .tile-collection-label {
+  display: block;
+  font-size: 12px;
+  color: #52626a;
+}
+@media (max-width: 380px) {
+  .strategy-progress,
+  .property-insight {
+    padding: 10px;
+  }
+}

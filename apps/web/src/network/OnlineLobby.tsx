@@ -22,7 +22,13 @@ export default function OnlineLobby({
   onView: (view: SessionView) => void;
   onLeave: () => void;
   autoCreate?: boolean;
-  defaults?: { name: string; count: number; teams: boolean; minutes: number };
+  defaults?: {
+    name: string;
+    count: number;
+    teams: boolean;
+    minutes: number;
+    pace?: 'normal' | 'fast';
+  };
 }) {
   const [invited] = useState(() => invitationCode(location.hash));
   const [code, setCode] = useState(
@@ -39,6 +45,7 @@ export default function OnlineLobby({
   const [turnUrl, setTurnUrl] = useState(''),
     [turnUser, setTurnUser] = useState(''),
     [turnPassword, setTurnPassword] = useState('');
+  const [pace, setPace] = useState<'normal' | 'fast'>(defaults?.pace ?? 'normal');
   const session = useRef<Session | null>(null),
     dialog = useRef<HTMLDialogElement>(null);
   const attempt = useRef(0);
@@ -400,6 +407,16 @@ export default function OnlineLobby({
                       </select>
                     </label>
                     <DurationPicker value={minutes} onChange={setMinutes} />
+                    <label className="field">
+                      Rythme partagé
+                      <select
+                        value={pace}
+                        onChange={(e) => setPace(e.target.value === 'fast' ? 'fast' : 'normal')}
+                      >
+                        <option value="normal">Animations normales</option>
+                        <option value="fast">Animations rapides</option>
+                      </select>
+                    </label>
                   </div>
                   <label className="toggle">
                     <input
@@ -416,7 +433,7 @@ export default function OnlineLobby({
                   <button
                     className="primary"
                     disabled={view.busy || view.blocked || !validMinutes(minutes)}
-                    onClick={() => void session.current?.start(count, teams, minutes * 60000)}
+                    onClick={() => void session.current?.start(count, teams, minutes * 60000, pace)}
                   >
                     {view.busy ? 'Préparation du plateau…' : 'Lancer la partie'}
                   </button>

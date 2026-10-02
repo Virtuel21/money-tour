@@ -3,6 +3,9 @@ import { getPropertyValue, type GameState } from '@money-tour/engine';
 import { ActionClock } from './ActionClock';
 import { money } from './local';
 import { tileTitle } from './tileTitle';
+import { collectionLabel } from './strategy';
+import { GameIcon } from './GameIcon';
+import './strategy.css';
 
 export function MobileTiles({
   state,
@@ -29,6 +32,9 @@ export function MobileTiles({
           <button key={t.id} onClick={() => onTile(t.id)}>
             <i style={{ background: t.color ?? '#e6b94a' }} />
             {tileTitle(t)}
+            {(t.type === 'city' || t.type === 'resort') && (
+              <span className="tile-collection-label">{collectionLabel(t)}</span>
+            )}
             <small>
               {selling
                 ? 'Vendre · ' +
@@ -50,7 +56,7 @@ export function MobileTiles({
             aria-label="Cases précédentes"
             onClick={() => setPage(index - 1)}
           >
-            ←
+            <GameIcon name="arrowLeft" />
           </button>
           <span>
             {index + 1} / {pages}
@@ -60,7 +66,7 @@ export function MobileTiles({
             aria-label="Cases suivantes"
             onClick={() => setPage(index + 1)}
           >
-            →
+            <GameIcon name="arrowRight" />
           </button>
         </div>
       )}

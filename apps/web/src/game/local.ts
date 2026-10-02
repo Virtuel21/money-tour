@@ -1,3 +1,4 @@
+import { accumulateStats, newGameStats, validGameStats, type GameStats } from './gameStats';
 import {
   config,
   legacyConfig,
@@ -25,6 +26,7 @@ import {
 } from '@money-tour/engine';
 
 export interface LocalSave {
+  stats?: GameStats;
   history?: string[];
   version: 1;
   seed: string;
@@ -33,14 +35,22 @@ export interface LocalSave {
 const key = 'money-tour.local.v17';
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
-  return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
+  const state = createGame({ ...options, seed }, createRng(seed));
+  return { version: 1, seed, state, stats: newGameStats(state) };
 }
 export function applyLocal(
   save: LocalSave,
   action: GameAction,
 ): { save: LocalSave; result: GameResult } {
   const result = reduceGame(save.state, action, createRng(`${save.seed}:${save.state.seq}`));
-  return { save: { ...save, state: result.state }, result };
+  return {
+    save: {
+      ...save,
+      state: result.state,
+      stats: accumulateStats(save.stats, save.state, result.state, result.events),
+    },
+    result,
+  };
 }
 export function loadLocal(): LocalSave | null {
   try {
@@ -61,6 +71,7 @@ export function loadLocal(): LocalSave | null {
       localStorage.getItem('money-tour.local.v4');
     if (!raw) return null;
     const save = JSON.parse(raw) as LocalSave;
+    if (!validGameStats(save.stats) || save.stats.lastSeq !== save.state?.seq) delete save.stats;
     if (save?.version === 1 && save.state?.config?.version === 4) {
       const oldConfig: GameConfig = { ...legacyConfig, version: 4 } as GameConfig;
       delete oldConfig.championshipDuration;

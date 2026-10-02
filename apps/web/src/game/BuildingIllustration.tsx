@@ -1,11 +1,36 @@
+import { architectureAsset } from './architecture';
 /** Original vector illustrations: crisp at phone and large desktop sizes. */
 export function BuildingIllustration({
   level,
   island = false,
+  cityName,
 }: {
   level: number;
   island?: boolean;
+  cityName?: string;
 }) {
+  if (cityName && !island && level > 0) {
+    const count = level === 4 ? 1 : level;
+    return (
+      <svg
+        className="building-illustration regional-illustration"
+        viewBox="0 0 180 132"
+        aria-hidden="true"
+        focusable="false"
+      >
+        {Array.from({ length: count }, (_, i) => (
+          <image
+            key={i}
+            href={architectureAsset(cityName, level === 4)}
+            x={count === 1 ? 24 : i * 44}
+            y={count === 1 ? 0 : i % 2 ? 8 : 22}
+            width={count === 1 ? 132 : 92}
+            height={count === 1 ? 132 : 92}
+          />
+        ))}
+      </svg>
+    );
+  }
   const houses =
     level === 1
       ? [[62, 38]]

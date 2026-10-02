@@ -1,4 +1,15 @@
 import { useAuctionDialog } from './game/useAuctionDialog';
+import { StrategyProgress } from './game/StrategyProgress';
+import { publicVictoryProgress } from './game/strategy';
+import { PropertyInsight } from './game/PropertyInsight';
+import { GameIcon } from './game/GameIcon';
+import { BuildingIllustration } from './game/BuildingIllustration';
+import { architectureForCity, architectureLabels } from './game/architecture';
+import { EventCelebration } from './game/EventCelebration';
+import { loadComfort, saveComfort } from './game/comfort';
+import { ContextTip } from './game/ContextTip';
+import { GameResults } from './game/GameResults';
+import { rematchOptions } from './game/gameStats';
 import { useAuctionReveal } from './game/useAuctionReveal';
 import { useSpectatorDialog } from './game/useSpectatorDialog';
 import { victoryThreats } from '@money-tour/engine';
@@ -26,9 +37,7 @@ import {
   createGame,
   getLegalActions,
   getDecisionPlayerId,
-  getNetWorth,
   getPropertyValue,
-  getRent,
   adventureText,
   reservedCity,
   type GameAction,
@@ -106,7 +115,7 @@ function Modal({
         <h2>{title}</h2>
         {onClose && (
           <button aria-label="Fermer" className="icon-button" onClick={onClose}>
-            ×
+            <GameIcon name="close" />
           </button>
         )}
       </div>
@@ -140,6 +149,10 @@ for (const [id, ownerId, level] of [
 export default function App() {
   const mobile = useMobile();
   const [overview, setOverview] = useState(false);
+  const [strategicTiles, setStrategicTiles] = useState<number[]>([]);
+  const [comfort, setComfort] = useState(loadComfort);
+  const [journey, setJourney] = useState(0);
+  useEffect(() => saveComfort(comfort), [comfort]);
   const [boardReady, setBoardReady] = useState(false);
   const [inspectedOwner, setInspectedOwner] = useState<string | null>(null);
   const [collapsedPlayers, setCollapsedPlayers] = useState<Record<string, boolean>>({});
@@ -158,6 +171,7 @@ export default function App() {
     | 'pocket'
     | 'bonus'
     | 'journal'
+    | 'strategy'
     | 'taunt'
     | null
   >(location.hash.includes('room=') ? 'online' : null);
@@ -217,12 +231,19 @@ export default function App() {
   const [history, setHistory] = useState<string[]>(save?.history ?? []),
     [notice, setNotice] = useState('');
   const dispatchRef = useRef<(action: GameAction) => void>(() => {});
-  const cinema = usePresentation(save?.state ?? demo, reduced, !!online);
+  const cinema = usePresentation(
+    save?.state ?? demo,
+    reduced,
+    !!online,
+    online ? (online.state?.presentationPace ?? 'normal') : comfort.pace,
+    paused,
+  );
   const rolling = cinema.busy;
   const turnKey = (online?.state ?? save?.state)?.turn;
   useEffect(() => {
     setOverview(false);
     setInspectedOwner(null);
+    setStrategicTiles([]);
   }, [turnKey]);
   const display = cinema.frame.state;
   useEffect(() => {
@@ -242,15 +263,35 @@ export default function App() {
     setPaused(true);
     setSelected(null);
   };
+  const rematch = () => {
+    if (!current.winner) return;
+    if (onlineSession.current) {
+      void onlineSession.current.rematch();
+      return;
+    }
+    const next = newLocal({ ...rematchOptions(current), presentationPace: comfort.pace });
+    cinema.reset(next.state);
+    setSave(next);
+    setHistory(['Nouveau voyage ! ' + adventureText(next.state)]);
+    setJourney((value) => value + 1);
+    setNotice('');
+    setPaused(false);
+    setScreen('game');
+    setSelected(null);
+    setStrategicTiles([]);
+    setModal(null);
+    setDismissedOffer('');
+    setBuyoutOfferKey('');
+  };
   const togglePause = () => {
     if (online) return;
     sound.current?.stopEffects();
-    cinema.reset(save?.state ?? demo);
     setPaused((value) => !value);
   };
   const current =
     screen === 'game' ? (rolling ? display : (online?.state ?? save?.state ?? demo)) : demo;
   const active = current.players[current.currentPlayer]!;
+  const victoryProgress = publicVictoryProgress(current, online?.self ?? active.id);
   const warnings = victoryThreats(current);
   const humans = current.players.filter((p) => !p.bot && !p.eliminated);
   const canTaunt =
@@ -352,6 +393,7 @@ export default function App() {
       })),
       mode: mode === 'teams' ? 'teams' : 'free-for-all',
       durationMs: minutes * 60000,
+      presentationPace: comfort.pace,
     });
     cinema.reset(next.state);
     setSave(next);
@@ -437,7 +479,9 @@ export default function App() {
     screen !== 'game' || interactionDisabled,
     online?.self ?? save?.seed,
   );
-  const offerKey = [save?.seed, active.id, current.turn, active.position].join(':');
+  const offerKey = [online ? journey : save?.seed, active.id, current.turn, active.position].join(
+    ':',
+  );
   const eligibleOffer =
     screen === 'game' && !interactionDisabled && !modal
       ? purchaseOffer(current, online?.self, buyoutOfferKey === offerKey)
@@ -508,7 +552,8 @@ export default function App() {
       value={{ state: screen === 'game' ? current : null, held: paused || rolling }}
     >
       <div
-        className="app"
+        className={`app${comfort.largeText ? ' text-large' : ''}`}
+        style={{ '--ui-text-scale': comfort.largeText ? 1.15 : 1 } as React.CSSProperties}
         onPointerDownCapture={() => void sound.current?.unlock()}
         onKeyDownCapture={() => void sound.current?.unlock()}
       >
@@ -533,7 +578,7 @@ export default function App() {
               aria-label="Réglages"
               onClick={() => setModal('settings')}
             >
-              ⚙
+              <GameIcon name="settings" />
             </button>
           </nav>
         </header>
@@ -730,7 +775,7 @@ export default function App() {
                     : online
                       ? 'SALON EN LIGNE'
                       : 'PARTIE LOCALE'}{' '}
-                  · TOUR {current.turn}
+                  · TOUR DE JEU {current.turn}
                 </span>
                 <h1>Le tour de la fortune</h1>
               </div>
@@ -740,10 +785,10 @@ export default function App() {
                   aria-label="Réglages de la partie"
                   onClick={() => setModal('settings')}
                 >
-                  ⚙
+                  <GameIcon name="settings" />
                 </button>
                 <span className="clock" aria-label="Temps restant">
-                  ◷ {duration(current.durationMs - current.elapsedMs)}
+                  <GameIcon name="clock" /> {duration(current.durationMs - current.elapsedMs)}
                 </span>
                 <button
                   className="subtle"
@@ -763,7 +808,7 @@ export default function App() {
                   aria-label="Quitter la partie"
                   onClick={() => setModal('leave')}
                 >
-                  ↪
+                  <GameIcon name="exit" />
                 </button>
               </div>
             </div>
@@ -826,7 +871,7 @@ export default function App() {
                               : `Assurance : ${current.config.board[p.insurance.tile]?.name}`
                           }
                         >
-                          🛡
+                          <GameIcon name="shield" />
                         </span>
                       )}
                       <small className="player-seat-label">
@@ -844,9 +889,9 @@ export default function App() {
                   {(mobile || !collapsedPlayers[p.id]) && (
                     <>
                       <span className="property-count" title="Propriétés">
-                        ⌂{' '}
+                        <GameIcon name="house" />{' '}
                         {Object.values(current.properties).filter((v) => v.ownerId === p.id).length}{' '}
-                        · Tour du plateau {p.laps + 1}
+                        · {p.laps} tour(s) du plateau terminé(s)
                       </span>
                       {p.islandTurns !== null && !p.eliminated && (
                         <span
@@ -900,6 +945,7 @@ export default function App() {
                     state={display}
                     onReady={() => setBoardReady(true)}
                     auctionTile={current.auction?.tile}
+                    strategicTiles={strategicTiles}
                     onPlayer={
                       canTaunt
                         ? (id) => {
@@ -914,7 +960,13 @@ export default function App() {
                     }
                     taunt={visibleTaunt ?? undefined}
                     mobile={mobile}
-                    overview={overview || paused || Boolean(inspectedOwner) || !!current.auction}
+                    overview={
+                      overview ||
+                      paused ||
+                      Boolean(inspectedOwner) ||
+                      !!current.auction ||
+                      strategicTiles.length > 0
+                    }
                     inspectedOwner={inspectedOwner}
                     self={online?.self}
                     insuranceFocus={
@@ -931,6 +983,22 @@ export default function App() {
                     reducedMotion={reduced || paused}
                   />
                 </Suspense>
+                {strategicTiles.length > 0 && (
+                  <div className="strategy-board-note" role="status">
+                    <GameIcon name="target" />
+                    <span>{strategicTiles.length} cases repérées</span>
+                    <button aria-label="Effacer le repérage" onClick={() => setStrategicTiles([])}>
+                      <GameIcon name="close" />
+                    </button>
+                  </div>
+                )}
+                <EventCelebration
+                  key={online ? journey : save?.seed}
+                  cue={cinema.frame.cue}
+                  state={current}
+                  reduced={reduced}
+                  paused={paused}
+                />
               </div>
               <div className="roll-status" role="status">
                 {inspectedOwner
@@ -959,8 +1027,19 @@ export default function App() {
                 )}
               </div>
               <div className="board-controls">
-                <button onClick={() => setModal('journal')}>Journal des actions</button>
-                <button onClick={() => setModal('tiles')}>
+                <button className="strategy-button icon-label" onClick={() => setModal('strategy')}>
+                  <GameIcon name="target" />
+                  Ma stratégie{' '}
+                  <small>
+                    {victoryProgress.completed}/{victoryProgress.target}
+                  </small>
+                </button>
+                <button className="icon-label" onClick={() => setModal('journal')}>
+                  <GameIcon name="journal" />
+                  Journal des actions
+                </button>
+                <button className="icon-label" onClick={() => setModal('tiles')}>
+                  <GameIcon name="map" />
                   {mobile && options.length && !interactionDisabled
                     ? 'Choisir une case'
                     : 'Explorer les cases'}
@@ -979,16 +1058,27 @@ export default function App() {
                           ? 'Suivre mon pion'
                           : 'Vue globale'}
                     </button>
-                    <button onClick={() => setModal('pocket')}>Mon carnet</button>
+                    <button className="icon-label" onClick={() => setModal('pocket')}>
+                      <GameIcon name="book" />
+                      Mon carnet
+                    </button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => setInspectedOwner(null)}>Vue globale</button>
+                    <button className="icon-label" onClick={() => setInspectedOwner(null)}>
+                      <GameIcon name="map" />
+                      Vue globale
+                    </button>
                   </>
                 )}
               </div>
             </section>
             <aside className="game-sidebar">
+              <ContextTip
+                state={current}
+                self={online?.self ?? active.id}
+                disabled={rolling || paused || !!modal || !!offer || !!tile}
+              />
               {current.phase === 'championship' && !interactionDisabled && (
                 <section className="mondial-picker" aria-label="Choisir la propriété du Festival">
                   <strong>🎸 Où accueillir le Festival ?</strong>
@@ -1158,7 +1248,7 @@ export default function App() {
                         >
                           <span>{actionLabel(a)}</span>
                           <ActionClock />
-                          {a.type === 'roll' && <span>⚄</span>}
+                          {a.type === 'roll' && <GameIcon name="dice" />}
                         </button>
                       ))}
                 </div>
@@ -1270,9 +1360,34 @@ export default function App() {
               key={current.turn}
               state={current}
               self={online?.self}
+              onHighlight={(ids) => {
+                setStrategicTiles(ids);
+                setOverview(true);
+                setInspectedOwner(null);
+                setModal(null);
+              }}
               onTile={(id) => {
                 setModal(null);
                 chooseTile(id);
+              }}
+            />
+          </Modal>
+        )}
+        {modal === 'strategy' && (
+          <Modal title="Le cap vers la victoire" onClose={() => setModal(null)}>
+            <StrategyProgress
+              state={current}
+              playerId={online?.self ?? active.id}
+              expanded
+              onHighlight={(ids) => {
+                setStrategicTiles(ids);
+                setOverview(true);
+                setInspectedOwner(null);
+                setModal(null);
+              }}
+              onTile={(id) => {
+                setModal(null);
+                setSelected(id);
               }}
             />
           </Modal>
@@ -1391,6 +1506,37 @@ export default function App() {
         )}
         {modal === 'settings' && (
           <Modal title="Votre confort de voyage" onClose={() => setModal(null)}>
+            <div className="comfort-options">
+              <label className="field">
+                Rythme des animations
+                <select
+                  value={online ? (online.state?.presentationPace ?? 'normal') : comfort.pace}
+                  disabled={!!online}
+                  onChange={(e) =>
+                    setComfort((old) => ({
+                      ...old,
+                      pace: e.target.value === 'fast' ? 'fast' : 'normal',
+                    }))
+                  }
+                >
+                  <option value="normal">Normal · prendre le temps de voir</option>
+                  <option value="fast">Rapide · aller à l’essentiel</option>
+                </select>
+              </label>
+              <p>
+                {online
+                  ? 'En ligne, le rythme est choisi par l’hôte avant la partie et partagé par tous.'
+                  : 'Le mode rapide raccourcit les animations. Le temps pour décider reste identique.'}
+              </p>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={comfort.largeText}
+                  onChange={(e) => setComfort((old) => ({ ...old, largeText: e.target.checked }))}
+                />
+                Textes d’interface agrandis
+              </label>
+            </div>
             <label className="toggle">
               <input
                 type="checkbox"
@@ -1626,7 +1772,26 @@ export default function App() {
           !paused &&
           !cinema.dismissed &&
           cinema.frame.cue.kind === 'notice' &&
-          cinema.frame.cue.reason !== 'auction_started' && (
+          cinema.frame.cue.reason !== 'auction_started' &&
+          (['insured_tile', 'alliance_expired', 'crisis_expired', 'roaches_expired'].includes(
+            cinema.frame.cue.reason ?? '',
+          ) ? (
+            <div className="routine-notice" role="status">
+              <GameIcon name="info" />
+              <p>{cinema.frame.cue.message}</p>
+              <button
+                onClick={() => {
+                  cinema.dismiss();
+                  setModal('journal');
+                }}
+              >
+                Journal
+              </button>
+              <button aria-label="Masquer l’information" onClick={cinema.dismiss}>
+                <GameIcon name="close" />
+              </button>
+            </div>
+          ) : (
             <Modal
               onClose={cinema.dismiss}
               className={cinema.frame.cue.reason === 'earthquake' ? 'earthquake-modal' : ''}
@@ -1657,7 +1822,7 @@ export default function App() {
                 Continuer
               </button>
             </Modal>
-          )}
+          ))}
         {screen === 'game' && !interactionDisabled && !modal && current.phase === 'rent' && (
           <Modal title="Un loyer… ou votre carte Squatteur ?">
             <p>
@@ -1753,10 +1918,7 @@ export default function App() {
           <Modal title={tileTitle(tile)} onClose={() => setSelected(null)}>
             <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
               {tile.type === 'city' ? (
-                <span
-                  className={`property-art ${property?.level === 4 ? 'hotel-art' : ''}`}
-                  aria-hidden="true"
-                />
+                <BuildingIllustration level={property?.level || 1} cityName={tile.name} />
               ) : (
                 <span>{tile.type === 'resort' ? '☀' : '✦'}</span>
               )}
@@ -1768,19 +1930,23 @@ export default function App() {
                     : 'Une escale spéciale de votre voyage.'}
               </p>
             </div>
+            {tile.type === 'city' && (
+              <p className="architecture-name">
+                {architectureLabels[architectureForCity(tile.name)]}
+              </p>
+            )}
+            {!!tile.price && (
+              <PropertyInsight
+                state={current}
+                tileId={tile.id}
+                playerId={online?.self ?? active.id}
+                onTile={setSelected}
+              />
+            )}
             {!!property?.roachTurns && (
               <p className="roach-warning">
                 🪳 Hôtel de {tile.name} infesté · loyer −50 % · encore {property.roachTurns} retours
                 du tour de son propriétaire.
-              </p>
-            )}
-            {tile.group && (
-              <p className="group-detail">
-                Groupe {tile.group.slice(1)} ·{' '}
-                {current.config.board
-                  .filter((t) => t.group === tile.group)
-                  .map((t) => t.name)
-                  .join(' · ')}
               </p>
             )}
             {tile.price ? (
@@ -1789,14 +1955,6 @@ export default function App() {
                   <div>
                     <small>Terrain</small>
                     <strong>{money(tile.price)}</strong>
-                  </div>
-                  <div>
-                    <small>Loyer actuel</small>
-                    <strong>
-                      {money(
-                        getRent(current, tile.id) || tile.rents?.[0] || config.resortRents[0]!,
-                      )}
-                    </strong>
                   </div>
                 </div>
                 {tile.type === 'resort' && (
@@ -1820,10 +1978,6 @@ export default function App() {
                 <p>
                   {reservedCity(current, tile.id)
                     ? 'Ville réservée au Marché flottant du tour de table 10. '
-                    : ''}
-                  {current.festivals.includes(tile.id) ? '✦ Festival permanent : loyers ×2. ' : ''}
-                  {property?.championships
-                    ? `Festival : loyer ×2 · ${property.championshipTurns ?? 4} tours du propriétaire restants.`
                     : ''}
                 </p>
               </>
@@ -1916,7 +2070,13 @@ export default function App() {
             <OnlineLobby
               open={modal === 'online'}
               autoCreate={createSalon}
-              defaults={{ name: names[0]!, count, teams: mode === 'teams', minutes }}
+              defaults={{
+                name: names[0]!,
+                count,
+                teams: mode === 'teams',
+                minutes,
+                pace: comfort.pace,
+              }}
               onClose={() => {
                 setModal(null);
                 if (online?.state) setScreen('game');
@@ -1934,15 +2094,21 @@ export default function App() {
               onView={(view) => {
                 setOnline(view);
                 if (view.state && view.state.seq !== onlineSeq.current) {
-                  if (onlineSeq.current < 0) {
+                  const newJourney = onlineSeq.current < 0 || view.state.seq < onlineSeq.current;
+                  if (newJourney) {
                     cinema.reset(view.state);
+                    setJourney((value) => value + 1);
+                    setDismissedOffer('');
+                    setBuyoutOfferKey('');
+                    setHistory([]);
+                    setSelected(null);
+                    setStrategicTiles([]);
                     setScreen('game');
                     setModal(null);
                     setPaused(false);
                   }
                   onlineSeq.current = view.state.seq;
-                  if (screen === 'game' || onlineSeq.current < 0)
-                    cinema.present(view.state, view.events);
+                  if (!newJourney && screen === 'game') cinema.present(view.state, view.events);
                   else cinema.reset(view.state);
                   const messages = view.events
                     .map((event) => eventText(event, view.state!))
@@ -1966,20 +2132,19 @@ export default function App() {
             <p className="winner-reason">
               {current.winner.reasons.map((r) => victoryText[r] ?? r).join(' · ')}
             </p>
-            <div className="results">
-              {[...current.players]
-                .sort((a, b) => getNetWorth(current, b.id) - getNetWorth(current, a.id))
-                .map((p, i) => (
-                  <div key={p.id}>
-                    <span>
-                      {i + 1}. {p.name}
-                    </span>
-                    <b>{money(getNetWorth(current, p.id))}</b>
-                  </div>
-                ))}
-            </div>
-            <button className="primary" onClick={goHome}>
-              Un nouveau voyage →
+            <GameResults
+              state={current}
+              stats={online ? online.stats : save?.stats}
+              onRematch={!online || online.self === online.host ? rematch : undefined}
+              rematchDisabled={!!online && (online.busy || online.blocked)}
+              rematchLabel={
+                online && online.self !== online.host
+                  ? 'L’hôte peut lancer la revanche dans ce salon.'
+                  : undefined
+              }
+            />
+            <button className="secondary" onClick={goHome}>
+              Retour à l’accueil
             </button>
           </Modal>
         )}

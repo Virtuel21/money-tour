@@ -1,0 +1,86 @@
+.context-tip {
+  display: flex;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #b9d0cc;
+  border-radius: 12px;
+  background: #eff7f3;
+  color: #173e4a;
+}
+.context-tip > div {
+  min-width: 0;
+  flex: 1;
+}
+.context-tip p {
+  margin: 5px 0 0;
+  font-size: 0.88em;
+  line-height: 1.5;
+}
+.context-tip button {
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.game-summary {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.game-summary > p {
+  margin: 0;
+}
+.game-summary article {
+  border: 1px solid #cedbd7;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f7faf5;
+}
+.game-summary .summary-winner {
+  border: 2px solid #638f65;
+  background: #f0f7e9;
+}
+.game-summary header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 1.1em;
+}
+.game-summary dl {
+  margin: 10px 0 0;
+  display: grid;
+  gap: 5px;
+}
+.game-summary dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 0.9em;
+}
+.game-summary dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 700;
+}
+.game-summary .summary-highlight {
+  margin: 10px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid #cedbd7;
+  font-size: 0.9em;
+}
+.game-summary small {
+  line-height: 1.5;
+}
+@media (max-width: 420px) {
+  .context-tip {
+    flex-wrap: wrap;
+  }
+  .context-tip > div {
+    flex-basis: 100%;
+  }
+  .context-tip button {
+    margin-left: auto;
+  }
+  .game-summary header {
+    flex-wrap: wrap;
+  }
+}

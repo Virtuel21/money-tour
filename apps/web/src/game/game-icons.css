@@ -1,0 +1,16 @@
+.game-icon {
+  width: 1.2em;
+  height: 1.2em;
+  flex: 0 0 auto;
+  display: inline-block;
+  vertical-align: -0.2em;
+}
+button > .game-icon {
+  pointer-events: none;
+}
+.icon-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+}

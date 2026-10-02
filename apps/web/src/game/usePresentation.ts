@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameEvent, GameState } from '@money-tour/engine';
-import { presentation, type SceneFrame } from './presentation';
+import { presentation, type PresentationPace, type SceneFrame } from './presentation';
 
-export function usePresentation(initial: GameState, reduced: boolean, online = false) {
+export function usePresentation(
+  initial: GameState,
+  reduced: boolean,
+  online = false,
+  pace: PresentationPace = 'normal',
+  paused = false,
+) {
   const onlineRef = useRef(online);
   onlineRef.current = online;
+  const pausedRef = useRef(paused && !online);
+  pausedRef.current = paused && !online;
   const [frame, setFrame] = useState<SceneFrame>({
     state: initial,
     cue: { kind: 'settle', duration: 0 },
@@ -16,10 +24,14 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
   const queue = useRef<SceneFrame[]>([]),
     running = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const remaining = useRef(0);
+  const started = useRef(0);
+  const readingRef = useRef(false);
   const advanceRef = useRef<() => void>(() => {});
   const advance = useCallback(() => {
     setDismissed(false);
     if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
     const next = queue.current.shift();
     if (!next) {
       running.current = false;
@@ -34,12 +46,18 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
       ['card', 'tax'].includes(next.cue.kind) &&
       !onlineRef.current &&
       !next.state.players[next.state.currentPlayer]?.bot;
-    timer.current = reading ? null : setTimeout(() => advanceRef.current(), next.cue.duration);
+    readingRef.current = reading;
+    remaining.current = next.cue.duration;
+    started.current = Date.now();
+    if (!reading && !pausedRef.current)
+      timer.current = setTimeout(() => advanceRef.current(), remaining.current);
   }, []);
   advanceRef.current = advance;
   const reset = useCallback((state: GameState) => {
     setDismissed(false);
     if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    remaining.current = 0;
     queue.current = [];
     running.current = false;
     authoritative.current = latest.current = state;
@@ -48,13 +66,25 @@ export function usePresentation(initial: GameState, reduced: boolean, online = f
   }, []);
   const present = useCallback(
     (state: GameState, events: GameEvent[]) => {
-      const frames = presentation(authoritative.current, state, events, reduced);
+      const frames = presentation(authoritative.current, state, events, reduced, pace);
       authoritative.current = latest.current = state;
       if (frames.length) queue.current.push(...frames);
       if (!running.current) advance();
     },
-    [reduced, advance],
+    [reduced, pace, advance],
   );
+  useEffect(() => {
+    if (paused && !online) {
+      if (timer.current) {
+        clearTimeout(timer.current);
+        timer.current = null;
+        remaining.current = Math.max(0, remaining.current - (Date.now() - started.current));
+      }
+    } else if (running.current && !readingRef.current && !timer.current) {
+      started.current = Date.now();
+      timer.current = setTimeout(() => advanceRef.current(), remaining.current);
+    }
+  }, [paused, online]);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);

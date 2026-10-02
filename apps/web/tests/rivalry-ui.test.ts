@@ -41,6 +41,7 @@ it('removes a completed secret objective from the mobile notebook and returns to
   expect(host.querySelector('.private-quest')).toBeNull();
   expect([...host.querySelectorAll('nav button')].map((button) => button.textContent)).toEqual([
     'Villes',
+    'Victoire',
     'Bonus',
     'Partie',
   ]);
