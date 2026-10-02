@@ -2,7 +2,7 @@ import { InsuranceBadge, type InsuranceStyle } from './InsuranceBadge';
 import { architectureFamilies, architectureForCity } from '../game/architecture';
 import { tauntAsset, type Taunt } from '../game/taunts';
 import { scaledAmount } from '@money-tour/engine';
-import { cameraBounds, followPlayer } from './camera';
+import { cameraBounds, cameraZoom, followPlayer } from './camera';
 import { useEffect, useId, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -96,6 +96,7 @@ export default function Board({
   onReady,
   mobile = false,
   overview = false,
+  zoomPercent = 100,
   self,
   inspectedOwner,
   onPlayer,
@@ -114,6 +115,7 @@ export default function Board({
   onReady?: () => void;
   mobile?: boolean;
   overview?: boolean;
+  zoomPercent?: number;
   self?: string;
   inspectedOwner?: string | null;
   onPlayer?: (id: string) => void;
@@ -128,8 +130,32 @@ export default function Board({
     : 'outline';
   const host = useRef<HTMLDivElement>(null);
   const foregroundPawns = useRef<(HTMLSpanElement | null)[]>([]);
-  const live = useRef({ state, cue, reducedMotion, choices, mobile, overview, selecting, self });
-  live.current = { state, cue, reducedMotion, choices, mobile, overview, selecting, self };
+  const live = useRef({
+    state,
+    cue,
+    reducedMotion,
+    choices,
+    mobile,
+    overview,
+    selecting,
+    self,
+    zoomPercent,
+    strategicTiles,
+    auctionTile,
+  });
+  live.current = {
+    state,
+    cue,
+    reducedMotion,
+    choices,
+    mobile,
+    overview,
+    selecting,
+    self,
+    zoomPercent,
+    strategicTiles,
+    auctionTile,
+  };
   const update = useRef<() => void>(() => {});
   const [error, setError] = useState(''),
     [ready, setReady] = useState(false);
@@ -853,7 +879,16 @@ export default function Board({
           const factor = reduced ? 1 : 1 - Math.exp(-Math.min(100, now - previousTime) / 170);
           previousTime = now;
           focus.lerp(target, factor);
-          const zoomTarget = following ? Math.max(2.15, (camera.right - camera.left) / 14) : 1;
+          const zoomTarget = cameraZoom(
+            camera.right,
+            following,
+            live.current.zoomPercent,
+            live.current.selecting ||
+              live.current.auctionTile !== undefined ||
+              game.phase === 'auction' ||
+              live.current.strategicTiles.length > 0 ||
+              Boolean(game.winner),
+          );
           camera.zoom = THREE.MathUtils.lerp(camera.zoom, zoomTarget, factor);
           camera.position.copy(cameraOffset).add(focus);
           camera.lookAt(focus);

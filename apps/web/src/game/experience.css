@@ -23,6 +23,43 @@
 .comfort-options .field {
   margin: 0;
 }
+.board-zoom-setting {
+  min-width: 0;
+}
+.board-zoom-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 700;
+}
+.board-zoom-heading output {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.board-zoom-controls {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.board-zoom-controls button {
+  min-height: 44px;
+  padding: 0;
+  font-size: 1.3rem;
+}
+.board-zoom-controls input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  accent-color: #187c83;
+}
+.board-zoom-reset {
+  min-height: 44px;
+}
 .property-hero > .building-illustration {
   width: 160px;
   height: 125px;
