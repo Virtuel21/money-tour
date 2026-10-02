@@ -143,7 +143,7 @@ export function PurchaseDetails({
           </div>
           <p className="purchase-rule">
             {modern
-              ? 'Maisons sans rue complète. Construction d’un hôtel après 5 tours du plateau. Un hôtel existant peut être racheté avant.'
+              ? `Maisons sans rue complète. Construction d’un hôtel après ${state.config.hotelUnlockLaps ?? 1} tours du plateau. Un hôtel existant peut être racheté avant.`
               : 'Rue complète requise. Deux maisons maximum avant le premier passage Départ.'}{' '}
             {buyout
               ? `Rachat à ${state.players.find((p) => p.id === state.properties[tile.id]?.ownerId)?.name} : ${money(quote.land, true)}. Les bâtiments existants sont conservés ; seuls les nouveaux sont ajoutés au prix. Un chantier par visite.`

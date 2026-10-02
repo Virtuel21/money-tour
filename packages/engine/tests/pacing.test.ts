@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 import {
   config,
+  legacyConfigV16,
   createGame,
   getLegalActions,
   reduceGame,
@@ -17,6 +18,9 @@ const game = () =>
     ],
     seed: 'pacing',
   });
+it('changes only the hotel threshold and rules version from v16', () => {
+  expect(config).toEqual({ ...legacyConfigV16, version: 17, hotelUnlockLaps: 2 });
+});
 it('builds three houses without the matching city, but never on another playerâ€™s property', () => {
   let state = game();
   state.phase = 'property';
@@ -34,16 +38,16 @@ it('builds three houses without the matching city, but never on another playerâ€
   state.players[0]!.position = 2;
   expect(getLegalActions(state).some((a) => a.type === 'upgrade')).toBe(false);
 });
-it.each([0, 1, 4, 5, 6])('unlocks a hotel only after five complete laps (laps=%i)', (laps) => {
+it.each([0, 1, 2, 3, 5])('unlocks a hotel only after two complete laps (laps=%i)', (laps) => {
   const state = game();
   state.phase = 'property';
   state.players[0]!.position = 1;
   state.players[0]!.laps = laps;
   state.properties[1]!.ownerId = 'a';
   state.properties[1]!.level = 3;
-  expect(getLegalActions(state).some((a) => a.type === 'upgrade')).toBe(laps >= 5);
+  expect(getLegalActions(state).some((a) => a.type === 'upgrade')).toBe(laps >= 2);
   const result = reduceGame(state, { type: 'upgrade', playerId: 'a' });
-  expect(result.state.properties[1]!.level).toBe(laps >= 5 ? 4 : 3);
+  expect(result.state.properties[1]!.level).toBe(laps >= 2 ? 4 : 3);
 });
 it('opens the duel on its board tile and removes it from the current Chance deck', () => {
   const state = game();

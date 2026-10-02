@@ -12,6 +12,7 @@ import {
   legacyConfigV13,
   legacyConfigV14,
   legacyConfigV15,
+  legacyConfigV16,
   type GameConfig,
 } from '@money-tour/engine';
 import { applyLocal, loadLocal, newLocal, persistLocal } from '../src/game/local';
@@ -26,6 +27,21 @@ describe('local session', () => {
     });
   });
   afterEach(() => vi.unstubAllGlobals());
+  it('keeps the five-lap hotel rule when resuming v16 but uses two laps in new games', () => {
+    const players = [
+      { id: 'a', name: 'A' },
+      { id: 'b', name: 'B' },
+    ];
+    const save = newLocal({ config: legacyConfigV16 as GameConfig, players });
+    data.set('money-tour.local.v16', JSON.stringify(save));
+    expect(loadLocal()).toEqual(save);
+    expect(loadLocal()!.state.config.hotelUnlockLaps).toBe(5);
+    const fresh = newLocal({ players });
+    expect(fresh.state.config.hotelUnlockLaps).toBe(2);
+    persistLocal(fresh);
+    expect(data.has('money-tour.local.v17')).toBe(true);
+    expect(loadLocal()).toEqual(fresh);
+  });
   it('resumes a v15 save with its board, economy and random sequence intact', () => {
     const save = newLocal({
       config: legacyConfigV15 as GameConfig,

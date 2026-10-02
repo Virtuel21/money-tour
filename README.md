@@ -15,7 +15,7 @@ pnpm simulate 1000
 
 Les nouvelles parties utilisent des montants simples : compte initial 1 500, prime Départ 300, terrains de 100 à 475. Le journal affiche les actions publiques ; les bonus et malus sont consultables à côté des propriétés sur PC, dans le carnet sur mobile.
 
-Chaque ville possédée peut recevoir jusqu’à trois maisons sans réunir la rue complète. L’hôtel se débloque après cinq tours complets du plateau du propriétaire. La durée se choisit parmi les préréglages ou de 1 à 180 minutes personnalisées. Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
+Chaque ville possédée peut recevoir jusqu’à trois maisons sans réunir la rue complète. L’hôtel se débloque après deux tours complets du plateau du propriétaire. La durée se choisit parmi les préréglages ou de 1 à 180 minutes personnalisées. Les destinations et championnats se choisissent directement sur les cases dorées du plateau.
 
 Un Mondial coûte 50 et double le loyer de la ville pendant quatre retours du propriétaire : les doubles ne consomment pas de durée et un nouveau Mondial renouvelle les quatre tours sans cumuler le bonus. Un trophée, un ruban et des confettis signalent la ville hôte ; le badge indique les tours restants. Fermer l’offre d’achat ne termine pas le tour : cliquez de nouveau sur votre case ou sur Acheter pour la rouvrir. « Non merci, je passe » termine la décision. Les taxes sont annoncées par une fenêtre humoristique avant l’animation du prélèvement.
 
@@ -23,7 +23,7 @@ La crise économique est active : 4 % de chances à partir du sixième tour de t
 
 Après achat, le loyer actuel s’affiche en gros et en gras directement sur la case. Il est recalculé avec les constructions, festivals, Mondial et le nombre d’îles détenues.
 
-Dans l’offre d’achat, chaque carte affiche le loyer du niveau correspondant. Sélectionner des maisons ou un hôtel puis acheter paie le terrain et tous les bâtiments en une seule opération, au prix total affiché. L’hôtel nécessite cinq tours complets du plateau et un compte insuffisant bloque tout l’achat. Après validation, aucun nouveau chantier n’est possible pendant cette visite. Revenir sur sa ville rouvre la même fenêtre et ne facture que les bâtiments manquants. Les anciennes sauvegardes conservent leurs règles.
+Dans l’offre d’achat, chaque carte affiche le loyer du niveau correspondant. Sélectionner des maisons ou un hôtel puis acheter paie le terrain et tous les bâtiments en une seule opération, au prix total affiché. L’hôtel nécessite deux tours complets du plateau et un compte insuffisant bloque tout l’achat. Après validation, aucun nouveau chantier n’est possible pendant cette visite. Revenir sur sa ville rouvre la même fenêtre et ne facture que les bâtiments manquants. Les anciennes sauvegardes conservent leurs règles.
 
 Le moteur couvre les 32 cases, les 23 cartes Chance, les constructions, la dette/faillite, les victoires et les équipes. Les règles sont dans `packages/engine/src/game.config.json`. L'API pure exporte `createGame`, `reduceGame`, `createRng`, `chooseBotAction`, `getLegalActions` et les fonctions de calcul/validation. `pnpm build` produit le site statique dans `apps/web/dist`. Les parties locales se sauvegardent sur cet appareil. Le bouton « Explorer les cases » permet de consulter les villes sur petit écran, et les animations peuvent être réduites dans les réglages.
 

@@ -1,5 +1,5 @@
 {
-  "version": 17,
+  "version": 16,
   "initialCash": 1500,
   "startBonus": 300,
   "durationMs": 1200000,
@@ -495,7 +495,7 @@
   "crisisChance": 4,
   "adventures": true,
   "buildingRequiresGroup": false,
-  "hotelUnlockLaps": 2,
+  "hotelUnlockLaps": 5,
   "crisisMinRound": 6,
   "crisisCooldownRounds": 8,
   "crisisMaxCount": 2,

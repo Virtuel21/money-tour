@@ -1,17 +1,17 @@
 import { expect, it } from 'vitest';
-import { config, legacyConfigV14 } from '@money-tour/engine';
+import { legacyConfigV15, legacyConfigV14 } from '@money-tour/engine';
 import { festivalText, tileTitle } from '../src/game/tileTitle';
 import { festivalBeat } from '../src/board/specialArt';
 
 it('preserves all prices, probabilities and mechanics when renaming Mondial to Festival', () => {
   const previous = structuredClone(legacyConfigV14);
-  previous.version = config.version;
+  previous.version = legacyConfigV15.version;
   for (const tile of previous.board) if (tile.type === 'championship') tile.name = 'Festival';
   for (const card of previous.cards) {
     card.title = festivalText(card.title);
     card.description = festivalText(card.description);
   }
-  expect(config).toEqual(previous);
+  expect(legacyConfigV15).toEqual(previous);
 });
 
 it('shows Festival names in existing saves and old Chance cards', () => {

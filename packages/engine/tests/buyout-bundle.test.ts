@@ -17,7 +17,7 @@ const game = (level = 0) => {
   });
   s.phase = 'property';
   s.players[0]!.position = 5;
-  s.players[0]!.laps = 5;
+  s.players[0]!.laps = 2;
   s.properties[5] = { ownerId: 'b', level, championships: 0 };
   return s;
 };
@@ -57,7 +57,7 @@ it('keeps existing houses and charges only missing levels at their individual bu
 });
 it('rejects invalid, unaffordable, premature hotel and off-turn bundles without a partial transfer', () => {
   const s = game();
-  s.players[0]!.laps = 4;
+  s.players[0]!.laps = 1;
   s.players[0]!.cash = 350;
   const actions = [
     { type: 'buyout', playerId: 'a', level: 1 },
@@ -73,7 +73,7 @@ it('rejects invalid, unaffordable, premature hotel and off-turn bundles without 
   }
   s.players[0]!.cash = 1500;
   expect(getBuyoutQuote(s, 4)!.available).toBe(false);
-  s.players[0]!.laps = 5;
+  s.players[0]!.laps = 2;
   expect(getBuyoutQuote(s, 4)!.canBuy).toBe(true);
   s.properties[5]!.level = 4;
   expect(getBuyoutQuote(s, 4)!.available).toBe(true);

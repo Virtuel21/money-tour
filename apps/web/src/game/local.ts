@@ -11,6 +11,7 @@ import {
   legacyConfigV13,
   legacyConfigV14,
   legacyConfigV15,
+  legacyConfigV16,
   sameRules,
   type GameConfig,
   createGame,
@@ -29,7 +30,7 @@ export interface LocalSave {
   seed: string;
   state: GameState;
 }
-const key = 'money-tour.local.v16';
+const key = 'money-tour.local.v17';
 export function newLocal(options: GameOptions): LocalSave {
   const seed = crypto.randomUUID();
   return { version: 1, seed, state: createGame({ ...options, seed }, createRng(seed)) };
@@ -45,6 +46,7 @@ export function loadLocal(): LocalSave | null {
   try {
     const raw =
       localStorage.getItem(key) ??
+      localStorage.getItem('money-tour.local.v16') ??
       localStorage.getItem('money-tour.local.v15') ??
       localStorage.getItem('money-tour.local.v14') ??
       localStorage.getItem('money-tour.local.v13') ??
@@ -82,6 +84,7 @@ export function loadLocal(): LocalSave | null {
       typeof save.seed !== 'string' ||
       !(
         sameRules(save.state.config, config) ||
+        sameRules(save.state.config, legacyConfigV16 as GameConfig) ||
         sameRules(save.state.config, legacyConfigV15 as GameConfig) ||
         sameRules(save.state.config, legacyConfigV14 as GameConfig) ||
         sameRules(save.state.config, legacyConfigV13 as GameConfig) ||

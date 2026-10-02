@@ -8,7 +8,7 @@
 
 ### Évolutions précédentes conservées
 
-- Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Construction d’un hôtel verrouillée avant cinq tours ; rachat d’un hôtel existant possible dès le début, comme toutes les villes et îles. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
+- Rachat : le bouton ouvre le sélecteur des bâtiments. Prix = valeur existante × multiplicateur de rachat, versée au vendeur, plus coût des nouveaux niveaux, versé à la banque. Les maisons existantes sont conservées et ne sont pas facturées une seconde fois comme constructions. Construction d’un hôtel verrouillée avant deux tours ; rachat d’un hôtel existant possible dès le début, comme toutes les villes et îles. Assurance : bloque la totalité du rachat et des constructions sans débit, puis disparaît. Après confirmation, aucun second chantier durant cette visite.
 - Taunts accessibles pendant les tours et animations adverses. Affichage unique de l’illustration au-dessus du personnage, sans message central.
 - Sur PC, chaque volet joueur peut être réduit au nom et au solde puis développé. Un objectif secret accompli disparaît du volet et du carnet mobile ; son gain reste acquis et sa réussite reste dans le journal.
 
@@ -75,8 +75,8 @@ Les indices ci-dessous commencent à 0 sur Départ, puis augmentent dans le sens
 Les deux nouveaux tarifs sont 140 et 340. Les anciens tarifs sont divisés par 1 000 ; le plus cher reste 475. Une construction coûte 50 % du terrain, arrondis à l’entier le plus proche ; les loyers valent respectivement 10 %, 20 %, 40 %, 70 % et 120 % de son prix, arrondis à l’entier le plus proche.
 
 - Achat groupé : terrain + somme des constructions jusqu’au niveau sélectionné. Trois maisons ajoutent trois coûts unitaires au terrain ; l’hôtel en ajoute quatre. Rien n’est débité si le total dépasse le cash.
-- Un seul achat ou chantier par visite. Après validation, seule la fin de visite est proposée. Revenir sur sa ville rouvre la même fenêtre : choisir le niveau total souhaité, payer uniquement les constructions manquantes. Hôtel toujours verrouillé avant cinq tours complets.
-- Les maisons ne nécessitent pas la rue entière. L’hôtel n’est disponible qu’après cinq tours complets du plateau effectués par son propriétaire.
+- Un seul achat ou chantier par visite. Après validation, seule la fin de visite est proposée. Revenir sur sa ville rouvre la même fenêtre : choisir le niveau total souhaité, payer uniquement les constructions manquantes. Hôtel toujours verrouillé avant deux tours complets.
+- Les maisons ne nécessitent pas la rue entière. L’hôtel n’est disponible qu’après deux tours complets du plateau effectués par son propriétaire.
 - Rachat hostile : deux fois la valeur du terrain et de ses constructions, payé au propriétaire. Toutes les villes, y compris les hôtels, et les îles sont éligibles. L’assurance peut le bloquer une fois.
 - Vente à la banque pour régler une dette : 50 % de la valeur terrain + bâtiments ; le bien redevient libre. La vente consomme une assurance attachée à ce bien.
 - Les loyers sont transférés, pas créés. Squatteur permet d’éviter un loyer. Le loyer affiché inclut les bonus et malus actifs.

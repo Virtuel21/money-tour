@@ -40,3 +40,5 @@ export { victoryThreats } from './victory-threats.js';
 export { default as legacyConfigV14 } from './legacy-v14.config.json';
 
 export { default as legacyConfigV15 } from './legacy-v15.config.json';
+
+export { default as legacyConfigV16 } from './legacy-v16.config.json';

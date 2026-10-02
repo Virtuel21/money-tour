@@ -196,7 +196,7 @@ export function previewScenario(): LocalSave | null {
   if (name === 'purchase' || name === 'hotel-purchase') {
     player.position = 5;
     state.phase = 'property';
-    if (name === 'hotel-purchase') player.laps = 5;
+    if (name === 'hotel-purchase') player.laps = config.hotelUnlockLaps ?? 1;
   }
   if (name === 'mondial') {
     player.position = 16;
