@@ -2,6 +2,7 @@ import { useLayoutEffect, useState, type CSSProperties } from 'react';
 import type { GameState, Player } from '@money-tour/engine';
 import type { Cue } from './presentation';
 import { money } from './local';
+import { GameIcon } from './GameIcon';
 
 export function TurnBanner({
   player,
@@ -69,10 +70,14 @@ export function MoneyFlight({
             className="flying-coin"
             key={i}
             style={
-              { '--delay': `${i * 65}ms`, '--scatter': `${((i % 3) - 1) * 24}px` } as CSSProperties
+              {
+                '--delay': `${i * Math.min(65, cue.duration * 0.04)}ms`,
+                '--scatter': `${((i % 3) - 1) * 24}px`,
+                animationDuration: `${Math.min(1000, cue.duration * 0.65)}ms`,
+              } as CSSProperties
             }
           >
-            🪙
+            <GameIcon name="coin" />
           </span>
         ))}
       <div className="money-toast" role="status">

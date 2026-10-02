@@ -11,28 +11,28 @@ export const lessons = [
   {
     id: 'roll',
     title: 'À vous de lancer',
-    text: 'Le bandeau indique qui joue. Lancez deux dés et avancez de leur somme. Un double donne un nouveau lancer en fin de tour ; trois doubles successifs vous envoient sur l’Île perdue. Ici, les dés sont préparés pour vous faire découvrir Madrid.',
+    text: 'Le bandeau indique qui joue. Lancez deux dés et avancez de leur somme. Un double donne un nouveau lancer à la fin de votre tour de jeu ; trois doubles successifs vous envoient sur l’Île perdue. Ici, les dés sont préparés pour vous faire découvrir Madrid.',
     task: 'Lancez les dés.',
     target: 'action',
   },
   {
     id: 'buy',
     title: 'Votre première ville',
-    text: 'Chaque option indique son loyer. Dans une partie, choisissez le terrain seul ou des maisons : Acheter acquiert tout en une fois au prix total affiché. L’hôtel attend deux tours du plateau. Ici, commencez par le terrain ; la leçon Construire vous fera ajouter une maison. Fermer permet de regarder le plateau ; Acheter rouvre l’offre et Passer termine la décision.',
+    text: `Chaque option indique son loyer. Dans une partie, choisissez le terrain seul ou des maisons : Acheter acquiert tout en une fois au prix total affiché. L’hôtel attend ${config.hotelUnlockLaps ?? 0} tours complets du plateau. Ici, commencez par le terrain ; la leçon Construire vous fera ajouter une maison. Fermer permet de regarder le plateau ; Acheter rouvre l’offre et Passer termine la décision.`,
     task: 'Achetez Madrid ou essayez de passer.',
     target: 'action',
   },
   {
     id: 'rent',
     title: 'Vos villes travaillent pour vous',
-    text: 'Sacha arrive sur votre ville : le loyer vous est versé automatiquement. Le montant sur la case suit les bâtiments et les bonus. Après paiement, un adversaire peut racheter une ville sans hôtel pour deux fois sa valeur foncière.',
+    text: 'Sacha arrive sur votre ville : le loyer vous est versé automatiquement. Le montant sur la case suit les bâtiments et les bonus. Après paiement, un adversaire peut racheter une ville, même avec un hôtel, ou une île pour deux fois sa valeur foncière. Une assurance bloque ce rachat une fois.',
     task: 'Simulez la visite de Sacha et regardez les comptes.',
     target: 'action',
   },
   {
     id: 'build',
     title: 'Construire dès votre premier achat',
-    text: 'Vous pouvez construire sur Madrid sans posséder Barcelone. À chaque visite, la fenêtre vous laisse choisir le niveau final, jusqu’à trois maisons. Validez une seule fois : seuls les bâtiments manquants sont facturés. Il faut revenir sur la ville pour construire à nouveau. L’hôtel se débloque après deux tours complets du plateau. Les rues complètes servent toujours à gagner la partie.',
+    text: `Vous pouvez construire sur Madrid sans posséder Barcelone. À chaque visite, la fenêtre vous laisse choisir le niveau final, jusqu’à trois maisons. Validez une seule fois : seuls les bâtiments manquants sont facturés. Il faut revenir sur la ville pour construire à nouveau. L’hôtel se débloque après ${config.hotelUnlockLaps ?? 0} tours complets du plateau. Les rues complètes servent toujours à gagner la partie.`,
     task: 'Construisez une maison à Madrid.',
     target: 'action',
   },
@@ -46,7 +46,7 @@ export const lessons = [
   {
     id: 'resorts',
     title: 'Les îles privées',
-    text: 'Les îles s’achètent mais ne se construisent pas. Une, deux, trois ou quatre îles rapportent respectivement 50, 100, 200 ou 500 à chaque visite adverse. Posséder les quatre ne termine pas la partie.',
+    text: 'Les îles s’achètent mais ne se construisent pas. Une, deux, trois ou quatre îles rapportent respectivement 50, 100, 200 ou 500 à chaque visite adverse. Posséder les quatre compte comme une rue complète pour la victoire par trois rues.',
     task: 'Achetez Bali.',
     target: 'action',
   },
@@ -95,7 +95,7 @@ export const lessons = [
   {
     id: 'attack',
     title: 'Les cartes offensives',
-    text: 'Expropriation rend une ville adverse à la banque. Les cafards divisent le loyer d’un hôtel par deux pendant deux tours du propriétaire. Les cartes d’attaque financière prélèvent de l’argent ; seules les cibles autorisées sont éclairées.',
+    text: 'Expropriation rend une ville adverse à la banque. Les cafards divisent le loyer d’un hôtel par deux pendant deux tours de jeu du propriétaire. Les cartes d’attaque financière prélèvent de l’argent ; seules les cibles autorisées sont éclairées.',
     task: 'Jouez Expropriation sur Rome.',
     target: 'board',
   },
@@ -151,7 +151,7 @@ export const lessons = [
   {
     id: 'alliance',
     title: 'Une alliance temporaire',
-    text: 'La carte Alliance vous donne 50 % des gains du joueur choisi jusqu’à la fin de son prochain tour. Cette part est prélevée sur ses gains. Elle est distincte des équipes 2v2 choisies avant la partie.',
+    text: 'La carte Alliance vous donne 50 % des gains du joueur choisi jusqu’à la fin de son prochain tour de jeu. Cette part est prélevée sur ses gains. Elle est distincte des équipes 2v2 choisies avant la partie.',
     task: 'Choisissez Sacha comme allié temporaire.',
     target: 'action',
   },
@@ -192,6 +192,10 @@ export const lessons = [
   },
 ] as const;
 export type LessonId = (typeof lessons)[number]['id'];
+/** Five real actions; the complete reference remains available at any time. */
+export const quickLessons = (['roll', 'buy', 'build', 'rent', 'victory'] as const).map((id) =>
+  lessons.find((lesson) => lesson.id === id)!,
+);
 
 /** Deliberately staged practice scenes, isolated from persistence and networking. */
 export function tutorialScene(id: LessonId): GameState {

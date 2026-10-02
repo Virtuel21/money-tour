@@ -33,6 +33,7 @@ export function CasinoView({
             style={
               {
                 '--roulette-stop': cue?.casinoColor === 'red' ? '2148.75deg' : '2126.25deg',
+                animationDuration: cue ? `${Math.min(1900, cue.duration * 0.55)}ms` : undefined,
               } as CSSProperties
             }
           />

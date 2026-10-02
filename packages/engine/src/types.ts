@@ -169,6 +169,7 @@ export interface Winner {
   netWorth: number;
 }
 export interface GameState {
+  presentationPace?: 'normal' | 'fast';
   earthquakeHistory?: { count: number; lastRound: number };
   crisisHistory?: { count: number; lastRound: number };
   adventure?: Adventure;
@@ -204,6 +205,7 @@ export interface GameState {
   winner: Winner | null;
 }
 export interface GameOptions {
+  presentationPace?: 'normal' | 'fast';
   players: PlayerSetup[];
   mode?: 'free-for-all' | 'teams';
   seed?: string | number;

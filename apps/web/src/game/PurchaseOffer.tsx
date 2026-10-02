@@ -104,7 +104,7 @@ export function PurchaseDetails({
                 aria-label={`${labels[index]} : loyer ${money(getQuote(index)!.rent, true)}${index === 4 && hotelLocked && !getQuote(index)?.available ? ', hôtel verrouillé' : ''}`}
                 onClick={() => setLevel(index)}
               >
-                <BuildingIllustration level={index} />
+                <BuildingIllustration level={index} cityName={tile.name} />
                 <strong>{labels[index]}</strong>
                 <span className="level-rent">
                   Loyer <b>{money(getQuote(index)!.rent, true)}</b>

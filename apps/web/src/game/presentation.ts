@@ -1,4 +1,26 @@
 import type { GameEvent, GameState } from '@money-tour/engine';
+import { eventCelebrations, type Celebration } from './celebrations';
+
+export type PresentationPace = 'normal' | 'fast';
+
+/** Reading time and auction orientation are independent from animation speed. */
+function pacedDuration(cue: Cue, pace: PresentationPace): number {
+  if (pace === 'normal' || ['card', 'tax'].includes(cue.kind) || cue.reason === 'auction_started')
+    return cue.duration;
+  const caps: Record<Cue['kind'], number> = {
+    dice: 600,
+    hop: 90,
+    card: 5500,
+    tax: 5000,
+    build: 350,
+    money: 650,
+    turn: 650,
+    settle: 150,
+    casino: 1600,
+    notice: 2200,
+  };
+  return Math.min(cue.duration, caps[cue.kind]);
+}
 
 export interface Cue {
   kind:
@@ -19,6 +41,7 @@ export interface Cue {
   cardId?: string;
   tile?: number;
   sound?: string;
+  celebrations?: Celebration[];
 }
 export interface SceneFrame {
   state: GameState;
@@ -30,11 +53,17 @@ export function presentation(
   next: GameState,
   events: GameEvent[],
   reduced = false,
+  pace: PresentationPace = 'normal',
 ): SceneFrame[] {
   const visual = structuredClone(previous);
   const frames: SceneFrame[] = [];
   const size = previous.config.board.length;
-  const add = (cue: Cue) => frames.push({ state: structuredClone(visual), cue });
+  const add = (cue: Cue) =>
+    frames.push({
+      state: structuredClone(visual),
+      cue: { ...cue, duration: pacedDuration(cue, pace) },
+    });
+  const celebrations = eventCelebrations(previous, next, events);
   const money = (event: GameEvent) => {
     if ((event.amount ?? 0) <= 0) return;
     const recipient = visual.players.find((p) => p.id === event.playerId);
@@ -55,6 +84,9 @@ export function presentation(
   };
   let departure: GameEvent | undefined;
   for (const [index, event] of events.entries()) {
+    const firstFrame = frames.length;
+    if (event.type === 'insured')
+      add({ kind: 'settle', reason: 'insured', tile: event.tile, duration: 700 });
     if (event.type === 'auction_started' && next.auction) {
       visual.auction = structuredClone(next.auction);
       visual.phase = 'auction';
@@ -111,7 +143,6 @@ export function presentation(
             event.message
           : '',
       insurance: 'Un jeton assurance vous attend. Choisissez une propriété à protéger.',
-      insured: 'L’assurance a protégé la propriété ! Le jeton est consommé.',
       insured_tile: 'Cette propriété est maintenant assurée.',
       squatter: 'Vous passez sans payer de loyer !',
       expropriate: 'Expropriation : cette ville est à nouveau disponible.',
@@ -209,64 +240,94 @@ export function presentation(
       });
     if (['victory', 'bankruptcy'].includes(event.type))
       add({ kind: 'settle', sound: event.type, duration: 150 });
+    const highlights = celebrations.filter((celebration) => celebration.eventIndex === index);
+    if (highlights.length && frames[firstFrame]) frames[firstFrame]!.cue.celebrations = highlights;
   }
   if (frames.length) frames.push({ state: next, cue: { kind: 'settle', duration: 50 } });
   return frames;
 }
 
-export function presentationMs(events: GameEvent[]): number {
+export function presentationMs(events: GameEvent[], pace: PresentationPace = 'normal'): number {
+  if (pace === 'fast')
+    return events.reduce((ms, event) => {
+      if (event.type === 'move') return ms + Math.abs(Number(event.steps ?? 0)) * 90;
+      if (event.type === 'island') return ms + 32 * 90;
+      const durations: Record<string, number> = {
+        dice: 750,
+        auction_started: 1800,
+        earthquake: 2350,
+        casino_result: 1600,
+        insured: 150,
+        turn: 650,
+        extra_roll: 650,
+        tax_notice: 5000,
+        card: 5500,
+        build: 1000,
+        purchase: 800,
+        buyout: 150,
+        championship: 650,
+        victory: 150,
+        bankruptcy: 150,
+      };
+      if (event.type in durations) return ms + durations[event.type]!;
+      if (['payment', 'income', 'start_bonus', 'sale'].includes(event.type))
+        return ms + ((event.amount ?? 0) > 0 ? 650 : 0) + (event.type === 'sale' ? 150 : 0);
+      // All remaining public notices retain readable time; unknown events keep their normal budget.
+      return ms + Math.min(2200, presentationMs([event]));
+    }, 0);
   return events.reduce(
     (ms, e) =>
       ms +
       (e.type === 'dice'
         ? 2000
-        : e.type === 'auction_started'
-          ? 1800
-          : e.type === 'earthquake'
-            ? 3700
-            : e.type === 'casino_result'
-              ? 3600
-              : [
-                    'auction_started',
-                    'auction_result',
-                    'quest_completed',
-                    'capital_revealed',
-                    'alliance',
-                    'alliance_expired',
-                    'crisis',
-                    'crisis_expired',
-                    'victory_warning',
-                    'duel_result',
-                    'duel_cancelled',
-                    'duel_forfeit',
-                    'insurance',
-                    'insured',
-                    'insured_tile',
-                    'squatter',
-                    'expropriate',
-                    'roaches',
-                    'roaches_expired',
-                    'karma',
-                  ].includes(e.type)
-                ? 7600
-                : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) &&
-                    (e.amount ?? 0) > 0
-                  ? 1500
-                  : ['turn', 'extra_roll'].includes(e.type)
-                    ? 1400
-                    : e.type === 'move'
-                      ? Math.abs(Number(e.steps ?? 0)) * 270
-                      : e.type === 'tax_notice'
-                        ? 5000
-                        : e.type === 'card'
-                          ? 5500
-                          : ['build', 'purchase', 'buyout'].includes(e.type)
-                            ? 2200
-                            : e.type === 'championship'
-                              ? 1500
-                              : e.type === 'island'
-                                ? 8640
-                                : 0),
+        : e.type === 'insured'
+          ? 700
+          : e.type === 'auction_started'
+            ? 1800
+            : e.type === 'earthquake'
+              ? 3700
+              : e.type === 'casino_result'
+                ? 3600
+                : [
+                      'auction_started',
+                      'auction_result',
+                      'quest_completed',
+                      'capital_revealed',
+                      'alliance',
+                      'alliance_expired',
+                      'crisis',
+                      'crisis_expired',
+                      'victory_warning',
+                      'duel_result',
+                      'duel_cancelled',
+                      'duel_forfeit',
+                      'insurance',
+                      'insured_tile',
+                      'squatter',
+                      'expropriate',
+                      'roaches',
+                      'roaches_expired',
+                      'karma',
+                    ].includes(e.type)
+                  ? 7600
+                  : ['payment', 'income', 'start_bonus', 'sale'].includes(e.type) &&
+                      (e.amount ?? 0) > 0
+                    ? 1500
+                    : ['turn', 'extra_roll'].includes(e.type)
+                      ? 1400
+                      : e.type === 'move'
+                        ? Math.abs(Number(e.steps ?? 0)) * 270
+                        : e.type === 'tax_notice'
+                          ? 5000
+                          : e.type === 'card'
+                            ? 5500
+                            : ['build', 'purchase', 'buyout'].includes(e.type)
+                              ? 2200
+                              : e.type === 'championship'
+                                ? 1500
+                                : e.type === 'island'
+                                  ? 8640
+                                  : 0),
     0,
   );
 }

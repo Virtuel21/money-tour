@@ -4,6 +4,8 @@ import { adventureText, getRent, type GameState } from '@money-tour/engine';
 import { PrivateQuest } from './AdventureHUD';
 import { money } from './local';
 import { estateGroups } from './estate';
+import { StrategyProgress } from './StrategyProgress';
+import { GameIcon } from './GameIcon';
 
 /** A small paginated collection: the board never becomes a scrolling inventory. */
 export function MobilePocket({
@@ -11,11 +13,13 @@ export function MobilePocket({
   self,
   onTile,
   onBonus,
+  onHighlight,
 }: {
   state: GameState;
   self?: string;
   onTile: (id: number) => void;
   onBonus?: (bonus: BonusInfo) => void;
+  onHighlight?: (ids: number[]) => void;
 }) {
   const viewer =
     state.players.find((p) => p.id === self) ??
@@ -23,7 +27,9 @@ export function MobilePocket({
       ? state.players.find((p) => !p.bot)
       : undefined) ??
     state.players[state.currentPlayer]!;
-  const [requestedTab, setTab] = useState<'cities' | 'bonus' | 'quest' | 'rules'>('cities');
+  const [requestedTab, setTab] = useState<'cities' | 'bonus' | 'quest' | 'rules' | 'strategy'>(
+    'cities',
+  );
   const quest = state.quests?.[viewer.id];
   const hasQuest = !!quest && !quest.completed && !viewer.bot && (!self || self === viewer.id);
   const tab = requestedTab === 'quest' && !hasQuest ? 'cities' : requestedTab;
@@ -37,7 +43,7 @@ export function MobilePocket({
   return (
     <div className="mobile-pocket">
       <nav aria-label="Votre carnet">
-        {(['cities', 'bonus', 'quest', 'rules'] as const)
+        {(['cities', 'strategy', 'bonus', 'quest', 'rules'] as const)
           .filter((item) => item !== 'quest' || hasQuest)
           .map((item) => (
             <button
@@ -48,7 +54,15 @@ export function MobilePocket({
                 setPage(0);
               }}
             >
-              {{ cities: 'Villes', bonus: 'Bonus', quest: 'Objectif', rules: 'Partie' }[item]}
+              {
+                {
+                  cities: 'Villes',
+                  strategy: 'Victoire',
+                  bonus: 'Bonus',
+                  quest: 'Objectif',
+                  rules: 'Partie',
+                }[item]
+              }
             </button>
           ))}
       </nav>
@@ -77,7 +91,8 @@ export function MobilePocket({
                   <span>Loyer {money(getRent(state, t.id), true)}</span>
                   {!!state.properties[t.id]!.roachTurns && (
                     <span className="roach-badge">
-                      🪳 {state.properties[t.id]!.roachTurns} tours · loyer −50 %
+                      <GameIcon name="bug" /> Cafards · {state.properties[t.id]!.roachTurns} tours ·
+                      loyer −50 %
                     </span>
                   )}
                 </button>
@@ -88,7 +103,9 @@ export function MobilePocket({
             <div className="pocket-bonuses">
               {bonuses.slice(index * 2, index * 2 + 2).map((b, i) => (
                 <button key={i} onClick={() => onBonus?.(b)}>
-                  <strong>{b.title}</strong>
+                  <strong>
+                    <GameIcon name={b.icon ?? 'info'} /> {b.title}
+                  </strong>
                   <span>{b.description}</span>
                 </button>
               ))}
@@ -102,7 +119,7 @@ export function MobilePocket({
                 disabled={!index}
                 onClick={() => setPage(index - 1)}
               >
-                ←
+                <GameIcon name="arrowLeft" />
               </button>
               <span>
                 {index + 1} / {pages}
@@ -112,7 +129,7 @@ export function MobilePocket({
                 disabled={index === pages - 1}
                 onClick={() => setPage(index + 1)}
               >
-                →
+                <GameIcon name="arrowRight" />
               </button>
             </div>
           )}
@@ -120,6 +137,15 @@ export function MobilePocket({
       )}
       {tab === 'quest' && (
         <PrivateQuest key={viewer.id} state={state} player={viewer} self={self} />
+      )}
+      {tab === 'strategy' && (
+        <StrategyProgress
+          state={state}
+          playerId={viewer.id}
+          onTile={onTile}
+          onHighlight={onHighlight}
+          expanded
+        />
       )}
       {tab === 'rules' && (
         <div className="pocket-rule">
@@ -132,14 +158,15 @@ export function MobilePocket({
           </p>
           {state.crisis && (
             <p>
-              📉 Crise : loyers −50 % · {state.crisis.remaining.length} joueur(s) doivent encore
-              jouer.
+              <GameIcon name="trendDown" /> Crise : loyers −50 % · {state.crisis.remaining.length}{' '}
+              joueur(s) doivent encore jouer.
             </p>
           )}
           {state.alliance && (
             <p>
-              🤝 {state.players.find((p) => p.id === state.alliance!.beneficiaryId)?.name} reçoit 50
-              % des gains de {state.players.find((p) => p.id === state.alliance!.targetId)?.name}.
+              <GameIcon name="people" />{' '}
+              {state.players.find((p) => p.id === state.alliance!.beneficiaryId)?.name} reçoit 50 %
+              des gains de {state.players.find((p) => p.id === state.alliance!.targetId)?.name}.
             </p>
           )}
         </div>

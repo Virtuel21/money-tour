@@ -99,6 +99,7 @@ export const optionsSchema = z
       .max(4),
     mode: z.enum(['free-for-all', 'teams']),
     durationMs: z.number().int().min(60000).max(10800000),
+    presentationPace: z.enum(['normal', 'fast']).optional(),
   })
   .strict();
 export const authSchema = z
@@ -111,6 +112,7 @@ export const authSchema = z
   .strict();
 export const commandSchema = z.union([
   z.object({ type: z.literal('start'), options: optionsSchema }).strict(),
+  z.object({ type: z.literal('rematch'), options: optionsSchema }).strict(),
   z
     .object({ type: z.literal('action'), action: actionSchema, auth: authSchema.optional() })
     .strict(),

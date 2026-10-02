@@ -10,7 +10,7 @@ import {
   reduceGame,
   type GameAction,
 } from '@money-tour/engine';
-import { lessons, tutorialScene, type LessonId } from './tutorial';
+import { lessons, quickLessons, tutorialScene, type LessonId } from './tutorial';
 import { AuctionView } from './AuctionView';
 import { DuelView } from './DuelView';
 import { CasinoView } from './CasinoView';
@@ -28,6 +28,8 @@ const Board = lazy(() => import('../board/Board3D'));
 export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [index, setIndex] = useState(0);
+  const [quick, setQuick] = useState(true);
+  const course = quick ? quickLessons : lessons;
   const [attempt, setAttempt] = useState(0);
   const previousFocus = useRef(document.activeElement as HTMLElement | null);
   useEffect(() => {
@@ -48,6 +50,15 @@ export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
         <strong>
           MONEY TOUR <span>· PARTIE GUIDÉE</span>
         </strong>
+        <button
+          aria-pressed={!quick}
+          onClick={() => {
+            setQuick(!quick);
+            setIndex(0);
+          }}
+        >
+          {quick ? 'Toutes les leçons (27)' : 'Découverte en 5 actions'}
+        </button>
         <label>
           Escales{' '}
           <select
@@ -55,7 +66,7 @@ export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
             value={index}
             onChange={(e) => setIndex(Number(e.target.value))}
           >
-            {lessons.map((lesson, i) => (
+            {course.map((lesson, i) => (
               <option value={i} key={lesson.id}>
                 {i + 1}. {lesson.title}
               </option>
@@ -65,11 +76,12 @@ export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
         <button onClick={onClose}>Quitter le tutoriel</button>
       </header>
       <Lesson
-        key={`${index}:${attempt}`}
+        key={`${quick}:${index}:${attempt}`}
         index={index}
+        course={course}
         onReplay={() => setAttempt(attempt + 1)}
         onBack={() => setIndex(index - 1)}
-        onNext={() => (index === lessons.length - 1 ? onClose() : setIndex(index + 1))}
+        onNext={() => (index === course.length - 1 ? onClose() : setIndex(index + 1))}
       />
     </dialog>
   );
@@ -77,16 +89,18 @@ export default function GuidedTutorial({ onClose }: { onClose: () => void }) {
 
 function Lesson({
   index,
+  course,
   onBack,
   onNext,
   onReplay,
 }: {
   index: number;
+  course: readonly (typeof lessons)[number][];
   onBack: () => void;
   onNext: () => void;
   onReplay: () => void;
 }) {
-  const lesson = lessons[index]!;
+  const lesson = course[index]!;
   const [state, setState] = useState(() => {
     const scene = tutorialScene(lesson.id);
     if (scene.auction) scene.auction.id += '-' + crypto.randomUUID();
@@ -372,10 +386,10 @@ function Lesson({
       </div>
       <section className="tutorial-coach" aria-label="Guide de la partie">
         <div className="tutorial-progress">
-          <span style={{ width: `${((index + 1) / lessons.length) * 100}%` }} />
+          <span style={{ width: `${((index + 1) / course.length) * 100}%` }} />
         </div>
         <small>
-          ESCALE {index + 1} / {lessons.length} · À VOTRE RYTHME
+          ESCALE {index + 1} / {course.length} · À VOTRE RYTHME
         </small>
         <h2 ref={heading} tabIndex={-1}>
           {lesson.title}
@@ -392,7 +406,7 @@ function Lesson({
           <button className="primary" onClick={onNext} disabled={cinema.busy}>
             {cinema.busy
               ? 'Observez le plateau…'
-              : index === lessons.length - 1
+              : index === course.length - 1
                 ? 'Terminer le tutoriel'
                 : done && !cinema.busy
                   ? 'Continuer →'

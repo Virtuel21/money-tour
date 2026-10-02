@@ -1,4 +1,5 @@
 import { InsuranceBadge, type InsuranceStyle } from './InsuranceBadge';
+import { architectureFamilies, architectureForCity } from '../game/architecture';
 import { tauntAsset, type Taunt } from '../game/taunts';
 import { scaledAmount } from '@money-tour/engine';
 import { cameraBounds, followPlayer } from './camera';
@@ -91,6 +92,7 @@ export default function Board({
   selecting = false,
   insuranceFocus = false,
   auctionTile,
+  strategicTiles = [],
   onReady,
   mobile = false,
   overview = false,
@@ -108,6 +110,7 @@ export default function Board({
   selecting?: boolean;
   insuranceFocus?: boolean;
   auctionTile?: number;
+  strategicTiles?: number[];
   onReady?: () => void;
   mobile?: boolean;
   overview?: boolean;
@@ -292,6 +295,7 @@ export default function Board({
         const [
           travelers,
           architecture,
+          regionalArchitecture,
           expansionTiles,
           lostIslandArt,
           festivalArt,
@@ -301,6 +305,7 @@ export default function Board({
         ] = await Promise.all([
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/travelers-v3.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/architecture-v3.webp'),
+          textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/architecture-regional.svg'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/expansion-v1.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/lost-island-v1.webp'),
           textureLoader.loadAsync(import.meta.env.BASE_URL + 'textures/festival-stage-v1.webp'),
@@ -311,6 +316,7 @@ export default function Board({
         const loadedTextures = [
           travelers,
           architecture,
+          regionalArchitecture,
           expansionTiles,
           lostIslandArt,
           festivalArt,
@@ -718,7 +724,17 @@ export default function Board({
             for (let j = 0; j < n; j++) {
               const building = new THREE.Group();
               building.add(
-                ownerSprite(atlasSprite(architecture, level === 4 ? 1 : 0, 3, 1.85, 1.85), owner),
+                ownerSprite(
+                  atlasSprite(
+                    regionalArchitecture,
+                    architectureFamilies.indexOf(architectureForCity(tile.name)) +
+                      (level === 4 ? 5 : 0),
+                    5,
+                    1.85,
+                    1.85,
+                  ),
+                  owner,
+                ),
               );
               building.scale.setScalar(level === 4 ? 0.61 : n === 1 ? 0.66 : 0.44);
               building.position.x = (j - (n - 1) / 2) * 0.46;
@@ -1127,25 +1143,27 @@ export default function Board({
                   className={
                     auctionTile === t.id
                       ? 'auction-highlight'
-                      : badgeStyle === 'outline' &&
-                          !inspectedOwner &&
-                          !selecting &&
-                          auctionTile === undefined &&
-                          state.players.some(
-                            (p) =>
-                              p.insurance?.tile === t.id &&
-                              p.id === state.properties[t.id]?.ownerId,
-                          )
-                        ? 'insured-outline'
-                        : inspectedOwner
-                          ? state.properties[t.id]?.ownerId === inspectedOwner
-                            ? 'profile-highlight'
-                            : 'choice-dimmed'
-                          : choices.includes(t.id)
-                            ? 'selectable'
-                            : selecting
-                              ? 'choice-dimmed'
-                              : ''
+                      : strategicTiles.includes(t.id) && !selecting
+                        ? 'strategy-highlight'
+                        : badgeStyle === 'outline' &&
+                            !inspectedOwner &&
+                            !selecting &&
+                            auctionTile === undefined &&
+                            state.players.some(
+                              (p) =>
+                                p.insurance?.tile === t.id &&
+                                p.id === state.properties[t.id]?.ownerId,
+                            )
+                          ? 'insured-outline'
+                          : inspectedOwner
+                            ? state.properties[t.id]?.ownerId === inspectedOwner
+                              ? 'profile-highlight'
+                              : 'choice-dimmed'
+                            : choices.includes(t.id)
+                              ? 'selectable'
+                              : selecting
+                                ? 'choice-dimmed'
+                                : ''
                   }
                   style={
                     {

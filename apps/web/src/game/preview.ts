@@ -8,6 +8,8 @@ export function previewScenario(): LocalSave | null {
   if (
     !name ||
     ![
+      'architecture',
+      'results',
       'auction',
       'quest',
       'travel',
@@ -60,6 +62,26 @@ export function previewScenario(): LocalSave | null {
     ],
     seed: 'visual-review',
   });
+  if (name === 'architecture' || name === 'results') {
+    const cities = state.config.board.filter((tile) => tile.type === 'city');
+    cities.forEach((tile, index) => {
+      state.properties[tile.id] = {
+        ownerId: `p${(index % 4) + 1}`,
+        level: index % 2 ? 4 : 2,
+        championships: 0,
+      };
+    });
+    state.players.forEach((p, index) => {
+      p.laps = 2;
+      p.position = [1, 13, 25, 29][index]!;
+    });
+    state.players[0]!.insurance = { tile: 1 };
+    if (name === 'results') {
+      const result = reduceGame(state, { type: 'tick', elapsedMs: state.durationMs });
+      return { version: 1, seed: 'visual-review', state: result.state };
+    }
+    return { version: 1, seed: 'visual-review', state };
+  }
   if (name === 'auction') {
     state.phase = 'auction';
     state.auction = {
