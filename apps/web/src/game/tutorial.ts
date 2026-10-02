@@ -18,7 +18,7 @@ export const lessons = [
   {
     id: 'buy',
     title: 'Votre première ville',
-    text: 'Chaque option indique son loyer. Dans une partie, choisissez le terrain seul ou des maisons : Acheter acquiert tout en une fois au prix total affiché. L’hôtel attend cinq tours du plateau. Ici, commencez par le terrain ; la leçon Construire vous fera ajouter une maison. Fermer permet de regarder le plateau ; Acheter rouvre l’offre et Passer termine la décision.',
+    text: 'Chaque option indique son loyer. Dans une partie, choisissez le terrain seul ou des maisons : Acheter acquiert tout en une fois au prix total affiché. L’hôtel attend deux tours du plateau. Ici, commencez par le terrain ; la leçon Construire vous fera ajouter une maison. Fermer permet de regarder le plateau ; Acheter rouvre l’offre et Passer termine la décision.',
     task: 'Achetez Madrid ou essayez de passer.',
     target: 'action',
   },
@@ -32,7 +32,7 @@ export const lessons = [
   {
     id: 'build',
     title: 'Construire dès votre premier achat',
-    text: 'Vous pouvez construire sur Madrid sans posséder Barcelone. À chaque visite, la fenêtre vous laisse choisir le niveau final, jusqu’à trois maisons. Validez une seule fois : seuls les bâtiments manquants sont facturés. Il faut revenir sur la ville pour construire à nouveau. L’hôtel se débloque après cinq tours complets du plateau. Les rues complètes servent toujours à gagner la partie.',
+    text: 'Vous pouvez construire sur Madrid sans posséder Barcelone. À chaque visite, la fenêtre vous laisse choisir le niveau final, jusqu’à trois maisons. Validez une seule fois : seuls les bâtiments manquants sont facturés. Il faut revenir sur la ville pour construire à nouveau. L’hôtel se débloque après deux tours complets du plateau. Les rues complètes servent toujours à gagner la partie.',
     task: 'Construisez une maison à Madrid.',
     target: 'action',
   },

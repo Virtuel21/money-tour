@@ -21,6 +21,7 @@ const game = () => {
   });
   state.phase = 'property';
   state.players[0]!.position = 5;
+  state.players[0]!.laps = 1;
   return state;
 };
 it('shows rent on each tier and buys exactly the chosen three houses with their total price', async () => {
@@ -41,6 +42,8 @@ it('shows rent on each tier and buys exactly the chosen three houses with their 
     'Loyer 180 💵',
   ]);
   expect(cards[4]!.disabled).toBe(true);
+  expect(cards[4]!.textContent).toContain('Après 2 tours');
+  expect(host.querySelector('.purchase-rule')!.textContent).toContain('après 2 tours');
   await act(() => cards[3]!.click());
   expect(cards[3]!.getAttribute('aria-pressed')).toBe('true');
   expect(cards[3]!.querySelector('.level-check svg')).not.toBeNull();
@@ -54,7 +57,7 @@ it('shows rent on each tier and buys exactly the chosen three houses with their 
 });
 it('allows an unlocked hotel but prevents a bundle exceeding the balance', async () => {
   const state = game();
-  state.players[0]!.laps = 5;
+  state.players[0]!.laps = 2;
   state.players[0]!.cash = 400;
   const onBuy = vi.fn();
   const host = document.createElement('div');

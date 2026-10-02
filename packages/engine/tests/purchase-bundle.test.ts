@@ -23,7 +23,7 @@ it.each([0, 1, 2, 3, 4])(
   'buys land and level %i with exactly one debit and one state transition',
   (level) => {
     const s = game();
-    s.players[0]!.laps = 5;
+    s.players[0]!.laps = 2;
     const before = JSON.stringify(s);
     const q = getPurchaseQuote(s, level)!;
     expect(q.total).toBe(150 + 75 * level);
@@ -45,12 +45,13 @@ it.each([0, 1, 2, 3, 4])(
 it('sums every construction tier, not only the price of the last one', () => {
   const s = game();
   s.config.board[5]!.buildCosts = [0, 75, 100, 125, 200];
-  s.players[0]!.laps = 5;
+  s.players[0]!.laps = 2;
   expect(getPurchaseQuote(s, 4)!.total).toBe(650);
   expect(reduceGame(s, { type: 'buy', playerId: 'a', level: 4 }).state.players[0]!.cash).toBe(850);
 });
 it('rejects unaffordable bundles, premature hotels, invalid levels and off-turn orders without partial purchases', () => {
   const s = game();
+  s.players[0]!.laps = 1;
   s.players[0]!.cash = 200;
   const actions = [
     { type: 'buy', playerId: 'a', level: 1 },
@@ -66,7 +67,7 @@ it('rejects unaffordable bundles, premature hotels, invalid levels and off-turn 
   }
   s.players[0]!.cash = 1500;
   expect(reduceGame(s, { type: 'buy', playerId: 'a', level: 4 }).error).toBeTruthy();
-  s.players[0]!.laps = 5;
+  s.players[0]!.laps = 2;
   expect(reduceGame(s, { type: 'buy', playerId: 'a', level: 4 }).error).toBeUndefined();
 });
 it('never builds on an island or on property already owned', () => {

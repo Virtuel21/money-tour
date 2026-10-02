@@ -1308,9 +1308,9 @@ export default function App() {
                 <h3>2. Construisez votre fortune</h3>
                 <p>
                   Construisez sur une ville à vous sans attendre la rue complète : jusqu’à trois
-                  maisons, puis un hôtel après cinq tours complets du plateau. Chaque passage
-                  rapporte 300. Après le loyer, toute ville adverse, même avec hôtel, et toute île
-                  peuvent être rachetées au double de sa valeur foncière.
+                  maisons, puis un hôtel après {current.config.hotelUnlockLaps ?? 1} tours complets
+                  du plateau. Chaque passage rapporte 300. Après le loyer, toute ville adverse, même
+                  avec hôtel, et toute île peuvent être rachetées au double de sa valeur foncière.
                 </p>
                 <h3>3. Plusieurs façons de gagner</h3>
                 <p>
