@@ -19,6 +19,7 @@ export function TileLabel({
   conditions,
   anchors,
   dimmed,
+  insured = false,
 }: {
   id: number;
   name: string;
@@ -26,6 +27,7 @@ export function TileLabel({
   conditions: string[];
   anchors?: TileLabelAnchors;
   dimmed: boolean;
+  insured?: boolean;
 }) {
   if (!anchors) return null;
   const frame = (
@@ -70,7 +72,7 @@ export function TileLabel({
       {frame(anchors.name, 60, 'name', name, 46, true)}
       {conditions.length > 0 &&
         frame(anchors.condition, 36, 'condition', conditions.join(' · '), 23, true)}
-      {rent && frame(anchors.rent, 120, 'rent', rent, 116, false)}
+      {rent && frame(insured ? anchors.insuredRent : anchors.rent, 120, 'rent', rent, 116, false)}
     </>
   );
 }

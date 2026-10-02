@@ -1,5 +1,5 @@
 {
-  "version": 16,
+  "version": 15,
   "initialCash": 1500,
   "startBonus": 300,
   "durationMs": 1200000,

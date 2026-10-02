@@ -1,3 +1,4 @@
+import { useAuctionReveal } from './useAuctionReveal';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   chooseBotAction,
@@ -175,6 +176,7 @@ function Lesson({
           'Bien joué ! Observez le résultat sur le plateau et vos comptes, puis passez à la suite.',
       );
   }
+  useAuctionReveal(state, 'p1', act, cinema.busy || done);
   const clickTile = (id: number) => {
     const action = targetActions.find((a) => a.tile === id);
     if (action) act(action);

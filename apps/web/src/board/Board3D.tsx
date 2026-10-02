@@ -1,3 +1,4 @@
+import { InsuranceBadge, type InsuranceStyle } from './InsuranceBadge';
 import { tauntAsset, type Taunt } from '../game/taunts';
 import { scaledAmount } from '@money-tour/engine';
 import { cameraBounds, followPlayer } from './camera';
@@ -89,6 +90,8 @@ export default function Board({
   choices = [],
   selecting = false,
   insuranceFocus = false,
+  auctionTile,
+  onReady,
   mobile = false,
   overview = false,
   self,
@@ -104,6 +107,8 @@ export default function Board({
   choices?: number[];
   selecting?: boolean;
   insuranceFocus?: boolean;
+  auctionTile?: number;
+  onReady?: () => void;
   mobile?: boolean;
   overview?: boolean;
   self?: string;
@@ -111,6 +116,13 @@ export default function Board({
   onPlayer?: (id: string) => void;
   taunt?: Taunt;
 }) {
+  const badgeStyle: InsuranceStyle = import.meta.env.DEV
+    ? ['shield', 'outline', 'medallion'].includes(
+        new URLSearchParams(location.search).get('insurance-style') ?? '',
+      )
+      ? (new URLSearchParams(location.search).get('insurance-style') as InsuranceStyle)
+      : 'outline'
+    : 'outline';
   const host = useRef<HTMLDivElement>(null);
   const foregroundPawns = useRef<(HTMLSpanElement | null)[]>([]);
   const live = useRef({ state, cue, reducedMotion, choices, mobile, overview, selecting, self });
@@ -1032,6 +1044,9 @@ export default function Board({
       renderer?.domElement.remove();
     };
   }, []);
+  useEffect(() => {
+    if (ready || error) onReady?.();
+  }, [ready, error, onReady]);
   const maskId = useId().replace(/:/g, '');
   const visualKey = JSON.stringify([state.properties, state.festivals, choices]);
   useEffect(() => {
@@ -1099,17 +1114,46 @@ export default function Board({
                   points={anchors[i]?.points}
                   tabIndex={0}
                   role="button"
-                  aria-label={(choices.includes(t.id) ? 'Choisir ' : 'Voir ') + tileTitle(t)}
+                  aria-label={
+                    (choices.includes(t.id) ? 'Choisir ' : 'Voir ') +
+                    tileTitle(t) +
+                    (state.players.some(
+                      (p) => p.insurance?.tile === t.id && p.id === state.properties[t.id]?.ownerId,
+                    )
+                      ? ' · Propriété assurée'
+                      : '') +
+                    (auctionTile === t.id ? ' · Aux enchères' : '')
+                  }
                   className={
-                    inspectedOwner
-                      ? state.properties[t.id]?.ownerId === inspectedOwner
-                        ? 'profile-highlight'
-                        : 'choice-dimmed'
-                      : choices.includes(t.id)
-                        ? 'selectable'
-                        : selecting
-                          ? 'choice-dimmed'
-                          : ''
+                    auctionTile === t.id
+                      ? 'auction-highlight'
+                      : badgeStyle === 'outline' &&
+                          !inspectedOwner &&
+                          !selecting &&
+                          auctionTile === undefined &&
+                          state.players.some(
+                            (p) =>
+                              p.insurance?.tile === t.id &&
+                              p.id === state.properties[t.id]?.ownerId,
+                          )
+                        ? 'insured-outline'
+                        : inspectedOwner
+                          ? state.properties[t.id]?.ownerId === inspectedOwner
+                            ? 'profile-highlight'
+                            : 'choice-dimmed'
+                          : choices.includes(t.id)
+                            ? 'selectable'
+                            : selecting
+                              ? 'choice-dimmed'
+                              : ''
+                  }
+                  style={
+                    {
+                      '--insurance-color':
+                        colors[
+                          state.players.findIndex((p) => p.id === state.properties[t.id]?.ownerId)
+                        ],
+                    } as React.CSSProperties
                   }
                   onClick={() => onTile(t.id)}
                   onKeyDown={(e) => {
@@ -1189,12 +1233,29 @@ export default function Board({
               <br />
               TOUR <span>✦</span>
             </div>
+            {state.players.map((player, i) => {
+              const id = player.insurance?.tile;
+              if (id == null || state.properties[id]?.ownerId !== player.id || !anchors[id])
+                return null;
+              return (
+                <InsuranceBadge
+                  key={player.id}
+                  tile={id}
+                  color={colors[i]!}
+                  matrix={anchors[id]!.labels.insurance}
+                  variant={badgeStyle}
+                />
+              );
+            })}
             {state.config.board.map((t, i) => {
               return (
                 <TileLabel
                   key={t.id}
                   id={t.id}
                   name={boardTileTitle(t)}
+                  insured={state.players.some(
+                    (p) => p.insurance?.tile === t.id && p.id === state.properties[t.id]?.ownerId,
+                  )}
                   anchors={anchors[i]?.labels}
                   dimmed={
                     !!(inspectedOwner
@@ -1203,7 +1264,7 @@ export default function Board({
                   }
                   conditions={[
                     ...(reservedCity(state, t.id) ? ['Enchère T10'] : []),
-                    ...(state.players.some((p) => p.insurance?.tile === t.id) ? ['Assurée'] : []),
+
                     ...(state.properties[t.id]?.roachTurns
                       ? [`−50 % · ${state.properties[t.id]?.roachTurns} tours`]
                       : []),

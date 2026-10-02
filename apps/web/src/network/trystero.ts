@@ -16,7 +16,7 @@ export class TrysteroTransport implements Transport {
     const password = await hash({ domain: 'money-tour-password-v2', code });
     this.room = joinRoom(
       {
-        appId: 'virtuel21-money-tour-v15',
+        appId: 'virtuel21-money-tour-v16',
         password,
         ...(this.turn.length ? { turnConfig: this.turn } : {}),
       },

@@ -20,7 +20,7 @@ it('can dismiss an online card early without its old timer advancing the followi
     await act(() =>
       cinema.present(state, [
         { type: 'card', playerId: 'p1', cardId: 'chance-01' },
-        { type: 'auction_started', playerId: 'p1', message: 'Offer' },
+        { type: 'auction_result', playerId: 'p1', message: 'Result' },
       ]),
     );
     expect(cinema.frame.cue.kind).toBe('card');

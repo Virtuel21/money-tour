@@ -1,5 +1,6 @@
 import { maybeEarthquake } from './earthquake.js';
 import { victoryThreats } from './victory-threats.js';
+import { monopolyGroups } from './monopoly.js';
 import {
   initAdventure,
   twinMultiplier,
@@ -1097,7 +1098,7 @@ function checkVictory(state: GameState, events: GameEvent[]): void {
     const owns = (tile: Tile): boolean => ids.has(state.properties[tile.id]?.ownerId ?? '');
     const cities = state.config.board.filter((tile) => tile.type === 'city');
     const lines = [...new Set(cities.map((tile) => tile.line))];
-    const groups = [...new Set(cities.map((tile) => tile.group))];
+    const groups = monopolyGroups(state.config);
     const resorts = state.config.board.filter((tile) => tile.type === 'resort');
     const reasons: string[] = [];
     if (
@@ -1113,10 +1114,7 @@ function checkVictory(state: GameState, events: GameEvent[]): void {
       })
     )
       reasons.push('line');
-    if (
-      groups.filter((group) => cities.filter((tile) => tile.group === group).every(owns)).length >=
-      state.config.groupsToWin
-    )
+    if (groups.filter((group) => group.every(owns)).length >= state.config.groupsToWin)
       reasons.push('triple_monopoly');
     if (state.config.resortVictory !== false && resorts.length > 0 && resorts.every(owns))
       reasons.push('resort_monopoly');

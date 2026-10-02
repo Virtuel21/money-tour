@@ -44,7 +44,7 @@ it('keeps the typed offer and keyboard focus through repeated network busy/tick 
     await render(false);
   }
   const seal = [...container.querySelectorAll('button')].find((b) =>
-    b.textContent?.includes('Sceller'),
+    b.textContent?.includes('Envoyer mon offre'),
   )!;
   await act(() => seal.click());
   await act(() => seal.click());
@@ -70,4 +70,28 @@ it('keeps local handover private and resets the form for the next player', async
   );
   expect(container.querySelector('input')).toBeNull();
   expect(container.textContent).toContain('Je suis Sacha');
+});
+
+it('restores a draft when the bidding window is closed and reopened', async () => {
+  const container = document.createElement('div');
+  document.body.append(container);
+  root = createRoot(container);
+  const state = tutorialScene('auction');
+  const view = () =>
+    createElement(AuctionView, {
+      state,
+      self: 'p1',
+      act: vi.fn(),
+      disabled: false,
+      gameKey: 'draft-reopen',
+    });
+  await act(() => root.render(view()));
+  const input = container.querySelector('input')!;
+  await act(() => {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, '123');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  await act(() => root.render(null));
+  await act(() => root.render(view()));
+  expect(container.querySelector('input')!.value).toBe('123');
 });
