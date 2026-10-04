@@ -1,5 +1,5 @@
 import { scaledAmount } from '@money-tour/engine';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   duelCommitment,
   duelChoices,
@@ -31,6 +31,7 @@ export function DuelView({
   const [amount, setAmount] = useState(String(scaledAmount(state.config, 50000)));
   const [error, setError] = useState('');
   const secrets = useRef<Record<string, { choice: DuelChoice; salt: string }>>({});
+  const revealSent = useRef<string | null>(null);
   const key = (id: string) => `money-tour.duel.${d.id}.${id}`;
   const choose = (choice: DuelChoice) => {
     const salt = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) =>
@@ -49,16 +50,22 @@ export function DuelView({
       hash: duelCommitment(d.id, actor.id, choice, salt),
     });
   };
-  const reveal = () => {
+  useEffect(() => {
+    if (d.stage !== 'reveal' || !canPlay) return;
+    const requestKey = `${d.id}:${actor.id}:${d.commitments[actor.id]}`;
+    if (revealSent.current === requestKey) return;
     let secret = secrets.current[actor.id];
     try {
-      secret ??= JSON.parse(sessionStorage.getItem(key(actor.id)) ?? 'null');
+      secret ??= JSON.parse(
+        sessionStorage.getItem(`money-tour.duel.${d.id}.${actor.id}`) ?? 'null',
+      );
     } catch {
       /* Offer cancellation if the local secret was lost. */
     }
     if (
       !secret ||
       !duelChoices.includes(secret.choice) ||
+      typeof secret.salt !== 'string' ||
       duelCommitment(d.id, actor.id, secret.choice, secret.salt) !== d.commitments[actor.id]
     ) {
       setError(
@@ -66,8 +73,10 @@ export function DuelView({
       );
       return;
     }
+    revealSent.current = requestKey;
+    setError('');
     act({ type: 'duel_reveal', playerId: actor.id, ...secret });
-  };
+  }, [d, actor.id, canPlay, act]);
   return (
     <div className="duel-view">
       <div className="duel-hands" aria-hidden="true">
@@ -211,14 +220,7 @@ export function DuelView({
             </>
           )}
           {d.stage === 'reveal' && (
-            <>
-              <p>Les choix sont verrouillés. Place à la révélation !</p>
-              {canPlay && (
-                <button className="primary" onClick={reveal}>
-                  Révéler mon choix <ActionClock />
-                </button>
-              )}
-            </>
+            <p role="status">Les choix sont verrouillés. Révélation automatique en cours…</p>
           )}
           {d.escrow && (
             <p className="setup-note">

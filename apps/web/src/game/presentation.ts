@@ -3,6 +3,29 @@ import { eventCelebrations, type Celebration } from './celebrations';
 
 export type PresentationPace = 'normal' | 'fast';
 
+/** One debit for a purchase/construction batch; keep the original events for the journal. */
+function propertyPayment(events: GameEvent[], index: number): number | undefined {
+  const event = events[index]!;
+  if (!['purchase', 'build'].includes(event.type)) return undefined;
+  const previous = events[index - 1];
+  if (
+    event.type === 'build' &&
+    previous &&
+    ['purchase', 'build'].includes(previous.type) &&
+    previous.tile === event.tile &&
+    previous.playerId === event.playerId
+  )
+    return 0;
+  let amount = event.amount ?? 0;
+  for (let i = index + 1; i < events.length; i++) {
+    const next = events[i]!;
+    if (next.type !== 'build' || next.tile !== event.tile || next.playerId !== event.playerId)
+      break;
+    amount += next.amount ?? 0;
+  }
+  return amount;
+}
+
 /** Reading time and auction orientation are independent from animation speed. */
 function pacedDuration(cue: Cue, pace: PresentationPace): number {
   if (pace === 'normal' || ['card', 'tax'].includes(cue.kind) || cue.reason === 'auction_started')
@@ -64,7 +87,7 @@ export function presentation(
       cue: { ...cue, duration: pacedDuration(cue, pace) },
     });
   const celebrations = eventCelebrations(previous, next, events);
-  const money = (event: GameEvent) => {
+  const money = (event: GameEvent, duration = 1500) => {
     if ((event.amount ?? 0) <= 0) return;
     const recipient = visual.players.find((p) => p.id === event.playerId);
     const payerId = typeof event.payerId === 'string' ? event.payerId : undefined;
@@ -79,11 +102,23 @@ export function presentation(
       reason: String(event.reason ?? event.type),
       tile: event.tile,
       sound: recipient ? 'coin-in' : 'coin-out',
-      duration: reduced ? 350 : 1500,
+      duration: reduced ? 350 : duration,
     });
   };
   let departure: GameEvent | undefined;
   for (const [index, event] of events.entries()) {
+    const propertyAmount = propertyPayment(events, index);
+    if (propertyAmount !== undefined)
+      money(
+        {
+          ...event,
+          amount: propertyAmount,
+          playerId: undefined,
+          payerId: event.playerId,
+          reason: event.type,
+        },
+        1000,
+      );
     const firstFrame = frames.length;
     if (event.type === 'insured')
       add({ kind: 'settle', reason: 'insured', tile: event.tile, duration: 700 });
@@ -227,10 +262,16 @@ export function presentation(
         kind: event.type === 'build' ? 'build' : 'settle',
         sound: event.type === 'buyout' ? 'purchase' : event.type,
         tile: event.tile,
-        duration: reduced ? 100 : 700,
+        duration: reduced
+          ? 100
+          : event.type === 'build'
+            ? 350
+            : event.type === 'purchase'
+              ? 250
+              : 700,
       });
     }
-    if (['purchase', 'build', 'championship'].includes(event.type))
+    if (event.type === 'championship')
       money({
         ...event,
         type: 'payment',
@@ -249,7 +290,10 @@ export function presentation(
 
 export function presentationMs(events: GameEvent[], pace: PresentationPace = 'normal'): number {
   if (pace === 'fast')
-    return events.reduce((ms, event) => {
+    return events.reduce((ms, event, index) => {
+      const propertyAmount = propertyPayment(events, index);
+      if (propertyAmount !== undefined)
+        return ms + (propertyAmount > 0 ? 650 : 0) + (event.type === 'build' ? 350 : 150);
       if (event.type === 'move') return ms + Math.abs(Number(event.steps ?? 0)) * 90;
       if (event.type === 'island') return ms + 32 * 90;
       const durations: Record<string, number> = {
@@ -262,8 +306,6 @@ export function presentationMs(events: GameEvent[], pace: PresentationPace = 'no
         extra_roll: 650,
         tax_notice: 5000,
         card: 5500,
-        build: 1000,
-        purchase: 800,
         buyout: 150,
         championship: 650,
         victory: 150,
@@ -275,8 +317,11 @@ export function presentationMs(events: GameEvent[], pace: PresentationPace = 'no
       // All remaining public notices retain readable time; unknown events keep their normal budget.
       return ms + Math.min(2200, presentationMs([event]));
     }, 0);
-  return events.reduce(
-    (ms, e) =>
+  return events.reduce((ms, e, index) => {
+    const propertyAmount = propertyPayment(events, index);
+    if (propertyAmount !== undefined)
+      return ms + (propertyAmount > 0 ? 1000 : 0) + (e.type === 'build' ? 350 : 250);
+    return (
       ms +
       (e.type === 'dice'
         ? 2000
@@ -327,7 +372,7 @@ export function presentationMs(events: GameEvent[], pace: PresentationPace = 'no
                                 ? 1500
                                 : e.type === 'island'
                                   ? 8640
-                                  : 0),
-    0,
-  );
+                                  : 0)
+    );
+  }, 0);
 }

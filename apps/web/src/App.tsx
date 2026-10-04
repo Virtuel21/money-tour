@@ -511,7 +511,7 @@ export default function App() {
     current.phase === 'auction'
       ? 'Une ville neutre attend vos offres secrètes. Suivez la fenêtre d’enchère.'
       : current.phase === 'duel'
-        ? 'La fenêtre de duel indique qui doit miser, choisir ou révéler sa main.'
+        ? 'La fenêtre de duel indique qui doit miser ou choisir sa main. Les choix sont ensuite révélés automatiquement.'
         : current.phase === 'alliance'
           ? 'Choisissez le joueur avec qui partager les prochains gains.'
           : current.phase === 'casino'
