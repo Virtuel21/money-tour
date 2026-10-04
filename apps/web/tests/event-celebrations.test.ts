@@ -31,9 +31,9 @@ it('celebrates the actual hotel build once, never an intermediate house or a hot
 });
 
 it.each([
-  { type: 'buy', initialLevel: 0, ownerId: null, expectedDelay: 8800 },
-  { type: 'buyout', initialLevel: 2, ownerId: 'b', expectedDelay: 4400 },
-  { type: 'upgrade', initialLevel: 3, ownerId: 'a', expectedDelay: 0 },
+  { type: 'buy', initialLevel: 0, ownerId: null, expectedDelay: 2300 },
+  { type: 'buyout', initialLevel: 2, ownerId: 'b', expectedDelay: 3550 },
+  { type: 'upgrade', initialLevel: 3, ownerId: 'a', expectedDelay: 1000 },
 ] as const)(
   'celebrates the real $type reducer result once its hotel build is presented',
   ({ type, initialLevel, ownerId, expectedDelay }) => {
@@ -70,7 +70,7 @@ it.each([
       const fastIndex = fast.findIndex((frame) =>
         frame.cue.celebrations?.some((item) => item.kind === 'hotel'),
       );
-      expect(fast.slice(0, fastIndex).reduce((ms, frame) => ms + frame.cue.duration, 0)).toBe(3800);
+      expect(fast.slice(0, fastIndex).reduce((ms, frame) => ms + frame.cue.duration, 0)).toBe(1850);
     }
   },
 );

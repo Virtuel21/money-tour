@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import {
   reservedCity,
   getLegalActions,
@@ -65,6 +65,8 @@ export function PurchaseDetails({
   const quote = getQuote(level)!;
   const fraudQuote = getPurchaseQuote(state, level, true)!;
   const canBuy = quote.canBuy;
+  const insufficientFunds = quote.available && player.cash < quote.total;
+  const feedbackId = useId();
   const hotelLocked = player.laps < (state.config.hotelUnlockLaps ?? 1);
   const labels = ['Terrain', '1 maison', '2 maisons', '3 maisons', 'Hôtel'];
   const modern = state.config.buildingRequiresGroup === false;
@@ -169,14 +171,19 @@ export function PurchaseDetails({
         {canBuy && <span> · Après achat {money(player.cash - quote.total, true)}</span>}
       </p>
       {!canBuy && (
-        <p role="status">
+        <p id={feedbackId} className="purchase-feedback" role="status">
           {!quote.available
             ? 'Ce niveau n’est pas encore disponible.'
-            : `Il manque ${money(Math.max(0, quote.total - player.cash), true)}.`}
+            : `Fonds insuffisants. Il manque ${money(Math.max(0, quote.total - player.cash), true)} pour cet achat.`}
         </p>
       )}
       <div className="purchase-buttons">
-        <button className="primary purchase-cta" disabled={!canBuy} onClick={() => onBuy(level)}>
+        <button
+          className={`primary purchase-cta${insufficientFunds ? ' purchase-insufficient' : ''}`}
+          disabled={!canBuy}
+          aria-describedby={!canBuy ? feedbackId : undefined}
+          onClick={() => onBuy(level)}
+        >
           <span>
             {buyout ? 'Racheter' : owned ? 'Passer à' : 'Acheter'}{' '}
             {tile.type === 'resort'

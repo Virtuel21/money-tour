@@ -31,7 +31,7 @@ import { MobilePocket } from './game/MobilePocket';
 import { AuctionView } from './game/AuctionView';
 import { AdventureBanner, PrivateQuest, PlayerInventory } from './game/AdventureHUD';
 import { ActionClock, GameClockContext } from './game/ActionClock';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
   chooseBotAction,
   config,
@@ -42,6 +42,8 @@ import {
   adventureText,
   reservedCity,
   type GameAction,
+  type GameState,
+  type GameEvent,
 } from '@money-tour/engine';
 const Board = lazy(() => import('./board/Board3D'));
 import { usePresentation } from './game/usePresentation';
@@ -50,6 +52,11 @@ import { previewScenario } from './game/preview';
 import { Soundscape, loadAudio } from './audio/synth';
 const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
 const GuidedTutorial = lazy(() => import('./game/GuidedTutorial'));
+const DebugPanel = lazy(() =>
+  import('./game/DebugPanel').then((module) => ({ default: module.DebugPanel })),
+);
+import { applyDebug, loadDebug, newDebug, persistDebug, type DebugCommand } from './game/debug';
+import './game/debug.css';
 import type { Session, SessionView } from './network/session';
 import {
   applyLocal,
@@ -85,6 +92,24 @@ function Logo() {
     </span>
   );
 }
+const DebugAccessContext = createContext<(() => void) | null>(null);
+
+function GameProviders({
+  value,
+  onDebug,
+  children,
+}: {
+  value: { state: GameState | null; held: boolean };
+  onDebug: (() => void) | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <DebugAccessContext.Provider value={onDebug}>
+      <GameClockContext.Provider value={value}>{children}</GameClockContext.Provider>
+    </DebugAccessContext.Provider>
+  );
+}
+
 function Modal({
   title,
   children,
@@ -97,6 +122,7 @@ function Modal({
   className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const openDebug = useContext(DebugAccessContext);
   useEffect(() => {
     ref.current?.showModal();
   }, []);
@@ -114,6 +140,11 @@ function Modal({
       </div>
       <div className="modal-heading">
         <h2>{title}</h2>
+        {openDebug && className !== 'debug-modal' && (
+          <button className="debug-access" onClick={openDebug}>
+            Debug
+          </button>
+        )}
         {onClose && (
           <button aria-label="Fermer" className="icon-button" onClick={onClose}>
             <GameIcon name="close" />
@@ -158,6 +189,8 @@ export default function App() {
   const [inspectedOwner, setInspectedOwner] = useState<string | null>(null);
   const [collapsedPlayers, setCollapsedPlayers] = useState<Record<string, boolean>>({});
   const [save, setSave] = useState<LocalSave | null>(() => previewScenario() ?? loadLocal());
+  const [debugResume, setDebugResume] = useState(loadDebug);
+  const [debugUndo, setDebugUndo] = useState<LocalSave[]>([]);
   const [screen, setScreen] = useState<'menu' | 'game'>(() =>
     previewScenario() ? 'game' : 'menu',
   );
@@ -174,6 +207,7 @@ export default function App() {
     | 'journal'
     | 'strategy'
     | 'taunt'
+    | 'debug'
     | null
   >(location.hash.includes('room=') ? 'online' : null);
   const [selectedBonus, setSelectedBonus] = useState<BonusInfo | null>(null);
@@ -231,13 +265,32 @@ export default function App() {
   );
   const [history, setHistory] = useState<string[]>(save?.history ?? []),
     [notice, setNotice] = useState('');
+  const debugging = !!save?.debug && !online;
+  const debugOpen = debugging && modal === 'debug';
+  const debugFreezeTime = debugging && !!save?.debug?.freezeTime;
+  const debugFreezeBots = debugging && !!save?.debug?.freezeBots;
+  const openDebug = () => {
+    setSelected(null);
+    setModal('debug');
+  };
+  useEffect(() => {
+    if (!debugging || screen !== 'game') return;
+    const shortcut = (event: KeyboardEvent) => {
+      if (event.key !== 'F2') return;
+      event.preventDefault();
+      setSelected(null);
+      setModal((previous) => (previous === 'debug' ? null : 'debug'));
+    };
+    window.addEventListener('keydown', shortcut);
+    return () => window.removeEventListener('keydown', shortcut);
+  }, [debugging, screen]);
   const dispatchRef = useRef<(action: GameAction) => void>(() => {});
   const cinema = usePresentation(
     save?.state ?? demo,
     reduced,
     !!online,
     online ? (online.state?.presentationPace ?? 'normal') : comfort.pace,
-    paused,
+    paused || debugOpen,
   );
   const rolling = cinema.busy;
   const turnKey = (online?.state ?? save?.state)?.turn;
@@ -263,6 +316,12 @@ export default function App() {
     setScreen('menu');
     setPaused(true);
     setSelected(null);
+    setModal(null);
+    if (debugging) {
+      const normal = loadLocal();
+      setSave(normal);
+      setHistory(normal?.history ?? []);
+    }
   };
   const rematch = () => {
     if (!current.winner) return;
@@ -270,7 +329,12 @@ export default function App() {
       void onlineSession.current.rematch();
       return;
     }
-    const next = newLocal({ ...rematchOptions(current), presentationPace: comfort.pace });
+    const fresh = newLocal({
+      ...rematchOptions(current),
+      presentationPace: comfort.pace,
+      ...(debugging ? { config: current.config } : {}),
+    });
+    const next = debugging ? newDebug(fresh) : fresh;
     cinema.reset(next.state);
     setSave(next);
     setHistory(['Nouveau voyage ! ' + adventureText(next.state)]);
@@ -332,7 +396,7 @@ export default function App() {
   );
   const legal = screen === 'game' ? getLegalActions(current) : [];
   const act = (action: GameAction) => {
-    if (screen !== 'game' || (paused && action.type !== 'quit')) return;
+    if (screen !== 'game' || debugOpen || (paused && action.type !== 'quit')) return;
     if (action.type !== 'tick') setInspectedOwner(null);
     if (['roll', 'attempt_escape', 'travel'].includes(action.type)) setOverview(false);
     if (onlineSession.current) {
@@ -347,6 +411,7 @@ export default function App() {
       setNotice('Cette action n’est plus disponible.');
       return;
     }
+    if (debugging && action.type !== 'tick') setDebugUndo((old) => [...old.slice(-19), save]);
     cinema.present(next.state, result.events);
     const messages = result.events.map((e) => eventText(e, next.state)).filter(Boolean);
     next.history = [...messages.slice().reverse(), ...history];
@@ -355,13 +420,19 @@ export default function App() {
   };
   dispatchRef.current = act;
   useEffect(() => {
-    if (save && !previewScenario() && !persistLocal(save))
+    if (save?.debug) {
+      setDebugResume(save);
+      if (!persistDebug(save))
+        setNotice('Le scénario debug ne peut pas être sauvegardé. Exportez-le avant de fermer.');
+    } else if (save && !previewScenario() && !persistLocal(save))
       setNotice('Le navigateur ne permet pas la sauvegarde locale. Gardez cet onglet ouvert.');
   }, [save]);
   useEffect(() => {
     if (
       (previewScenario() && new URLSearchParams(location.search).get('clock') !== '1') ||
       online ||
+      debugOpen ||
+      debugFreezeTime ||
       screen !== 'game' ||
       paused ||
       rolling ||
@@ -376,13 +447,73 @@ export default function App() {
       dispatchRef.current({ type: 'tick', elapsedMs });
     }, 1000);
     return () => clearInterval(timer);
-  }, [screen, paused, rolling, Boolean(current.winner), Boolean(online)]);
+  }, [
+    screen,
+    paused,
+    rolling,
+    Boolean(current.winner),
+    Boolean(online),
+    debugOpen,
+    debugFreezeTime,
+  ]);
   useEffect(() => {
-    if (online || screen !== 'game' || paused || rolling || current.winner || !decisionPlayer.bot)
+    if (
+      online ||
+      debugOpen ||
+      debugFreezeBots ||
+      screen !== 'game' ||
+      paused ||
+      rolling ||
+      current.winner ||
+      !decisionPlayer.bot
+    )
       return;
     const timer = setTimeout(() => dispatchRef.current(chooseBotAction(current)), 650);
     return () => clearTimeout(timer);
-  }, [save, screen, paused, rolling, Boolean(online)]);
+  }, [save, screen, paused, rolling, Boolean(online), debugOpen, debugFreezeBots]);
+  const installDebug = (next: LocalSave) => {
+    cinema.reset(next.state);
+    setSave(next);
+    setHistory(next.history ?? []);
+    setSelected(null);
+    setNotice('');
+    setDismissedOffer('');
+    setBuyoutOfferKey('');
+  };
+  const startDebug = (source?: LocalSave) => {
+    if (online) return;
+    try {
+      installDebug(source?.debug ? structuredClone(source) : newDebug(source));
+    } catch (cause) {
+      setNotice(
+        cause instanceof Error
+          ? cause.message
+          : 'Cette sauvegarde ne peut pas être ouverte en mode debug.',
+      );
+      return;
+    }
+    setDebugUndo([]);
+    setPaused(false);
+    setScreen('game');
+    setModal('debug');
+  };
+  const debugCommand = (command: DebugCommand) => {
+    if (!debugging || !save) throw new Error('Le mode debug est réservé au bac à sable local.');
+    let presentation: { before: GameState; events: GameEvent[] } | undefined;
+    const next = applyDebug(save, command, (before, events) => {
+      presentation = { before, events };
+    });
+    setDebugUndo((old) => [...old.slice(-19), save]);
+    installDebug(next);
+    if (presentation?.events.length) {
+      cinema.reset(presentation.before);
+      cinema.present(next.state, presentation.events);
+    }
+    if (command.type === 'dice' || (command.type === 'move' && command.resolve)) {
+      setModal(null);
+      setPaused(false);
+    }
+  };
   const start = () => {
     if (!validMinutes(minutes)) return;
     const next = newLocal({
@@ -477,7 +608,7 @@ export default function App() {
     current,
     online?.self,
     act,
-    screen !== 'game' || interactionDisabled,
+    screen !== 'game' || interactionDisabled || debugOpen,
     online?.self ?? save?.seed,
   );
   const offerKey = [online ? journey : save?.seed, active.id, current.turn, active.position].join(
@@ -511,7 +642,7 @@ export default function App() {
     current.phase === 'auction'
       ? 'Une ville neutre attend vos offres secrètes. Suivez la fenêtre d’enchère.'
       : current.phase === 'duel'
-        ? 'La fenêtre de duel indique qui doit miser, choisir ou révéler sa main.'
+        ? 'La fenêtre de duel indique qui doit miser ou choisir sa main. Les choix sont ensuite révélés automatiquement.'
         : current.phase === 'alliance'
           ? 'Choisissez le joueur avec qui partager les prochains gains.'
           : current.phase === 'casino'
@@ -549,8 +680,12 @@ export default function App() {
     );
 
   return (
-    <GameClockContext.Provider
-      value={{ state: screen === 'game' ? current : null, held: paused || rolling }}
+    <GameProviders
+      onDebug={debugging && screen === 'game' ? openDebug : null}
+      value={{
+        state: screen === 'game' ? current : null,
+        held: paused || rolling || debugOpen || debugFreezeTime,
+      }}
     >
       <div
         className={`app${comfort.largeText ? ' text-large' : ''}`}
@@ -710,6 +845,18 @@ export default function App() {
                     : 'Changez les sièges en bots pour observer une partie.'}{' '}
                   Sauvegarde sur cet appareil.
                 </p>
+                <button className="debug-launch" disabled={!!online} onClick={() => startDebug()}>
+                  Mode debug · nouveau bac à sable
+                </button>
+                {debugResume && (
+                  <button
+                    className="debug-launch"
+                    disabled={!!online}
+                    onClick={() => startDebug(debugResume)}
+                  >
+                    Reprendre mon scénario debug
+                  </button>
+                )}
               </div>
             </section>
             <section className="hero-map" aria-label="Aperçu du plateau">
@@ -1514,6 +1661,11 @@ export default function App() {
         )}
         {modal === 'settings' && (
           <Modal title="Votre confort de voyage" onClose={() => setModal(null)}>
+            {screen === 'game' && !online && !debugging && save && (
+              <button className="debug-launch" onClick={() => startDebug(save)}>
+                Tester une copie en mode debug
+              </button>
+            )}
             <div className="comfort-options">
               <section className="board-zoom-setting" aria-label="Réglage du zoom">
                 <div className="board-zoom-heading">
@@ -1985,7 +2137,7 @@ export default function App() {
             />
           </Modal>
         )}
-        {tile && !offer && (
+        {tile && !offer && !debugOpen && (
           <Modal title={tileTitle(tile)} onClose={() => setSelected(null)}>
             <div className="property-hero" style={{ background: tile.color ?? '#e6b94a' }}>
               {tile.type === 'city' ? (
@@ -2190,7 +2342,7 @@ export default function App() {
             />
           )}
         </Suspense>
-        {screen === 'game' && current.winner && !rolling && (
+        {screen === 'game' && current.winner && !rolling && !debugOpen && (
           <Modal title="Une fortune à célébrer !" onClose={goHome}>
             <div className="victory-art">
               ✦<span>♜</span>✦
@@ -2219,7 +2371,40 @@ export default function App() {
             </button>
           </Modal>
         )}
+        {debugging && screen === 'game' && (
+          <div className="debug-toolbar">
+            <button className="debug-access" onClick={openDebug}>
+              DEBUG · Outils (F2)
+            </button>
+          </div>
+        )}
+        {debugOpen && save && (
+          <Modal
+            title="Mode debug · laboratoire"
+            className="debug-modal"
+            onClose={() => setModal(null)}
+          >
+            <Suspense fallback={<p>Chargement des outils…</p>}>
+              <DebugPanel
+                save={save}
+                onCommand={debugCommand}
+                canUndo={!!debugUndo.length}
+                onUndo={() => {
+                  const previous = debugUndo.at(-1);
+                  if (previous) {
+                    installDebug(previous);
+                    setDebugUndo((old) => old.slice(0, -1));
+                  }
+                }}
+                onImport={(next) => {
+                  setDebugUndo((old) => [...old.slice(-19), save]);
+                  installDebug(next);
+                }}
+              />
+            </Suspense>
+          </Modal>
+        )}
       </div>
-    </GameClockContext.Provider>
+    </GameProviders>
   );
 }

@@ -68,7 +68,7 @@ export const lessons = [
     id: 'duel',
     title: 'Défier un adversaire',
     text: 'La case Duel remplace le Karma ; cette rencontre ne vient plus des cartes Chance. Proposez une mise à Sacha : chacun doit pouvoir payer la même somme. Après acceptation, choisissez secrètement pierre, feuille ou ciseaux, puis révélez. Le gagnant prend le pot ; une égalité relance les choix sans nouvelle mise jusqu’à un vainqueur. Refuser avant de miser ne coûte rien.',
-    task: 'Proposez un duel, choisissez une main et révélez-la.',
+    task: 'Proposez un duel et choisissez une main. La révélation est automatique.',
     target: 'action',
   },
   {
