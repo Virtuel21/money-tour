@@ -4,6 +4,7 @@ export { createRng } from './rng.js';
 export {
   createGame,
   reduceGame,
+  resolveDebugLanding,
   chooseBotAction,
   getLegalActions,
   isLegalPlayerAction,
