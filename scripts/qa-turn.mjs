@@ -39,6 +39,7 @@ async function context(language = 'fr', viewport = { width: 1280, height: 900 })
     }),
   );
   await ctx.addInitScript((language) => {
+    if (location.origin === 'null') return;
     localStorage.setItem('money-tour.language.v1', language);
     window.turnQaPeers = [];
     const Original = window.RTCPeerConnection;
@@ -173,6 +174,7 @@ try {
       const guestContext = await context();
       const guest = await guestContext.newPage();
       await guest.goto(link);
+      await guest.getByRole('dialog').waitFor({ timeout: 60000 });
       console.log('Guest page: ' + (await guest.locator('body').innerText({ timeout: 5000 })));
       if (mode === 'service')
         assert.equal(await guest.getByLabel('URL du service TURN').inputValue(), endpoint);
