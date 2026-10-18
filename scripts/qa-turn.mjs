@@ -207,6 +207,19 @@ try {
   }
   assert.deepEqual(result.errors, []);
   console.log(JSON.stringify(result));
+} catch (error) {
+  const pages = browser.contexts().flatMap((ctx) => ctx.pages());
+  result.failure = { message: error.message, pages: [] };
+  for (const [i, page] of pages.entries()) {
+    const state = await page.evaluate(() => ({
+      url: location.href,
+      text: document.body.innerText,
+    }));
+    result.failure.pages.push(state);
+    await page.screenshot({ path: path.join(out, `failure-${i}.png`) });
+  }
+  console.log(JSON.stringify(result.failure));
+  throw error;
 } finally {
   await fs.writeFile(path.join(out, 'results.json'), JSON.stringify(result, null, 2));
   await browser.close();
