@@ -28,7 +28,7 @@ Le service doit répondre en HTTPS, autoriser par CORS l'origine exacte du jeu e
 
 Le serveur émet des identifiants à durée limitée et applique ses propres quotas/limites d'abus. La clé API du fournisseur reste côté serveur. L'URL du service est publique ; elle ne doit contenir aucun secret. Le code du salon, l'identité de reprise et les données de partie ne sont pas envoyés à ce service. Trystero conserve ses STUN par défaut lorsqu'on lui passe `turnConfig`.
 
-Le kit auto-hébergeable `deploy/turn/` fournit Coturn et ce service ; [guide d’installation et saisie manuelle](TURN.md). Aucun serveur distant n’est provisionné automatiquement par le navigateur. L'option manuelle accepte plusieurs URL séparées par des virgules. Un transport TLS/TCP sur 443 peut aider là où UDP est filtré ; il faut que le fournisseur le propose réellement.
+Aucun fournisseur ni serveur TURN n'est provisionné par cette modification. L'option manuelle accepte plusieurs URL séparées par des virgules. Un transport TLS/TCP sur 443 peut aider là où UDP est filtré ; il faut que le fournisseur le propose réellement.
 
 ## Recette terrain restant à effectuer
 
@@ -40,3 +40,9 @@ Le kit auto-hébergeable `deploy/turn/` fournit Coturn et ce service ; [guide d�
 6. Jouer l'enchère à deux réseaux : conserver le focus pendant la saisie, sceller et révéler, comparer le gagnant et les soldes.
 
 Les tests de transport simulé et de viewport mobile ne valident pas un opérateur 5G. La recette multi-réseaux de l'issue #10 reste ouverte.
+
+## Saisie de votre serveur TURN dans le jeu
+
+Sous « Créer un salon en ligne », « Configurer le serveur TURN » ouvre les champs **Adresse TURN**, **Nom d’utilisateur TURN** et **Mot de passe TURN**. Saisir les paramètres du serveur existant, choisir si toutes les connexions doivent passer par le relais, puis « Créer le salon avec TURN ». Le bouton de test vérifie une allocation WebRTC `relay` ; il ne remplace pas une partie entre plusieurs réseaux.
+
+Plusieurs adresses peuvent être séparées par des virgules, par exemple `turn:relay.example:3478?transport=udp, turns:relay.example:5349?transport=tcp`. Les identifiants manuels restent en mémoire dans l’onglet et doivent être ressaisis après actualisation ou fermeture. Ils ne figurent pas dans l’invitation. En mode manuel, chaque invité renseigne ses paramètres ; le lien complet transmet le mode réseau et la demande de relais obligatoire. Un code de salon seul ne transmet pas ces réglages. Le service automatique facultatif configuré au déploiement reste pris en charge.

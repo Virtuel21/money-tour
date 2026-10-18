@@ -5,7 +5,6 @@ import {
   invitationTurn,
   rememberTurn,
   savedTurn,
-  turnEndpoint,
 } from '../src/network/turnSettings';
 import { manualTurnServers, probeTurn } from '../src/network/ice';
 
@@ -15,32 +14,21 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 const code = 'a'.repeat(32);
-it('shares the public endpoint and relay policy without adding credentials to the static request', () => {
-  const settings = { endpoint: 'https://relay.example/credentials', relayOnly: true };
+it('shares the manual mode in the invitation without any TURN credentials', () => {
+  const settings = { relayOnly: true, manual: true };
   const link = invitationLink('https://example.test/game/?v=1#old', code, settings);
   expect(new URL(link).search).toBe('?v=1');
   expect(invitationTurn(link)).toEqual(settings);
   expect(new URL(link).hash).toContain('room=' + code);
-});
-it('marks manual invitations so guests cannot silently join without the required TURN configuration', () => {
-  const settings = { endpoint: '', relayOnly: true, manual: true };
-  expect(invitationTurn(invitationLink('https://example.test', code, settings))).toEqual(settings);
   expect(invitationTurn('#room=' + code)).toBeNull();
 });
-it.each([
-  'http://relay.example/credentials',
-  'https://user:secret@relay.example',
-  'https://relay.example/?key=secret',
-  'https://relay.example/#secret',
-  'javascript:alert(1)',
-])('rejects unsafe or secret-bearing endpoint %s', (endpoint) => {
-  expect(() => turnEndpoint(endpoint)).toThrow('HTTPS');
-  expect(() => invitationTurn('#turn=' + encodeURIComponent(endpoint))).toThrow();
+it('does not fetch arbitrary endpoints from an invitation', () => {
+  expect(() => invitationTurn('#turn=https://untrusted.example/credentials')).toThrow('invalide');
 });
-it('allows loopback HTTP for local testing and expires room settings after 24 hours', () => {
-  const settings = { endpoint: turnEndpoint('http://127.0.0.1:8787/credentials'), relayOnly: true };
+it('expires public room preferences after 24 hours', () => {
+  const settings = { manual: true, relayOnly: true };
   rememberTurn(settings, code);
-  expect(savedTurn(code)).toMatchObject(settings);
+  expect(savedTurn(code)).toEqual(settings);
   expect(savedTurn('b'.repeat(32))).toBeNull();
   vi.useFakeTimers();
   vi.setSystemTime(Date.now() + 86400001);
@@ -101,7 +89,7 @@ it('does not leave a peer connection open after success, timeout or cancellation
 it('never persists unexpected credential properties', () => {
   rememberTurn(
     Object.assign(
-      { endpoint: 'https://relay.example/credentials', relayOnly: true },
+      { manual: true, relayOnly: true },
       { credential: 'must-not-save', username: 'must-not-save' },
     ),
     code,

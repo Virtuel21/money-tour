@@ -933,7 +933,7 @@ export default function App() {
                     setModal('online');
                   }}
                 >
-                  {translate('Créer un serveur TURN')}
+                  {translate('Configurer le serveur TURN')}
                 </button>
                 {(online?.state || onlineResume) && (
                   <>

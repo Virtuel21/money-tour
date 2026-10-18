@@ -21,7 +21,6 @@ import {
   invitationTurn,
   rememberTurn,
   savedTurn,
-  turnEndpoint,
   type TurnSettings,
 } from './turnSettings';
 
@@ -64,7 +63,7 @@ export default function OnlineLobby({
   const [initialTurn] = useState(() => {
     try {
       return {
-        settings: invitationTurn(location.hash) ?? savedTurn(resume?.code ?? code) ?? savedTurn(),
+        settings: invitationTurn(location.hash) ?? savedTurn(resume?.code ?? code),
         error: '',
       };
     } catch (error) {
@@ -85,17 +84,11 @@ export default function OnlineLobby({
   const [turnUrl, setTurnUrl] = useState(''),
     [turnUser, setTurnUser] = useState(''),
     [turnPassword, setTurnPassword] = useState('');
-  const [endpoint, setEndpoint] = useState(
-    initialTurn.settings?.endpoint ?? import.meta.env.VITE_TURN_CREDENTIALS_URL ?? '',
-  );
-  const [manual, setManual] = useState(
-    initialTurn.settings?.manual === true ||
-      !(initialTurn.settings?.endpoint || import.meta.env.VITE_TURN_CREDENTIALS_URL),
-  );
+  const [requiredTurn, setRequiredTurn] = useState(initialTurn.settings?.manual ?? false);
   const [relayOnly, setRelayOnly] = useState(initialTurn.settings?.relayOnly ?? setupTurn);
   const [networkSettings, setNetworkSettings] = useState<TurnSettings>({
-    endpoint: '',
     relayOnly: false,
+    manual: false,
   });
   const [testing, setTesting] = useState(false);
   const [testStatus, setTestStatus] = useState('');
@@ -137,23 +130,21 @@ export default function OnlineLobby({
   }, [error, view]);
   function selectedTurn(): TurnSettings {
     if (configurationError) throw new Error(configurationError);
-    const configured = manual
-      ? !!turnUrl.trim() || !!turnUser || !!turnPassword
-      : !!endpoint.trim();
-    if (!configured && (relayOnly || setupTurn || initialTurn.settings?.manual))
+    const configured = !!turnUrl.trim() || !!turnUser || !!turnPassword;
+    if (!configured && (relayOnly || setupTurn || requiredTurn))
       throw new Error('Configurez un serveur TURN avant d’activer le relais obligatoire.');
     return {
-      endpoint: manual ? '' : turnEndpoint(endpoint),
       relayOnly,
-      manual: manual && configured,
+      manual: configured,
     };
   }
   async function resolveTurn(settings: TurnSettings, controller: AbortController) {
     if (settings.manual) return manualTurnServers(turnUrl, turnUser, turnPassword);
-    if (!settings.endpoint) return [];
+    const endpoint = import.meta.env.VITE_TURN_CREDENTIALS_URL;
+    if (!endpoint) return [];
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
-      return await loadTurnServers(settings.endpoint, controller.signal);
+      return await loadTurnServers(endpoint, controller.signal);
     } finally {
       clearTimeout(timeout);
     }
@@ -197,8 +188,7 @@ export default function OnlineLobby({
       const enteredRoom = invitationCode(value);
       const settings = invitationTurn(value) ?? (enteredRoom ? savedTurn(enteredRoom) : null);
       if (settings) {
-        setEndpoint(settings.endpoint);
-        setManual(settings.manual === true);
+        setRequiredTurn(settings.manual);
         setRelayOnly(settings.relayOnly);
       }
       setError('');
@@ -213,17 +203,25 @@ export default function OnlineLobby({
   const link = invitationLink(location.href, code, networkSettings);
   const turnPanel = (
     <TurnPanel
-      open={setupTurn || !!initialTurn.settings?.manual || !!initialTurn.settings?.endpoint}
-      endpoint={endpoint}
-      onEndpoint={(value) => changeTurn(() => setEndpoint(value))}
-      manual={manual}
-      onManual={(value) => changeTurn(() => setManual(value))}
+      open={setupTurn || requiredTurn}
       url={turnUrl}
-      onUrl={(value) => changeTurn(() => setTurnUrl(value))}
+      onUrl={(value) =>
+        changeTurn(() => {
+          setTurnUrl(value);
+        })
+      }
       username={turnUser}
-      onUsername={(value) => changeTurn(() => setTurnUser(value))}
+      onUsername={(value) =>
+        changeTurn(() => {
+          setTurnUser(value);
+        })
+      }
       password={turnPassword}
-      onPassword={(value) => changeTurn(() => setTurnPassword(value))}
+      onPassword={(value) =>
+        changeTurn(() => {
+          setTurnPassword(value);
+        })
+      }
       relayOnly={relayOnly}
       onRelayOnly={(value) => changeTurn(() => setRelayOnly(value))}
       disabled={working}
@@ -260,7 +258,6 @@ export default function OnlineLobby({
       if (request !== attempt.current) return;
       const transport = new TrysteroTransport(servers, settings.relayOnly);
       setNetworkSettings(settings);
-      rememberTurn(settings);
       rememberTurn(settings, roomCode);
       const chosenName = name.trim().slice(0, 20);
       const publicName =
@@ -356,7 +353,7 @@ export default function OnlineLobby({
     >
       <div className="modal-heading">
         <h2 id={titleId}>
-          {translate(setupTurn ? 'Créer un serveur TURN' : 'Le voyage entre amis')}
+          {translate(setupTurn ? 'Configurer le serveur TURN' : 'Le voyage entre amis')}
         </h2>
         <button className="icon-button" aria-label={translate('Fermer le salon')} onClick={onClose}>
           <GameIcon name="close" />
@@ -430,12 +427,7 @@ export default function OnlineLobby({
                 {working ? translate('Connexion…') : translate('Rejoindre le salon')}
               </button>
             )}
-            {!setupTurn &&
-              (!invited ||
-                error ||
-                initialTurn.settings?.manual ||
-                initialTurn.settings?.endpoint) &&
-              turnPanel}
+            {!setupTurn && (!invited || error || requiredTurn) && turnPanel}
           </form>
         ) : (
           <>
@@ -481,7 +473,7 @@ export default function OnlineLobby({
                   {translate(
                     networkSettings.relayOnly
                       ? 'Mode réseau : TURN obligatoire'
-                      : networkSettings.endpoint || networkSettings.manual
+                      : import.meta.env.VITE_TURN_CREDENTIALS_URL || networkSettings.manual
                         ? 'Mode réseau : direct avec secours TURN'
                         : 'Mode réseau : connexion directe',
                   )}
