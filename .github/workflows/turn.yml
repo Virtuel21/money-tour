@@ -17,6 +17,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - name: Configure and validate deployment kit
         run: |
@@ -33,6 +34,7 @@ jobs:
       - name: Browser relay and room checks
         env:
           TURN_QA_REAL: '1'
+          TURN_QA_PREVIEW: '1'
         run: node --env-file=deploy/turn/.env scripts/qa-turn.mjs
       - uses: actions/upload-artifact@v4
         if: always()

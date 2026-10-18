@@ -9,7 +9,7 @@ import { credentialConfig, credentialServer, credentials } from '../deploy/turn/
 process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY = '1';
 const out = path.resolve(process.env.TURN_QA_OUT ?? 'artifacts/turn-qa');
 await fs.mkdir(out, { recursive: true });
-const app = await qaServer(process.env.TURN_QA_URL, 4183);
+const app = await qaServer(process.env.TURN_QA_URL, 4183, process.env.TURN_QA_PREVIEW === '1');
 const real = process.env.TURN_QA_REAL === '1';
 const result = { url: app.url, checks: [], errors: [], realRelay: real };
 const record = (message) => {

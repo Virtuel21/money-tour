@@ -3,14 +3,22 @@ import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-export async function qaServer(existing, port) {
+export async function qaServer(existing, port, preview = false) {
   if (existing) return { url: existing.replace(/\/$/, ''), close() {} };
   const require = createRequire(new URL('../apps/web/package.json', import.meta.url));
   const vite = path.join(path.dirname(require.resolve('vite/package.json')), 'bin/vite.js');
   const url = `http://127.0.0.1:${port}`;
   const server = spawn(
     process.execPath,
-    [vite, '--host', '127.0.0.1', '--port', String(port), '--strictPort'],
+    [
+      vite,
+      ...(preview ? ['preview'] : []),
+      '--host',
+      '127.0.0.1',
+      '--port',
+      String(port),
+      '--strictPort',
+    ],
     {
       cwd: fileURLToPath(new URL('../apps/web', import.meta.url)),
       windowsHide: true,
