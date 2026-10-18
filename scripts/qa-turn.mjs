@@ -29,7 +29,7 @@ let api;
 // Local in-memory Nostr signaling avoids public relay availability in this test.
 // The game's real WebRTC transport and real Coturn data path are preserved.
 const sockets = new Set(),
-  events = new Map();
+  seenEvents = new Set();
 async function context(language = 'fr', viewport = { width: 1280, height: 900 }, network = false) {
   const ctx = await browser.newContext({ viewport });
   ctx.on('page', (page) =>
@@ -75,17 +75,20 @@ async function context(language = 'fr', viewport = { width: 1280, height: 900 },
       if (type === 'REQ') {
         const [id, ...filters] = args;
         client.subs.set(id, filters);
-        for (const event of events.values())
-          if (matches(event, filters)) socket.send(JSON.stringify(['EVENT', id, event]));
+        // Trystero uses Nostr ephemeral events (kinds 20000-29999).
+        // Relays do not replay these events when subscriptions change.
         socket.send(JSON.stringify(['EOSE', id]));
       } else if (type === 'CLOSE') client.subs.delete(args[0]);
       else if (type === 'EVENT') {
         const event = args[0];
-        events.set(event.id, event);
         socket.send(JSON.stringify(['OK', event.id, true, '']));
+        const key = socket.url() + ':' + event.id;
+        if (seenEvents.has(key)) return;
+        seenEvents.add(key);
         for (const other of sockets)
-          for (const [id, filters] of other.subs)
-            if (matches(event, filters)) other.socket.send(JSON.stringify(['EVENT', id, event]));
+          if (other.socket.url() === socket.url())
+            for (const [id, filters] of other.subs)
+              if (matches(event, filters)) other.socket.send(JSON.stringify(['EVENT', id, event]));
       }
     });
   });
