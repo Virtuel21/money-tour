@@ -23,6 +23,7 @@ const browser = await chromium.launch({
     '--use-angle=swiftshader',
     '--enable-unsafe-swiftshader',
     '--disable-dev-shm-usage',
+    ...(real ? ['--allow-loopback-in-peer-connection'] : []),
   ],
 });
 let api;
@@ -171,6 +172,64 @@ try {
           throw error;
         });
       record('real TURN allocation through manual UI');
+      await host.evaluate(async (iceServers) => {
+        const a = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'relay' });
+        const b = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'relay' });
+        let timer;
+        try {
+          await new Promise((resolve, reject) => {
+            timer = setTimeout(
+              () =>
+                reject(
+                  new Error(
+                    'Native TURN data channel timeout: ' +
+                      a.iceConnectionState +
+                      '/' +
+                      b.iceConnectionState,
+                  ),
+                ),
+              15000,
+            );
+            const toA = [],
+              toB = [];
+            a.onicecandidate = ({ candidate }) => {
+              if (candidate) {
+                if (b.remoteDescription) void b.addIceCandidate(candidate).catch(reject);
+                else toB.push(candidate);
+              }
+            };
+            b.onicecandidate = ({ candidate }) => {
+              if (candidate) {
+                if (a.remoteDescription) void a.addIceCandidate(candidate).catch(reject);
+                else toA.push(candidate);
+              }
+            };
+            b.ondatachannel = ({ channel }) => {
+              channel.onmessage = ({ data }) => channel.send(data);
+            };
+            const channel = a.createDataChannel('turn-check');
+            channel.onopen = () => channel.send('TURN data verified');
+            channel.onmessage = ({ data }) => {
+              if (data === 'TURN data verified') resolve();
+              else reject(new Error('Wrong TURN payload'));
+            };
+            void (async () => {
+              await a.setLocalDescription(await a.createOffer());
+              await b.setRemoteDescription(a.localDescription);
+              await Promise.all(toB.map((candidate) => b.addIceCandidate(candidate)));
+              await b.setLocalDescription(await b.createAnswer());
+              await a.setRemoteDescription(b.localDescription);
+              await Promise.all(toA.map((candidate) => a.addIceCandidate(candidate)));
+            })().catch(reject);
+          });
+        } finally {
+          clearTimeout(timer);
+          a.close();
+          b.close();
+        }
+      }, credentials(config).iceServers);
+      record('real TURN data channel echo through mandatory relay');
+
       if (mode === 'service') {
         await host.getByLabel('Méthode de configuration').selectOption('service');
         await host.getByLabel('URL du service TURN').fill(endpoint);
