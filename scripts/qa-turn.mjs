@@ -5,6 +5,8 @@ import { chromium } from 'playwright';
 import { qaServer } from './qa-server.mjs';
 import { credentialConfig, credentialServer, credentials } from '../deploy/turn/server.mjs';
 
+// Remote font availability must not block network diagnostics.
+process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY = '1';
 const out = path.resolve(process.env.TURN_QA_OUT ?? 'artifacts/turn-qa');
 await fs.mkdir(out, { recursive: true });
 const app = await qaServer(process.env.TURN_QA_URL, 4183);
@@ -30,6 +32,12 @@ const sockets = new Set(),
   events = new Map();
 async function context(language = 'fr', viewport = { width: 1280, height: 900 }) {
   const ctx = await browser.newContext({ viewport });
+  ctx.on('page', (page) =>
+    page.on('pageerror', (error) => {
+      result.errors.push(error.message);
+      console.log(error.message);
+    }),
+  );
   await ctx.addInitScript((language) => {
     localStorage.setItem('money-tour.language.v1', language);
     window.turnQaPeers = [];
@@ -100,7 +108,6 @@ try {
   ]) {
     const ctx = await context(language, { width, height });
     const page = await ctx.newPage();
-    page.on('pageerror', (e) => result.errors.push(e.message));
     await page.goto(app.url);
     const button = page.getByRole('button', {
       name: language === 'fr' ? 'Créer un serveur TURN' : 'Create a TURN server',
@@ -158,11 +165,15 @@ try {
       const invite = host.getByRole('textbox', { name: 'Lien d’invitation', exact: true });
       await invite.waitFor();
       const link = await invite.inputValue();
+      console.log(
+        'Invitation mode: ' + new URLSearchParams(new URL(link).hash.slice(1)).get('turn'),
+      );
       assert.ok(link.includes('relay=1'));
       assert.equal(link.includes(config.secret), false);
       const guestContext = await context();
       const guest = await guestContext.newPage();
       await guest.goto(link);
+      console.log('Guest page: ' + (await guest.locator('body').innerText({ timeout: 5000 })));
       if (mode === 'service')
         assert.equal(await guest.getByLabel('URL du service TURN').inputValue(), endpoint);
       else await fillManual(guest, credentials(config).iceServers[0]);
@@ -216,7 +227,10 @@ try {
       text: document.body.innerText,
     }));
     result.failure.pages.push(state);
-    await page.screenshot({ path: path.join(out, `failure-${i}.png`) });
+    console.log(JSON.stringify(state));
+    await page
+      .screenshot({ path: path.join(out, `failure-${i}.png`), timeout: 5000 })
+      .catch(() => {});
   }
   console.log(JSON.stringify(result.failure));
   throw error;

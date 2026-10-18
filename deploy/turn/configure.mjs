@@ -58,13 +58,8 @@ export function turnFiles({
       'simple-log',
       'pidfile=/tmp/turnserver.pid',
       ...(tls
-        ? [
-            'tls-listening-port=5349',
-            'cert=/etc/coturn/cert.pem',
-            'pkey=/etc/coturn/key.pem',
-            'no-dtls',
-          ]
-        : ['no-tls', 'no-dtls']),
+        ? ['tls-listening-port=5349', 'cert=/etc/coturn/cert.pem', 'pkey=/etc/coturn/key.pem']
+        : ['no-tls']),
     ].join('\n') + '\n';
   const env = `TURN_HOST=${host}\nTURN_SECRET=${secret}\nTURN_URLS=${urls.join(',')}\nALLOWED_ORIGINS=${origin}\n`;
   return { conf, env };
