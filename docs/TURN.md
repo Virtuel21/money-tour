@@ -39,12 +39,12 @@ Autoriser dans le pare-feu du serveur **et** celui de l’hébergeur :
 | -------------------- | ---------------------------------------------------- |
 | TCP 80 et 443        | Certificat automatique Caddy et service HTTPS        |
 | UDP et TCP 3478      | Connexion du navigateur à Coturn                     |
-| UDP 49160–49260      | Trafic relayé entre participants                     |
+| UDP 49160–49671      | Trafic relayé entre participants                     |
 | TCP 5349, facultatif | TURN sur TLS, avec certificat explicitement installé |
 
 Le port 8787 reste limité à `127.0.0.1`. Le trafic sortant UDP vers les IP publiques des participants doit être autorisé. Si le serveur est derrière un NAT, adapter `external-ip=IP_PUBLIQUE/IP_PRIVÉE` dans `generated/turnserver.conf` et transférer les ports à l’identique. Un proxy HTTP classique ne transporte pas TURN. Pour Cloudflare DNS, choisir DNS seul pour le nom TURN.
 
-Le kit démarre Coturn avec authentification HMAC, identifiants de six heures, quotas d’allocations et limites de débit ; Caddy fournit HTTPS pour l’API. L’API accepte uniquement les origines configurées, sans cookies, et limite l’émission à 30 requêtes par minute et IP, 300 au total. CORS n’est pas une authentification : l’endpoint reste public et doit être surveillé. Les adresses privées, locales et multicast ne sont pas des destinations de relais autorisées. Le secret partagé reste côté serveur. Ces mécanismes suivent la [documentation Coturn](https://github.com/coturn/coturn/blob/master/examples/etc/turnserver.conf) et la [configuration Docker officielle](https://github.com/coturn/coturn/blob/master/docker/coturn/README.md).
+Le kit démarre Coturn avec authentification HMAC, identifiants de six heures, quotas d’allocations adaptés aux connexions préparées par Trystero (96 par identifiant, 512 au total) et limites de débit ; Caddy fournit HTTPS pour l’API. L’API accepte uniquement les origines configurées, sans cookies, et limite l’émission à 30 requêtes par minute et IP, 300 au total. CORS n’est pas une authentification : l’endpoint reste public et doit être surveillé. Les adresses privées, locales et multicast ne sont pas des destinations de relais autorisées. Le secret partagé reste côté serveur. Ces mécanismes suivent la [documentation Coturn](https://github.com/coturn/coturn/blob/master/examples/etc/turnserver.conf) et la [configuration Docker officielle](https://github.com/coturn/coturn/blob/master/docker/coturn/README.md).
 
 Vérifier le service sans afficher les identifiants :
 

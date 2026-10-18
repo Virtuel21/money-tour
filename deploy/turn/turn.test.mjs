@@ -57,7 +57,7 @@ test('generates matching server secrets, quotas and TLS URLs only when certifica
   assert.ok(files.conf.includes('use-auth-secret\nstatic-auth-secret=' + args.secret));
   assert.ok(files.env.includes('TURN_SECRET=' + args.secret));
   assert.ok(files.conf.includes('denied-peer-ip=127.0.0.0-127.255.255.255'));
-  assert.ok(files.conf.includes('total-quota=120'));
+  assert.ok(files.conf.includes('total-quota=512'));
   assert.equal(files.env.includes('turns:'), false);
   assert.ok(
     turnFiles({ ...args, tls: true }).env.includes('turns:turn.example.com:5349?transport=tcp'),

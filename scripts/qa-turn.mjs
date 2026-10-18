@@ -9,7 +9,11 @@ const out = path.resolve(process.env.TURN_QA_OUT ?? 'artifacts/turn-qa');
 await fs.mkdir(out, { recursive: true });
 const app = await qaServer(process.env.TURN_QA_URL, 4183);
 const real = process.env.TURN_QA_REAL === '1';
-const result = { checks: [], errors: [], realRelay: real };
+const result = { url: app.url, checks: [], errors: [], realRelay: real };
+const record = (message) => {
+  result.checks.push(message);
+  console.log(message);
+};
 const browser = await chromium.launch({
   headless: true,
   args: [
@@ -78,7 +82,7 @@ async function screenshot(page, name) {
       ),
   );
   assert.equal(overflow, false, `${name}: horizontal overflow`);
-  result.checks.push(name);
+  record(name);
 }
 async function fillManual(page, server) {
   await page
@@ -110,7 +114,7 @@ try {
     if (language === 'fr') {
       await page.getByRole('button', { name: 'Créer le salon avec TURN', exact: true }).click();
       await page.getByRole('alert').filter({ hasText: 'Configurez un serveur TURN' }).waitFor();
-      result.checks.push('missing TURN blocks room creation');
+      record('missing TURN blocks room creation');
     }
     await page
       .getByLabel(language === 'fr' ? 'Méthode de configuration' : 'Configuration method')
@@ -128,6 +132,7 @@ try {
     await new Promise((resolve) => api.listen(0, '127.0.0.1', resolve));
     const endpoint = `http://127.0.0.1:${api.address().port}/credentials`;
     for (const mode of ['manual', 'service']) {
+      console.log('Checking TURN room: ' + mode);
       const ctx = await context();
       const host = await ctx.newPage();
       await host.goto(app.url);
@@ -144,7 +149,7 @@ try {
           result.errors.push(await host.getByRole('alert').allTextContents());
           throw error;
         });
-      result.checks.push('real TURN allocation through manual UI');
+      record('real TURN allocation through manual UI');
       if (mode === 'service') {
         await host.getByLabel('Méthode de configuration').selectOption('service');
         await host.getByLabel('URL du service TURN').fill(endpoint);
@@ -190,12 +195,12 @@ try {
         pairs.some((pair) => pair.local === 'relay' && pair.remote === 'relay'),
         JSON.stringify(pairs),
       );
-      result.checks.push('two real Trystero peers connected through relay/relay candidate pair');
+      record('two real Trystero peers connected through relay/relay candidate pair');
       await screenshot(host, 'connected-turn-room-' + mode);
       await host.getByRole('button', { name: 'Lancer la partie', exact: true }).click();
       await host.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
       await guest.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
-      result.checks.push('both peers start the game through TURN');
+      record('both peers start the game through TURN');
       await guestContext.close();
       await ctx.close();
     }

@@ -3614,3 +3614,8 @@ footer a {
 .turn-test-status {
   min-height: 1.5em;
 }
+
+.turn-panel summary {
+  min-height: 44px;
+  align-content: center;
+}
