@@ -60,7 +60,7 @@ Le lien contient un secret aléatoire de 128 bits dans son fragment, non envoyé
 
 ## Limites réseau et de confiance
 
-Pour les réseaux mobiles restrictifs, le déploiement peut fournir automatiquement des identifiants TURN temporaires via `VITE_TURN_CREDENTIALS_URL`. Voir le [diagnostic 4G/5G et la configuration du relais](docs/NETWORK_MOBILE.md). Aucun serveur TURN n'est inclus ; la recette sur réseaux physiques distincts reste nécessaire.
+Pour les réseaux mobiles restrictifs, le déploiement peut fournir automatiquement des identifiants TURN temporaires via `VITE_TURN_CREDENTIALS_URL`. Voir le [diagnostic 4G/5G et la configuration du relais](docs/NETWORK_MOBILE.md). Un kit Coturn avec service d’identifiants temporaires est fourni dans `deploy/turn/` ; voir [installer et utiliser TURN](docs/TURN.md). Le bouton « Créer un serveur TURN » sous « Créer un salon en ligne » permet la saisie manuelle, le test du relais et la création d’un salon via TURN. Le serveur doit être installé sur une machine accessible sur Internet ; la recette sur réseaux physiques distincts reste nécessaire.
 
 - Sans TURN, certains NAT, réseaux d’entreprise et connexions 4G bloquent WebRTC. Le salon affiche un diagnostic et propose des paramètres TURN facultatifs. Fournissez vos propres paramètres ; ne publiez jamais des identifiants TURN durables dans le dépôt ou le site.
 - Gardez les onglets au premier plan sur mobile. Les relais Nostr publics et STUN peuvent être indisponibles. Aucun service public gratuit n’offre une garantie de disponibilité.

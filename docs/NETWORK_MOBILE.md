@@ -28,7 +28,7 @@ Le service doit répondre en HTTPS, autoriser par CORS l'origine exacte du jeu e
 
 Le serveur émet des identifiants à durée limitée et applique ses propres quotas/limites d'abus. La clé API du fournisseur reste côté serveur. L'URL du service est publique ; elle ne doit contenir aucun secret. Le code du salon, l'identité de reprise et les données de partie ne sont pas envoyés à ce service. Trystero conserve ses STUN par défaut lorsqu'on lui passe `turnConfig`.
 
-Aucun fournisseur ni serveur TURN n'est provisionné par cette modification. L'option manuelle accepte plusieurs URL séparées par des virgules. Un transport TLS/TCP sur 443 peut aider là où UDP est filtré ; il faut que le fournisseur le propose réellement.
+Le kit auto-hébergeable `deploy/turn/` fournit Coturn et ce service ; [guide d’installation et saisie manuelle](TURN.md). Aucun serveur distant n’est provisionné automatiquement par le navigateur. L'option manuelle accepte plusieurs URL séparées par des virgules. Un transport TLS/TCP sur 443 peut aider là où UDP est filtré ; il faut que le fournisseur le propose réellement.
 
 ## Recette terrain restant à effectuer
 

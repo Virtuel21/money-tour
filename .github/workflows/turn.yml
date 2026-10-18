@@ -1,0 +1,42 @@
+name: TURN integration
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Configure and validate deployment kit
+        run: |
+          node deploy/turn/configure.mjs --host turn.example.test --ip 127.0.0.1 --origin https://virtuel21.github.io
+          docker compose -f deploy/turn/compose.yml config --quiet
+          docker compose -f deploy/turn/compose.yml build credentials
+          docker compose -f deploy/turn/compose.yml run --rm --no-deps https caddy validate --config /etc/caddy/Caddyfile
+      - name: Start real Coturn (loopback permitted only for this isolated test)
+        run: |
+          sed -i '/denied-peer-ip=127.0.0.0-127.255.255.255/d' deploy/turn/generated/turnserver.conf
+          printf '\nallow-loopback-peers\n' >> deploy/turn/generated/turnserver.conf
+          docker compose -f deploy/turn/compose.yml up -d coturn credentials
+      - name: Browser relay and room checks
+        env:
+          TURN_QA_REAL: '1'
+        run: node --env-file=deploy/turn/.env scripts/qa-turn.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: turn-browser-qa
+          path: artifacts/turn-qa
+      - name: Stop test services
+        if: always()
+        run: docker compose -f deploy/turn/compose.yml down
