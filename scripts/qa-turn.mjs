@@ -30,7 +30,7 @@ let api;
 // The game's real WebRTC transport and real Coturn data path are preserved.
 const sockets = new Set(),
   events = new Map();
-async function context(language = 'fr', viewport = { width: 1280, height: 900 }) {
+async function context(language = 'fr', viewport = { width: 1280, height: 900 }, network = false) {
   const ctx = await browser.newContext({ viewport });
   ctx.on('page', (page) =>
     page.on('pageerror', (error) => {
@@ -38,18 +38,28 @@ async function context(language = 'fr', viewport = { width: 1280, height: 900 })
       console.log(error.message);
     }),
   );
-  await ctx.addInitScript((language) => {
-    if (location.origin === 'null') return;
-    localStorage.setItem('money-tour.language.v1', language);
-    window.turnQaPeers = [];
-    const Original = window.RTCPeerConnection;
-    window.RTCPeerConnection = class extends Original {
-      constructor(...args) {
-        super(...args);
-        window.turnQaPeers.push(this);
+  await ctx.addInitScript(
+    ({ language, network }) => {
+      if (location.origin === 'null') return;
+      localStorage.setItem('money-tour.language.v1', language);
+      if (network) {
+        // Two software-rendered 3D boards share the CI CPU. Keep networking and
+        // game timers real, while limiting rendering to ten frames per second.
+        window.requestAnimationFrame = (callback) =>
+          window.setTimeout(() => callback(performance.now()), 100);
+        window.cancelAnimationFrame = window.clearTimeout;
       }
-    };
-  }, language);
+      window.turnQaPeers = [];
+      const Original = window.RTCPeerConnection;
+      window.RTCPeerConnection = class extends Original {
+        constructor(...args) {
+          super(...args);
+          window.turnQaPeers.push(this);
+        }
+      };
+    },
+    { language, network },
+  );
   await ctx.routeWebSocket(/^wss:\/\//, (socket) => {
     const client = { socket, subs: new Map() };
     sockets.add(client);
@@ -141,7 +151,7 @@ try {
     const endpoint = `http://127.0.0.1:${api.address().port}/credentials`;
     for (const mode of ['manual', 'service']) {
       console.log('Checking TURN room: ' + mode);
-      const ctx = await context();
+      const ctx = await context('fr', { width: 800, height: 720 }, true);
       const host = await ctx.newPage();
       await host.goto(app.url);
       await host.getByRole('button', { name: 'Créer un serveur TURN', exact: true }).click();
@@ -171,7 +181,7 @@ try {
       );
       assert.ok(link.includes('relay=1'));
       assert.equal(link.includes(config.secret), false);
-      const guestContext = await context();
+      const guestContext = await context('fr', { width: 800, height: 720 }, true);
       const guest = await guestContext.newPage();
       await guest.goto(link);
       await guest.getByRole('dialog').waitFor({ timeout: 60000 });
@@ -180,7 +190,7 @@ try {
         assert.equal(await guest.getByLabel('URL du service TURN').inputValue(), endpoint);
       else await fillManual(guest, credentials(config).iceServers[0]);
       await guest.getByLabel('Votre nom', { exact: true }).fill('Alex');
-      await guest.getByRole('button', { name: 'Rejoindre le salon', exact: true }).click();
+      await guest.getByLabel('Votre nom', { exact: true }).press('Enter');
       await host
         .locator('.lobby-members li')
         .filter({ hasText: 'Alex' })
@@ -210,9 +220,10 @@ try {
       );
       record('two real Trystero peers connected through relay/relay candidate pair');
       await screenshot(host, 'connected-turn-room-' + mode);
-      await host.getByRole('button', { name: 'Lancer la partie', exact: true }).click();
-      await host.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
-      await guest.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
+      await host.getByRole('button', { name: 'Lancer la partie', exact: true }).focus();
+      await host.getByRole('button', { name: 'Lancer la partie', exact: true }).press('Enter');
+      await host.locator('.game-title').waitFor({ timeout: 45000 });
+      await guest.locator('.game-title').waitFor({ timeout: 45000 });
       record('both peers start the game through TURN');
       await guestContext.close();
       await ctx.close();
