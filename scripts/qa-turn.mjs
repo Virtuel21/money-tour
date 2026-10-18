@@ -127,64 +127,73 @@ try {
     api = credentialServer(config);
     await new Promise((resolve) => api.listen(0, '127.0.0.1', resolve));
     const endpoint = `http://127.0.0.1:${api.address().port}/credentials`;
-    const ctx = await context();
-    const host = await ctx.newPage();
-    await host.goto(app.url);
-    await host.getByRole('button', { name: 'Créer un serveur TURN', exact: true }).click();
-    await host.getByLabel('Votre nom', { exact: true }).fill('Camille');
-    await fillManual(host, credentials(config).iceServers[0]);
-    await host.getByRole('button', { name: 'Tester le serveur TURN', exact: true }).click();
-    await host
-      .getByRole('status')
-      .filter({ hasText: 'Allocation réussie' })
-      .waitFor({ timeout: 20000 });
-    result.checks.push('real TURN allocation through manual UI');
-    await host.getByLabel('Méthode de configuration').selectOption('service');
-    await host.getByLabel('URL du service TURN').fill(endpoint);
-    await host.getByRole('button', { name: 'Créer le salon avec TURN', exact: true }).click();
-    const invite = host.getByRole('textbox', { name: 'Lien d’invitation', exact: true });
-    await invite.waitFor();
-    const link = await invite.inputValue();
-    assert.ok(link.includes('relay=1'));
-    assert.equal(link.includes(config.secret), false);
-    const guestContext = await context();
-    const guest = await guestContext.newPage();
-    await guest.goto(link);
-    assert.equal(await guest.getByLabel('URL du service TURN').inputValue(), endpoint);
-    await guest.getByLabel('Votre nom', { exact: true }).fill('Alex');
-    await guest.getByRole('button', { name: 'Rejoindre le salon', exact: true }).click();
-    await host.locator('.lobby-members li').filter({ hasText: 'Alex' }).waitFor({ timeout: 45000 });
-    await guest
-      .locator('.lobby-members li')
-      .filter({ hasText: 'Camille' })
-      .waitFor({ timeout: 45000 });
-    const pairs = await host.evaluate(async () => {
-      const result = [];
-      for (const peer of window.turnQaPeers) {
-        const stats = await peer.getStats();
-        for (const stat of stats.values())
-          if (stat.type === 'transport' && stat.selectedCandidatePairId) {
-            const pair = stats.get(stat.selectedCandidatePairId);
-            result.push({
-              local: stats.get(pair.localCandidateId)?.candidateType,
-              remote: stats.get(pair.remoteCandidateId)?.candidateType,
-            });
-          }
+    for (const mode of ['manual', 'service']) {
+      const ctx = await context();
+      const host = await ctx.newPage();
+      await host.goto(app.url);
+      await host.getByRole('button', { name: 'Créer un serveur TURN', exact: true }).click();
+      await host.getByLabel('Votre nom', { exact: true }).fill('Camille');
+      await fillManual(host, credentials(config).iceServers[0]);
+      await host.getByRole('button', { name: 'Tester le serveur TURN', exact: true }).click();
+      await host
+        .getByRole('status')
+        .filter({ hasText: 'Allocation réussie' })
+        .waitFor({ timeout: 20000 });
+      result.checks.push('real TURN allocation through manual UI');
+      if (mode === 'service') {
+        await host.getByLabel('Méthode de configuration').selectOption('service');
+        await host.getByLabel('URL du service TURN').fill(endpoint);
       }
-      return result;
-    });
-    assert.ok(
-      pairs.some((pair) => pair.local === 'relay' && pair.remote === 'relay'),
-      JSON.stringify(pairs),
-    );
-    result.checks.push('two real Trystero peers connected through relay/relay candidate pair');
-    await screenshot(host, 'connected-turn-room');
-    await host.getByRole('button', { name: 'Lancer la partie', exact: true }).click();
-    await host.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
-    await guest.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
-    result.checks.push('both peers start the game through TURN');
-    await guestContext.close();
-    await ctx.close();
+      await host.getByRole('button', { name: 'Créer le salon avec TURN', exact: true }).click();
+      const invite = host.getByRole('textbox', { name: 'Lien d’invitation', exact: true });
+      await invite.waitFor();
+      const link = await invite.inputValue();
+      assert.ok(link.includes('relay=1'));
+      assert.equal(link.includes(config.secret), false);
+      const guestContext = await context();
+      const guest = await guestContext.newPage();
+      await guest.goto(link);
+      if (mode === 'service')
+        assert.equal(await guest.getByLabel('URL du service TURN').inputValue(), endpoint);
+      else await fillManual(guest, credentials(config).iceServers[0]);
+      await guest.getByLabel('Votre nom', { exact: true }).fill('Alex');
+      await guest.getByRole('button', { name: 'Rejoindre le salon', exact: true }).click();
+      await host
+        .locator('.lobby-members li')
+        .filter({ hasText: 'Alex' })
+        .waitFor({ timeout: 45000 });
+      await guest
+        .locator('.lobby-members li')
+        .filter({ hasText: 'Camille' })
+        .waitFor({ timeout: 45000 });
+      const pairs = await host.evaluate(async () => {
+        const result = [];
+        for (const peer of window.turnQaPeers) {
+          const stats = await peer.getStats();
+          for (const stat of stats.values())
+            if (stat.type === 'transport' && stat.selectedCandidatePairId) {
+              const pair = stats.get(stat.selectedCandidatePairId);
+              result.push({
+                local: stats.get(pair.localCandidateId)?.candidateType,
+                remote: stats.get(pair.remoteCandidateId)?.candidateType,
+              });
+            }
+        }
+        return result;
+      });
+      assert.ok(
+        pairs.some((pair) => pair.local === 'relay' && pair.remote === 'relay'),
+        JSON.stringify(pairs),
+      );
+      result.checks.push('two real Trystero peers connected through relay/relay candidate pair');
+      await screenshot(host, 'connected-turn-room-' + mode);
+      await host.getByRole('button', { name: 'Lancer la partie', exact: true }).click();
+      await host.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
+      await guest.locator('.board-canvas canvas').first().waitFor({ timeout: 45000 });
+      result.checks.push('both peers start the game through TURN');
+      await guestContext.close();
+      await ctx.close();
+    }
   }
   assert.deepEqual(result.errors, []);
   console.log(JSON.stringify(result));

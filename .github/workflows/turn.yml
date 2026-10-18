@@ -28,6 +28,7 @@ jobs:
           sed -i '/denied-peer-ip=127.0.0.0-127.255.255.255/d' deploy/turn/generated/turnserver.conf
           printf '\nallow-loopback-peers\n' >> deploy/turn/generated/turnserver.conf
           docker compose -f deploy/turn/compose.yml up -d coturn credentials
+          curl --fail --silent --retry 10 --retry-connrefused --retry-delay 1 --output /dev/null --header 'Origin: https://virtuel21.github.io' http://127.0.0.1:8787/credentials
       - name: Browser relay and room checks
         env:
           TURN_QA_REAL: '1'
