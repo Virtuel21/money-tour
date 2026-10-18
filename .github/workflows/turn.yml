@@ -1,6 +1,7 @@
 name: TURN integration
 on:
   push:
+    branches: [main]
   pull_request:
 permissions:
   contents: read
@@ -38,6 +39,14 @@ jobs:
         with:
           name: turn-browser-qa
           path: artifacts/turn-qa
+      - name: Relay startup diagnostics
+        if: failure()
+        run: |
+          node --env-file=deploy/turn/.env --input-type=module <<'JS'
+          import { execFileSync } from 'node:child_process';
+          const logs = execFileSync('docker', ['compose', '-f', 'deploy/turn/compose.yml', 'logs', '--tail=40', 'coturn'], { encoding: 'utf8' });
+          console.log(logs.replaceAll(process.env.TURN_SECRET, '[redacted]'));
+          JS
       - name: Stop test services
         if: always()
         run: docker compose -f deploy/turn/compose.yml down

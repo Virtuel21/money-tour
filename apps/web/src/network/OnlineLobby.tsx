@@ -89,7 +89,7 @@ export default function OnlineLobby({
     initialTurn.settings?.endpoint ?? import.meta.env.VITE_TURN_CREDENTIALS_URL ?? '',
   );
   const [manual, setManual] = useState(
-    initialTurn.settings?.manual ??
+    initialTurn.settings?.manual === true ||
       !(initialTurn.settings?.endpoint || import.meta.env.VITE_TURN_CREDENTIALS_URL),
   );
   const [relayOnly, setRelayOnly] = useState(initialTurn.settings?.relayOnly ?? setupTurn);

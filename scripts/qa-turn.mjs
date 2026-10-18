@@ -138,7 +138,12 @@ try {
       await host
         .getByRole('status')
         .filter({ hasText: 'Allocation réussie' })
-        .waitFor({ timeout: 20000 });
+        .waitFor({ timeout: 20000 })
+        .catch(async (error) => {
+          await host.screenshot({ path: path.join(out, 'relay-probe-failure.png') });
+          result.errors.push(await host.getByRole('alert').allTextContents());
+          throw error;
+        });
       result.checks.push('real TURN allocation through manual UI');
       if (mode === 'service') {
         await host.getByLabel('Méthode de configuration').selectOption('service');
