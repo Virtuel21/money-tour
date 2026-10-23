@@ -156,6 +156,7 @@
   display: block;
   margin-block-start: 4px;
   font-size: calc(12px * var(--ui-text-scale, 1));
+  color: #425860;
 }
 
 .action-card-content .pocket-pages {
@@ -205,6 +206,77 @@
 
 .action-card-footer > :first-child {
   margin-block-start: 0;
+}
+
+.action-card-footer:empty {
+  display: none;
+}
+
+.action-card-actions {
+  display: grid;
+  gap: 8px;
+  min-inline-size: 0;
+}
+
+.action-card-footer :is(.primary, .secondary) {
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  margin: 0;
+  padding: 10px 12px;
+  font-size: calc(14px * var(--ui-text-scale, 1));
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.action-card-footer :is(.decision-actions, .casino-actions, .duel-choices) {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  min-inline-size: 0;
+}
+
+.action-card-footer :is(.duel-offer-actions, .duel-choices) {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.action-card-footer :is(.duel-accept-actions, .casino-actions) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.action-card-footer .decision-actions button {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 6px;
+}
+
+.action-card-footer .duel-offer-actions button > small {
+  flex-basis: 100%;
+  font-size: calc(11px * var(--ui-text-scale, 1));
+}
+
+.action-card-footer .duel-choices button {
+  min-block-size: 68px;
+  gap: 4px;
+  padding: 8px;
+}
+
+.action-card-footer .duel-choices button > span:first-child {
+  font-size: 24px;
+}
+
+.action-card-footer .casino-actions button {
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 8px;
+}
+
+.action-card-footer .cta-clock {
+  padding: 4px 6px;
+  font-size: 11px;
 }
 
 @media (max-width: 400px) {
@@ -356,5 +428,69 @@
 
   .action-card-content .duel-view .decision-actions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .action-card-footer {
+    gap: 8px;
+  }
+
+  .action-card-footer :is(.primary, .secondary) {
+    padding-block: 8px;
+  }
+
+  .action-card-footer .duel-choices button {
+    min-block-size: 60px;
+  }
+
+  .action-card-content .debt-card-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: start;
+    gap: 16px;
+  }
+
+  .action-card-content :is(.debt-card-summary, .debt-card-choices) {
+    min-inline-size: 0;
+  }
+
+  .action-card-content .debt-card-summary p {
+    margin: 0 0 8px;
+    font-size: calc(13px * var(--ui-text-scale, 1));
+    line-height: 1.4;
+  }
+
+  .action-card-content .debt-card-choices .decision-actions {
+    margin: 0;
+  }
+
+  .action-card-content .debt-card-choices .tile-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    font-size: calc(12px * var(--ui-text-scale, 1));
+  }
+
+  .action-card-content .debt-card-choices .tile-search input {
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding: 8px;
+  }
+
+  .action-card-content .debt-card-choices .tile-results {
+    margin: 0 0 6px;
+    font-size: calc(12px * var(--ui-text-scale, 1));
+  }
+
+  .action-card-content .debt-card-choices .mobile-tile-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .action-card-content .debt-card-choices .mobile-tile-list button {
+    min-block-size: 64px;
+    padding: 8px 10px;
+    font-size: calc(13px * var(--ui-text-scale, 1));
   }
 }

@@ -243,6 +243,8 @@ export default function App() {
   const [inspectedOwner, setInspectedOwner] = useState<string | null>(null);
   const [collapsedPlayers, setCollapsedPlayers] = useState<Record<string, boolean>>({});
   const [save, setSave] = useState<LocalSave | null>(() => previewScenario() ?? loadLocal());
+  const localSaveRef = useRef(save);
+  localSaveRef.current = save;
   const [screen, setScreen] = useState<'menu' | 'game'>(() =>
     previewScenario() ? 'game' : 'menu',
   );
@@ -464,15 +466,19 @@ export default function App() {
       void onlineSession.current.intent(action);
       return;
     }
-    if (!save) return;
-    const { save: next, result } = applyLocal(save, action);
+    const previous = localSaveRef.current;
+    if (!previous) return;
+    const { save: next, result } = applyLocal(previous, action);
     if (result.error) {
       setNotice('Cette action n’est plus disponible.');
       return;
     }
+    // Timers can dispatch in the same React batch as the end of a card's flight.
+    // Advance synchronously so the next tick cannot overwrite the chosen action.
+    localSaveRef.current = next;
     cinema.present(next.state, result.events);
     const messages = result.events.map((e) => eventText(e, next.state)).filter(Boolean);
-    next.history = [...messages.slice().reverse(), ...history];
+    next.history = [...messages.slice().reverse(), ...(previous.history ?? history)];
     setSave(next);
     if (messages.length) setHistory((old) => [...messages.reverse(), ...old]);
   };
@@ -2427,66 +2433,70 @@ export default function App() {
               title={translate('Réglons cette dette ensemble')}
             >
               {(card) => (
-                <>
-                  <p>
-                    {translate('À payer : ')}
-                    <strong>{translate(money(current.debt!.amount))}</strong>
-                    {translate(' · En banque :')} {translate(money(active.cash))}.
-                  </p>
-                  <p>
-                    {translate('Il manque ')}
-                    <strong>{translate(money(current.debt!.amount - active.cash))}</strong>
-                    {translate(
-                      '. Choisissez les biens à vendre. Le paiement se règle dès que le total suffit.',
-                    )}
-                  </p>
-                  <p>
-                    {translate('Valeur vendable totale :')}{' '}
-                    <strong>
+                <div className="debt-card-layout">
+                  <div className="debt-card-summary">
+                    <p>
+                      {translate('À payer : ')}
+                      <strong>{translate(money(current.debt!.amount))}</strong>
+                      {translate(' · En banque :')} {translate(money(active.cash))}.
+                    </p>
+                    <p>
+                      {translate('Il manque ')}
+                      <strong>{translate(money(current.debt!.amount - active.cash))}</strong>
                       {translate(
-                        money(
-                          legal
-                            .filter((a) => a.type === 'sell')
-                            .reduce(
-                              (sum, a) =>
-                                sum +
-                                Math.floor(
-                                  getPropertyValue(current, 'tile' in a ? a.tile : 0) *
-                                    current.config.resaleRate,
-                                ),
-                              0,
-                            ),
-                        ),
+                        '. Choisissez les biens à vendre. Le paiement se règle dès que le total suffit.',
                       )}
-                    </strong>
-                    .
-                  </p>
-                  {mobile ? (
-                    <MobileTiles
-                      state={current}
-                      choices={options.map((a) => a.tile)}
-                      onTile={(id) => {
-                        const action = options.find((a) => a.tile === id);
-                        if (action) card.run(() => dispatchDecision(action));
-                      }}
-                    />
-                  ) : (
-                    <div className="decision-actions">
-                      {available
-                        .filter((a) => a.type === 'sell')
-                        .map((a) => (
-                          <button
-                            className="secondary"
-                            key={'tile' in a ? a.tile : a.type}
-                            onClick={() => card.run(() => dispatchDecision(a))}
-                          >
-                            {translate(actionLabel(a))}
-                            <ActionClock />
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </>
+                    </p>
+                    <p>
+                      {translate('Valeur vendable totale :')}{' '}
+                      <strong>
+                        {translate(
+                          money(
+                            legal
+                              .filter((a) => a.type === 'sell')
+                              .reduce(
+                                (sum, a) =>
+                                  sum +
+                                  Math.floor(
+                                    getPropertyValue(current, 'tile' in a ? a.tile : 0) *
+                                      current.config.resaleRate,
+                                  ),
+                                0,
+                              ),
+                          ),
+                        )}
+                      </strong>
+                      .
+                    </p>
+                  </div>
+                  <div className="debt-card-choices">
+                    {mobile ? (
+                      <MobileTiles
+                        state={current}
+                        choices={options.map((a) => a.tile)}
+                        onTile={(id) => {
+                          const action = options.find((a) => a.tile === id);
+                          if (action) card.run(() => dispatchDecision(action));
+                        }}
+                      />
+                    ) : (
+                      <div className="decision-actions">
+                        {available
+                          .filter((a) => a.type === 'sell')
+                          .map((a) => (
+                            <button
+                              className="secondary"
+                              key={'tile' in a ? a.tile : a.type}
+                              onClick={() => card.run(() => dispatchDecision(a))}
+                            >
+                              {translate(actionLabel(a))}
+                              <ActionClock />
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </ActionCard>
           )}

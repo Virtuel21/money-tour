@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { CardBack, DRAWN_CARD_EXIT_MS } from './DrawnCard';
 import { GameIcon, type GameIconName } from './GameIcon';
 import { restoreDialogFocus, trapDialogFocus } from './dialogFocus';
@@ -40,6 +41,21 @@ export interface ActionCardProps {
 }
 
 const ActionCardContext = createContext<ActionCardController | null>(null);
+const ActionCardFooterContext = createContext<HTMLDivElement | null | undefined>(undefined);
+
+/** Keep decision controls visible while their explanation scrolls; standalone views stay inline. */
+export function ActionCardActions({
+  children,
+  className = '',
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  const host = useContext(ActionCardFooterContext);
+  if (host === undefined) return children;
+  if (!host) return null;
+  return createPortal(<div className={`action-card-actions ${className}`}>{children}</div>, host);
+}
 
 export function useActionCard(): ActionCardController {
   const card = useContext(ActionCardContext);
@@ -70,6 +86,7 @@ function ActionCardDialog({
   const pendingAction = useRef<(() => void) | null>(null);
   const mounted = useRef(false);
   const [leaving, setLeaving] = useState(false);
+  const [footerHost, setFooterHost] = useState<HTMLDivElement | null>(null);
 
   const finishDeparture = useCallback(() => {
     if (!mounted.current || !pendingAction.current) return;
@@ -130,59 +147,70 @@ function ActionCardDialog({
 
   return (
     <ActionCardContext.Provider value={card}>
-      <dialog
-        ref={dialogRef}
-        style={CARD_MOTION_STYLE}
-        className={`drawn-card-dialog drawn-card-event action-card-dialog${reducedMotion ? ' motion-reduced' : ''}${leaving ? ' is-leaving' : ''}`}
-        aria-labelledby={titleId}
-        aria-modal="true"
-        aria-busy={leaving || undefined}
-        onKeyDown={trapDialogFocus}
-        onCancel={(event) => {
-          event.preventDefault();
-          if (onClose) run(onClose);
-        }}
-      >
-        <div
-          className="drawn-card-motion"
-          onAnimationEnd={(event) => {
-            if (event.target === event.currentTarget && event.animationName === 'drawn-card-depart')
-              finishDeparture();
+      <ActionCardFooterContext.Provider value={footerHost}>
+        <dialog
+          ref={dialogRef}
+          style={CARD_MOTION_STYLE}
+          className={`drawn-card-dialog drawn-card-event action-card-dialog${reducedMotion ? ' motion-reduced' : ''}${leaving ? ' is-leaving' : ''}`}
+          aria-labelledby={titleId}
+          aria-modal="true"
+          aria-busy={leaving || undefined}
+          onKeyDown={trapDialogFocus}
+          onCancel={(event) => {
+            event.preventDefault();
+            if (onClose) run(onClose);
           }}
         >
-          <CardBack />
-          <article className="drawn-card-front action-card-front">
-            <div className="drawn-card-owner action-card-owner">
-              <GameIcon name={icon} />
-              {ownerLabel && <span>{ownerLabel}</span>}
-              <span className="drawn-card-brand" aria-hidden="true">
-                MONEY <b>TOUR</b>
-              </span>
-              {onClose && (
-                <button
-                  type="button"
-                  className="action-card-close"
-                  aria-label={translate('Fermer')}
-                  onClick={() => run(onClose)}
-                  disabled={leaving}
-                >
-                  <GameIcon name="close" />
-                </button>
-              )}
-            </div>
-            {status && <div className="action-card-status">{status}</div>}
-            <fieldset className="action-card-fieldset" disabled={leaving} aria-labelledby={titleId}>
-              <div className="action-card-content" tabIndex={0}>
-                <h2 id={titleId} ref={titleRef} tabIndex={-1}>
-                  {title}
-                </h2>
-                {renderContent(children)}
+          <div
+            className="drawn-card-motion"
+            onAnimationEnd={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                event.animationName === 'drawn-card-depart'
+              )
+                finishDeparture();
+            }}
+          >
+            <CardBack />
+            <article className="drawn-card-front action-card-front">
+              <div className="drawn-card-owner action-card-owner">
+                <GameIcon name={icon} />
+                {ownerLabel && <span>{ownerLabel}</span>}
+                <span className="drawn-card-brand" aria-hidden="true">
+                  MONEY <b>TOUR</b>
+                </span>
+                {onClose && (
+                  <button
+                    type="button"
+                    className="action-card-close"
+                    aria-label={translate('Fermer')}
+                    onClick={() => run(onClose)}
+                    disabled={leaving}
+                  >
+                    <GameIcon name="close" />
+                  </button>
+                )}
               </div>
-              {footer && <div className="action-card-footer">{renderContent(footer)}</div>}
-            </fieldset>
-          </article>
-        </div>
-      </dialog>
+              {status && <div className="action-card-status">{status}</div>}
+              <fieldset
+                className="action-card-fieldset"
+                disabled={leaving}
+                aria-labelledby={titleId}
+              >
+                <div className="action-card-content" tabIndex={0}>
+                  <h2 id={titleId} ref={titleRef} tabIndex={-1}>
+                    {title}
+                  </h2>
+                  {renderContent(children)}
+                </div>
+                <div className="action-card-footer" ref={setFooterHost}>
+                  {footer && renderContent(footer)}
+                </div>
+              </fieldset>
+            </article>
+          </div>
+        </dialog>
+      </ActionCardFooterContext.Provider>
     </ActionCardContext.Provider>
   );
 }

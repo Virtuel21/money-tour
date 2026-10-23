@@ -306,6 +306,23 @@ it('cancels an outgoing Festival choice if its decision expires before the card 
   expect(scene.latest!.properties[1]!.championships).toBe(0);
 });
 
+it('preserves the Festival payment and journal when its departure and the next tick share one React batch', async () => {
+  const state = game();
+  state.phase = 'championship';
+  const cash = state.players[0]!.cash;
+  window.history.replaceState(null, '', '?clock=1');
+  await mount(state);
+  await click(state.config.board[1]!.name, card());
+  // One batch deliberately runs both the 800 ms departure and the 1 s game tick.
+  await act(() => vi.advanceTimersByTime(1000));
+  expect(scene.actions.map((action) => action.type)).toEqual(['place_championship', 'tick']);
+  expect(scene.latest!.properties[1]!.championships).toBe(1);
+  expect(scene.latest!.players[0]!.cash).toBe(cash - state.config.championshipFee);
+  expect(host.querySelector('.live-actions')!.textContent?.toLowerCase()).toContain(
+    'organise un festival',
+  );
+});
+
 it('closes an insurance picker when its owner’s turn expires without applying the pending choice', async () => {
   const state = game();
   state.phase = 'end';
