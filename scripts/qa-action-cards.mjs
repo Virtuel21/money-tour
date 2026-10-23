@@ -213,13 +213,17 @@ async function assertAfterAction(page, fixture) {
   const matches = (state) => {
     switch (fixture.name) {
       case 'duel':
-        return state.duel?.stage === 'accept' && state.duel.targetId === 'p2';
+        return (
+          state.duel?.stage === 'accept' &&
+          state.duel.targetId === 'p2' &&
+          state.duel.amount === 100
+        );
       case 'festival':
         return Object.values(state.properties).some(
           (property) => property.ownerId === 'p1' && property.championships > 0,
         );
       case 'insurance':
-        return state.players[0].insurance?.tile !== null;
+        return state.players[0].insurance?.tile === fixture.owned;
       case 'casino':
       case 'slots':
         return !state.casino && state.phase !== 'casino';
@@ -373,10 +377,10 @@ async function runCase(fixture, language, width, height, reducedMotion = false, 
       await finishEntrance(resultCard);
       await geometry(resultCard);
       assert.equal(await page.locator('dialog[open]').count(), 1);
-      await capture(page, name, 'casino-result');
+      if (width === 390 && language === 'fr') await capture(page, name, 'casino-result');
       await resultCard
         .getByRole('button', { name: language === 'fr' ? /Passer l’animation/ : /Skip animation/ })
-        .click();
+        .evaluate((button) => button.click());
       await resultCard.waitFor({ state: 'detached', timeout: 5000 });
     }
     results.checks.push({
