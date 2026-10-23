@@ -1,6 +1,7 @@
 /** Real application acceptance using valid current saves, suitable for dev and public Pages.
  * ACTION_QA_URL / ACTION_QA_OUT reuse a deployment and choose the evidence destination.
  * ACTION_QA_NAMES / ACTION_QA_LANGUAGES / ACTION_QA_SCREENS can select a smaller smoke run.
+ * ACTION_QA_PROFILE=release selects 42 representative cases; public selects 21.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
@@ -402,28 +403,40 @@ async function runCase(fixture, language, width, height, reducedMotion = false, 
 
 try {
   const cases = [];
-  if (process.env.ACTION_QA_PROFILE === 'release') {
+  const profile = process.env.ACTION_QA_PROFILE;
+  const keyNames = ['duel', 'festival', 'insurance', 'casino', 'travel', 'debt'];
+  if (['release', 'public'].includes(profile)) {
     for (const fixture of fixtures) cases.push([fixture, 'fr', 390, 844]);
-    for (const fixture of fixtures) cases.push([fixture, 'en', 844, 390]);
-    for (const fixture of fixtures.filter((entry) =>
-      ['duel', 'festival', 'insurance', 'casino', 'travel', 'debt'].includes(entry.name),
+    for (const fixture of fixtures.filter(
+      (entry) => profile === 'release' || keyNames.includes(entry.name),
     ))
-      cases.push([fixture, 'fr', 1280, 900]);
+      cases.push([fixture, 'en', 844, 390]);
+    if (profile === 'release')
+      for (const fixture of fixtures.filter((entry) => keyNames.includes(entry.name)))
+        cases.push([fixture, 'fr', 1280, 900]);
   } else {
     for (const language of languages)
       for (const [width, height] of screens)
         for (const fixture of fixtures) cases.push([fixture, language, width, height]);
   }
   if (process.env.ACTION_QA_REDUCED !== '0')
-    for (const fixture of fixtures) cases.push([fixture, 'fr', 320, 740, true, true]);
-  const concurrency = Math.max(1, Number(process.env.ACTION_QA_CONCURRENCY ?? 2));
+    for (const fixture of fixtures.filter(
+      (entry) => profile !== 'public' || ['duel', 'casino', 'debt'].includes(entry.name),
+    ))
+      cases.push([fixture, 'fr', 320, 740, true, true]);
+  const concurrency = Math.max(1, Number(process.env.ACTION_QA_CONCURRENCY ?? 1));
   await Promise.all(
     Array.from({ length: concurrency }, async () => {
       while (cases.length) await runCase(...cases.shift());
     }),
   );
   assert.deepEqual(results.errors, [], 'No application errors');
-  assert.deepEqual(results.failures, [], 'All browser acceptance cases passed');
+  assert.equal(
+    results.failures.length,
+    0,
+    'Browser acceptance failures: ' +
+      results.failures.map(({ name, message }) => `${name}: ${message}`).join('; '),
+  );
   console.log(
     JSON.stringify({ checks: results.checks.length, screenshots: results.frames.length, out }),
   );

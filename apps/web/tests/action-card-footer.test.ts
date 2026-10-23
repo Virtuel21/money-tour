@@ -98,6 +98,7 @@ describe('fixed action-card controls', () => {
       challengerId: 'a',
       stage: 'offer',
       amount: 0,
+      escrow: false,
       commitments: {},
       reveals: {},
     };
