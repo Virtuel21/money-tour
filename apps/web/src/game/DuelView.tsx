@@ -170,6 +170,11 @@ export function DuelView({
                             {translate('Défier ')}
                             {state.players.find((p) => p.id === a.targetId)!.name}
                             <small>
+                              {translate('Mise : ')}
+                              {Number.isSafeInteger(Number(amount)) && Number(amount) > 0
+                                ? translate(money(Number(amount), true))
+                                : '—'}
+                              {' · '}
                               {translate('Maximum :')}{' '}
                               {translate(
                                 money(
