@@ -325,27 +325,40 @@ async function runCase(fixture, language, width, height, reducedMotion = false, 
     const button = await pickAction(dialog, fixture, language);
     const before = actionStateSignature(await savedState(page));
     await button.scrollIntoViewIfNeeded();
+    if (!reducedMotion)
+      await button.evaluate((button) => {
+        window.__actionQaDeparture = null;
+        button.addEventListener(
+          'click',
+          () => {
+            setTimeout(() => {
+              const element = button.closest('.action-card-dialog');
+              window.__actionQaDeparture = {
+                state: JSON.parse(localStorage.getItem('money-tour.local.v17')).state,
+                leaving: element?.classList.contains('is-leaving'),
+                locked:
+                  element &&
+                  [...element.querySelectorAll('button,input,select')].every((control) =>
+                    control.matches(':disabled'),
+                  ),
+                seconds:
+                  element &&
+                  parseFloat(
+                    getComputedStyle(element.querySelector('.drawn-card-motion')).animationDuration,
+                  ),
+              };
+            }, 180);
+          },
+          { once: true },
+        );
+      });
     await button.click();
     if (!reducedMotion) {
-      await page.waitForTimeout(180);
-      // Several protocol round trips can consume an entire departure: collect atomically.
-      const departure = await page.evaluate((selector) => {
-        const element = document.querySelector(selector);
-        return {
-          state: JSON.parse(localStorage.getItem('money-tour.local.v17')).state,
-          leaving: element?.classList.contains('is-leaving'),
-          locked:
-            element &&
-            [...element.querySelectorAll('button,input,select')].every((control) =>
-              control.matches(':disabled'),
-            ),
-          seconds:
-            element &&
-            parseFloat(
-              getComputedStyle(element.querySelector('.drawn-card-motion')).animationDuration,
-            ),
-        };
-      }, cardSelector);
+      // Snapshot at 180ms inside the browser, independent of protocol/host latency.
+      const departure = await page.evaluate(async () => {
+        while (!window.__actionQaDeparture) await new Promise((resolve) => setTimeout(resolve, 20));
+        return window.__actionQaDeparture;
+      });
       assert.equal(actionStateSignature(departure.state), before, 'Action waits for departure');
       assert.equal(departure.leaving, true);
       assert(departure.locked, 'Controls lock during departure to prevent double actions');
