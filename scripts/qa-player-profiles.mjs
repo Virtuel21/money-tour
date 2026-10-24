@@ -350,6 +350,19 @@ async function dialogGeometry(dialog) {
     const back = element.querySelector('.player-details-back').getBoundingClientRect();
     const body = element.querySelector('.player-details-body') ?? element;
     const heading = document.getElementById(element.getAttribute('aria-labelledby'));
+    const originalScrollTop = body.scrollTop;
+    const propertyReachability = [...element.querySelectorAll('.mini-property')].map((property) => {
+      property.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
+      const propertyBox = property.getBoundingClientRect();
+      const bodyBox = body.getBoundingClientRect();
+      return (
+        propertyBox.top >= bodyBox.top - 1 &&
+        propertyBox.bottom <= bodyBox.bottom + 1 &&
+        propertyBox.left >= bodyBox.left - 1 &&
+        propertyBox.right <= bodyBox.right + 1
+      );
+    });
+    body.scrollTop = originalScrollTop;
     return {
       bounds: {
         left: box.left,
@@ -382,6 +395,7 @@ async function dialogGeometry(dialog) {
       labelled: !!heading?.textContent.trim(),
       bodyScrolls: body.scrollHeight > body.clientHeight + 1,
       bodyHeight: body.clientHeight,
+      everyPropertyReachableByScrolling: propertyReachability.every(Boolean),
     };
   });
   assert(geometry.fits, 'Player details fit inside the viewport');
@@ -389,6 +403,10 @@ async function dialogGeometry(dialog) {
   assert(geometry.closeFits, 'Close target remains visible and touch sized');
   assert(geometry.backFits, 'Return-to-board action remains visible and touch sized');
   assert(geometry.labelled, 'Player details have an accessible heading');
+  assert(
+    geometry.everyPropertyReachableByScrolling,
+    'Every owned property can be revealed inside the details scroll area',
+  );
   return geometry;
 }
 
