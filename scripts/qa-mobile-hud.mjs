@@ -1,11 +1,12 @@
 /** Real WebGL acceptance for the compact HUD and passive insurance flow.
  * HUD_QA_URL targets a deployment; HUD_QA_OUT selects the evidence directory.
+ * HUD_QA_BROWSER=webkit runs the same checks using WebKit (default: Chromium).
  * Browser viewport, touch and warning time are emulated; no physical phone is represented.
  */
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { chromium } from 'playwright';
+import { chromium, webkit } from 'playwright';
 import { tsImport } from 'tsx/esm/api';
 import { qaServer } from './qa-server.mjs';
 
@@ -24,12 +25,14 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY = '1';
 const out = path.resolve(process.env.HUD_QA_OUT ?? '../../outputs/recette-hud/local');
 await fs.mkdir(out, { recursive: true });
 const app = await qaServer(process.env.HUD_QA_URL, 4197);
-const browser = await chromium.launch({ headless: true });
+const engine = process.env.HUD_QA_BROWSER ?? 'chromium';
+assert(['chromium', 'webkit'].includes(engine), `Unsupported HUD_QA_BROWSER: ${engine}`);
+const browser = await { chromium, webkit }[engine].launch({ headless: true });
 const report = {
   startedAt: new Date().toISOString(),
   url: app.url,
   browser: browser.version(),
-  environment: 'Headless Chromium, real WebGL; emulated touch viewports and warning timer.',
+  environment: `Headless ${engine}, real WebGL; emulated touch viewports and warning timer.`,
   checks: [],
   screenshots: [],
   errors: [],
@@ -119,7 +122,7 @@ function fixture(name) {
   assert(sameRules(state.config, config), `${name}: unchanged production rules`);
   return { version: 1, seed, state };
 }
-async function open(width, height, save) {
+async function open(width, height, save, pauseWhileLoading = false) {
   const mobile = width < 1000;
   const context = await browser.newContext({
     viewport: { width, height },
@@ -147,6 +150,9 @@ async function open(width, height, save) {
   }, save);
   await page.goto(app.url);
   await page.getByRole('button', { name: /Reprendre ma partie$/ }).click({ timeout: 45000 });
+  // Each ordinary clock tick changes seq, hence the seeded dice. Pause before
+  // waiting for models/textures so slow asset loading cannot move the fixture's RNG.
+  if (pauseWhileLoading) await page.getByRole('button', { name: 'Pause', exact: true }).click();
   await page.locator('.board-canvas canvas').waitFor({ state: 'visible', timeout: 60000 });
   await page.locator('.board-loading').waitFor({ state: 'hidden', timeout: 60000 });
   await page.waitForFunction(
@@ -154,6 +160,12 @@ async function open(width, height, save) {
       document.querySelector('.board-hit-polygons polygon')?.getAttribute('points')?.length > 10,
   );
   assert.equal(await page.locator('.board-fallback').count(), 0, 'The real board rendered');
+  if (pauseWhileLoading)
+    assert.equal(
+      (await state(page)).seq,
+      save.state.seq,
+      'Asset loading leaves the staged RNG intact',
+    );
   return { context, page };
 }
 async function toolbar(page) {
@@ -283,13 +295,24 @@ try {
     await warning.context.close();
   }
 
-  const insurance = await open(390, 844, fixture('insurance'));
+  const insuranceSave = fixture('insurance');
+  const insurance = await open(390, 844, insuranceSave, true);
   try {
     await check(
       'insurance-arrival-placement-and-next-roll-do-not-need-acknowledgement',
       async () => {
         const page = insurance.page;
+        await page.getByRole('button', { name: 'Reprendre', exact: true }).tap();
+        const beforeRoll = await state(page);
+        assert.equal(beforeRoll.seq, insuranceSave.state.seq, 'The first roll uses the staged RNG');
         await page.getByRole('button', { name: /Lancer les dés/ }).click();
+        const arrived = await state(page);
+        const insuranceTile = arrived.config.board.find((tile) => tile.type === 'insurance').id;
+        assert.equal(
+          arrived.players[0].position,
+          insuranceTile,
+          'The real roll lands on insurance',
+        );
         await page.locator('.passive-insurance-notice').waitFor();
         assert.match(
           await page.locator('.passive-insurance-notice').innerText(),
@@ -342,6 +365,9 @@ try {
         await capture(page, 'insurance-next-roll-while-information-visible');
         return {
           insuranceArrivalIsPassive: true,
+          stagedSeq: insuranceSave.state.seq,
+          beforeRollSeq: beforeRoll.seq,
+          insuranceTile,
           confirmedProperty: (await state(page)).players[0].insurance.tile,
           confirmationStillVisibleDuringNextRoll: true,
           noAcknowledgementRequired: true,
