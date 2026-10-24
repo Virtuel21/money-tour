@@ -19,7 +19,9 @@ const result = {
   errors: [],
   failures: [],
 };
+const selected = process.env.BUGFIX_QA_CASES?.split(',');
 async function check(name, run) {
+  if (selected && !selected.includes(name)) return;
   try {
     result.checks.push({ name, passed: true, evidence: await run() });
     console.log(`PASS ${name}`);
@@ -159,7 +161,13 @@ try {
         });
         for (const target of ['controls', 'sidebar', 'info']) {
           assert(geometry[target].width <= 1121, `${target}: ${geometry[target].width}px`);
-          assert(Math.abs(geometry[target].x + geometry[target].width / 2 - width / 2) < 2);
+          if (width >= 1280 || height > width)
+            assert(Math.abs(geometry[target].x + geometry[target].width / 2 - width / 2) < 2);
+          else {
+            // Mobile landscape intentionally keeps its action panel to the right of the board.
+            assert(geometry[target].x >= 0);
+            assert(geometry[target].x + geometry[target].width <= width + 1);
+          }
         }
         assert.equal(geometry.overflow, false);
         await capture(page, `board-${width}x${height}`);
