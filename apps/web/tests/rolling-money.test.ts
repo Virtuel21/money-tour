@@ -159,13 +159,18 @@ describe('mechanical cash counters', () => {
     setLanguage('en');
     await render(1234.75);
     expect(accessible()).toBe('1,234.75');
+    // ICU versions differ on en-GB compact-unit casing (K/k).
+    const compactEnglish = new Intl.NumberFormat('en-GB', {
+      notation: 'compact',
+      maximumFractionDigits: 0,
+    });
     await render(12000, true);
-    expect(accessible()).toBe('12K');
+    expect(accessible()).toBe(compactEnglish.format(12000));
     await render(15000, true);
     expect(counter().dataset.rolling).toBe('true');
     await advance(MONEY_ROLL_MS + 16);
     expect(pose(0)).toBe('translate3d(0, -5em, 0)');
-    expect(accessible()).toBe('15K');
+    expect(accessible()).toBe(compactEnglish.format(15000));
   });
 
   it('stops immediately when reduced motion is requested, including during a roll', async () => {
