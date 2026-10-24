@@ -209,7 +209,7 @@ try {
       try {
         await page.getByRole('button', { name: /Reprendre ma partie$/ }).click();
         await readyBoard(page);
-        await page.getByRole('button', { name: 'Vue globale', exact: true }).click();
+        await page.getByRole('button', { name: 'Suivre mon pion', exact: true }).click();
         await page.waitForTimeout(700);
         await capture(page, `mobile-zoom-${zoom}`);
         const composition = await page.evaluate(() => ({
