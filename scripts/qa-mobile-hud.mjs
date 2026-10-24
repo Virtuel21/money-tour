@@ -9,8 +9,16 @@ import { chromium } from 'playwright';
 import { tsImport } from 'tsx/esm/api';
 import { qaServer } from './qa-server.mjs';
 
-const { config, createGame, createRng, reduceGame, validateState, sameRules, victoryThreats } =
-  await tsImport('../packages/engine/src/index.ts', import.meta.url);
+const {
+  config,
+  createGame,
+  createRng,
+  reduceGame,
+  validateState,
+  sameRules,
+  victoryThreats,
+  monopolyGroups,
+} = await tsImport('../packages/engine/src/index.ts', import.meta.url);
 
 process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY = '1';
 const out = path.resolve(process.env.HUD_QA_OUT ?? '../../outputs/recette-hud/local');
@@ -83,8 +91,11 @@ function fixture(name) {
     state.quests[player.id] = { kind: 'laps', progress: 0, completed: false };
   }
   if (name === 'warning') {
-    for (const resort of state.config.board.filter((tile) => tile.type === 'resort').slice(0, 3))
-      state.properties[resort.id].ownerId = 'p1';
+    const groups = monopolyGroups(state.config);
+    for (const group of groups.slice(0, state.config.groupsToWin - 1))
+      for (const tile of group) state.properties[tile.id].ownerId = 'p1';
+    for (const tile of groups[state.config.groupsToWin - 1].slice(0, -1))
+      state.properties[tile.id].ownerId = 'p1';
     assert.equal(victoryThreats(state).length, 1, 'A public ownership warning is staged');
   }
   if (name === 'insurance') {
@@ -223,6 +234,7 @@ try {
         assert.equal(await page.locator('.adventure-banner').count(), 1);
         assert.match(await page.locator('.adventure-banner').innerText(), /Capitale mystère/);
         const before = mobile ? await fullBleed(page) : null;
+        await page.locator('.turn-banner').waitFor({ state: 'hidden' });
         await capture(page, `${name}-first-round`);
         await page.getByRole('button', { name: /Fin du tour/ }).click();
         await page.waitForFunction(
@@ -239,6 +251,7 @@ try {
           await fullBleed(page);
           await toolbar(page);
         }
+        await page.locator('.turn-banner').waitFor({ state: 'hidden' });
         await capture(page, `${name}-second-round`);
         return {
           ...controls,
