@@ -142,6 +142,44 @@ async function boardGeometry(page) {
         const frame = panel.querySelector('.player-portrait-frame')?.getBoundingClientRect();
         const image = panel.querySelector('.player-portrait-image')?.getBoundingClientRect();
         const heading = panel.querySelector('.player-panel-heading')?.getBoundingClientRect();
+        const statLabelsFit = [...panel.querySelectorAll('.player-panel-stats small')].every(
+          (label) => {
+            const box = label.getBoundingClientRect();
+            if (!box.width || !box.height) return true;
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            const text = range.getBoundingClientRect();
+            const tile = label.closest('.player-panel-stats > div').getBoundingClientRect();
+            return (
+              text.left >= tile.left - 1 &&
+              text.right <= tile.right + 1 &&
+              text.top >= tile.top - 1 &&
+              text.bottom <= tile.bottom + 1
+            );
+          },
+        );
+        const balanceFitsChevron = [
+          ...panel.querySelectorAll(
+            '.player-panel-heading .player-panel-money-full, .player-panel-heading .player-panel-money-compact',
+          ),
+        ].every((amount) => {
+          const amountBox = amount.getBoundingClientRect();
+          if (amountBox.width <= 2 || amountBox.height <= 2) return true;
+          const range = document.createRange();
+          range.selectNodeContents(amount);
+          const text = range.getBoundingClientRect();
+          const mark = panel.classList.contains('is-active')
+            ? panel.querySelector('.player-active-mark')
+            : panel.querySelector('.player-compact-chevron');
+          if (!mark || getComputedStyle(mark).visibility === 'hidden') return true;
+          const markBox = mark.getBoundingClientRect();
+          return (
+            !markBox.width ||
+            !markBox.height ||
+            Math.min(text.right, markBox.right) - Math.max(text.left, markBox.left) <= 0.5 ||
+            Math.min(text.bottom, markBox.bottom) - Math.max(text.top, markBox.top) <= 0.5
+          );
+        });
         const portraitCentered =
           frame &&
           image &&
@@ -162,6 +200,8 @@ async function boardGeometry(page) {
             heading.right <= rect.right + 1 &&
             heading.top >= rect.top - 1 &&
             heading.bottom <= rect.bottom + 1,
+          statLabelsFit,
+          balanceFitsChevron,
         };
       },
     );
@@ -246,6 +286,14 @@ async function boardGeometry(page) {
     assert(
       panel.headingFits,
       `${panel.player}: name/portrait/balance header stays inside its profile frame`,
+    );
+    assert(
+      panel.statLabelsFit,
+      `${panel.player}: property/lap labels stay inside their statistic tiles`,
+    );
+    assert(
+      panel.balanceFitsChevron,
+      `${panel.player}: balance/status text does not overlap the profile chevron`,
     );
     assert(panel.portraitCentered, `${panel.player}: portrait is centered in its circular frame`);
   }

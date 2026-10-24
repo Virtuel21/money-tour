@@ -314,6 +314,24 @@
   font-weight: 750;
   line-height: 1.12;
 }
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .player-panel .player-panel-stats > div {
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 4px;
+  }
+  .player-panel .player-panel-stats .game-icon {
+    width: 22px;
+    height: 22px;
+  }
+  .player-panel .player-panel-stats > div > span {
+    display: contents;
+  }
+  .player-panel .player-panel-stats small {
+    grid-column: 1 / -1;
+    overflow-wrap: anywhere;
+  }
+}
 .player-property-preview h3,
 .player-details-content h3 {
   margin: 0 0 5px;
@@ -839,6 +857,15 @@
   }
   .player-panel .player-panel-money-compactable .player-panel-money-compact {
     display: inline;
+  }
+  .player-panel.is-eliminated .player-panel-money {
+    padding-right: 0;
+  }
+  .player-panel.is-eliminated .player-panel-money strong {
+    font-size: clamp(10px, 2.75vw, 14px);
+  }
+  .player-panel.is-eliminated .player-compact-chevron {
+    display: none;
   }
   .player-compact-chevron {
     position: absolute;
