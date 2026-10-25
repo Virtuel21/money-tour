@@ -176,10 +176,21 @@ try {
           assert.equal(await page.getByRole('button', { name: /How to play/ }).count(), 0);
           assert.deepEqual(await page.locator('.mode-tabs button').allTextContents(), [
             'With friends',
+            'Online',
             'Solo & bots',
           ]);
           await page.getByRole('button', { name: 'Play on this device', exact: true }).click();
           await capture(page, prefix + '-local-setup');
+          await close(page);
+          await page.getByRole('button', { name: 'Online', exact: true }).click();
+          await page.getByRole('button', { name: 'Find a game', exact: true }).click();
+          const publicForm = page.locator('.online-modal[open]');
+          assert.equal(await publicForm.getByLabel('Your name', { exact: true }).inputValue(), '');
+          assert.equal(
+            await publicForm.getByRole('button', { name: 'Find a game', exact: true }).isDisabled(),
+            true,
+          );
+          await capture(page, prefix + '-public-search-form');
           await close(page);
           await page.getByRole('button', { name: 'Solo & bots', exact: true }).click();
           await capture(page, prefix + '-solo-setup');

@@ -81,25 +81,32 @@ try {
     const tabs = page.locator('.mode-tabs button');
     assert.deepEqual(
       await tabs.allTextContents(),
-      fr ? ['Entre amis', 'Solo & bots'] : ['With friends', 'Solo & bots'],
+      fr ? ['Entre amis', 'En ligne', 'Solo & bots'] : ['With friends', 'Online', 'Solo & bots'],
     );
     assert.equal(await tabs.nth(0).getAttribute('aria-pressed'), 'true');
-    for (let index = 0; index < 2; index++) {
+    for (let index = 0; index < 3; index++) {
       await tabs.nth(index).click();
-      assert.equal(await page.locator('.setup .seat-list').count(), index === 0 ? 0 : 1);
-      const primary = page.locator('.setup > button.primary');
+      assert.equal(await page.locator('.setup .seat-list').count(), index === 2 ? 1 : 0);
+      const actions = page.locator(
+        index === 1 ? '.public-home-actions > button' : '.setup > button',
+      );
+      const primary = page.locator('.setup button.primary.launch');
       assert.equal(await primary.count(), 1);
       assert.match(
         await primary.textContent(),
-        index === 1
+        index === 2
           ? fr
             ? /Jouer sur cet appareil/
             : /Play on this device/
-          : fr
-            ? /Créer un salon en ligne/
-            : /Create an online room/,
+          : index === 1
+            ? fr
+              ? /Trouver une partie/
+              : /Find a game/
+            : fr
+              ? /Créer un salon en ligne/
+              : /Create an online room/,
       );
-      const firstAction = await page.locator('.setup > button').first().textContent();
+      const firstAction = await actions.first().textContent();
       assert.equal(firstAction, await primary.textContent());
       assert.equal(
         await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
@@ -108,7 +115,7 @@ try {
       await capture(page, `home-${language}-${width}x${height}-${index}`);
     }
     results.checks.push(
-      `${language} ${width}x${height}: friends selected by default, ordered modes, online primary for friends, local primary for solo`,
+      `${language} ${width}x${height}: friends selected by default, ordered modes, private room primary for friends, find a game primary for online, local primary for solo`,
     );
 
     for (const kind of ['card', 'tax']) {

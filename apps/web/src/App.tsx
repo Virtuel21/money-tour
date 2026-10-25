@@ -60,6 +60,7 @@ import { previewScenario } from './game/preview';
 import { Soundscape, loadAudio } from './audio/synth';
 const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
 import type { Session, SessionView } from './network/session';
+import './network/public.css';
 import {
   applyLocal,
   colors,
@@ -276,6 +277,7 @@ export default function App() {
   const [tauntReadyAt, setTauntReadyAt] = useState(0);
   const seenTaunt = useRef('');
   const [createSalon, setCreateSalon] = useState(false);
+  const [publicMode, setPublicMode] = useState<'find' | 'create'>();
   const [lobbyKey, setLobbyKey] = useState(0);
   const [setupTurn, setSetupTurn] = useState(false);
   const [online, setOnline] = useState<SessionView | null>(null);
@@ -322,7 +324,7 @@ export default function App() {
   const [buyoutOfferKey, setBuyoutOfferKey] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(4),
-    [mode, setMode] = useState<'solo' | 'local'>('local');
+    [mode, setMode] = useState<'solo' | 'local' | 'public'>('local');
   const [minutes, setMinutes] = useState(20),
     [names, setNames] = useState(() => [translate('Vous'), 'Sacha', 'Lou', 'Noa']);
   const firstNameEdited = useRef(false);
@@ -396,6 +398,7 @@ export default function App() {
     setOnlineResume(loadOnlineResume());
     setResumeRequest(undefined);
     setCreateSalon(false);
+    setPublicMode(undefined);
     setSetupTurn(false);
     setLobbyKey((value) => value + 1);
     window.history.replaceState(window.history.state, '', `${location.pathname}${location.search}`);
@@ -601,7 +604,7 @@ export default function App() {
     setScreen('game');
     setSelected(null);
   };
-  const chooseMode = (value: 'solo' | 'local') => {
+  const chooseMode = (value: 'solo' | 'local' | 'public') => {
     setMode(value);
     setBots(value === 'solo' ? [false, true, true, true] : [false, false, false, false]);
   };
@@ -905,6 +908,7 @@ export default function App() {
                   {(
                     [
                       ['local', 'Entre amis'],
+                      ['public', 'En ligne'],
                       ['solo', 'Solo & bots'],
                     ] as const
                   ).map(([value, label]) => (
@@ -918,47 +922,75 @@ export default function App() {
                   ))}
                 </div>
                 {mode === 'solo' && localSetup}
-                {(mode === 'solo' ? ['local', 'online'] : ['online', 'local']).map(
-                  (target, index) => (
-                    <button
-                      key={target}
-                      className={index === 0 ? 'primary launch' : 'secondary local-launch'}
-                      onClick={() => {
-                        if (target === 'local') {
-                          if (mode === 'local') setModal('local-setup');
-                          else if (save && !save.state.winner) setModal('new-game');
-                          else start();
-                        } else {
+                {mode === 'public' ? (
+                  <div className="public-home-actions">
+                    <p className="public-home-intro">
+                      {translate(
+                        'Une table vous attend. Retrouvez des voyageurs et jouez sans invitation.',
+                      )}
+                    </p>
+                    {(['find', 'create'] as const).map((target) => (
+                      <button
+                        key={target}
+                        className={target === 'find' ? 'primary launch' : 'secondary local-launch'}
+                        onClick={() => {
                           detachOnline();
-                          setResumeRequest(undefined);
-                          setSetupTurn(false);
-                          setCreateSalon(true);
+                          setPublicMode(target);
                           setModal('online');
-                        }
-                      }}
-                      disabled={target === 'local' && mode === 'solo' && !validMinutes(minutes)}
-                    >
-                      {target === 'online'
-                        ? translate('Créer un salon en ligne')
-                        : save && !save.state.winner
-                          ? translate('Nouvelle partie sur cet appareil')
-                          : translate('Jouer sur cet appareil')}
-                      {index === 0 && <span aria-hidden="true"> →</span>}
-                    </button>
-                  ),
+                        }}
+                      >
+                        {translate(
+                          target === 'find' ? 'Trouver une partie' : 'Créer un salon public',
+                        )}
+                        {target === 'find' && <span aria-hidden="true"> →</span>}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  (mode === 'solo' ? ['local', 'online'] : ['online', 'local']).map(
+                    (target, index) => (
+                      <button
+                        key={target}
+                        className={index === 0 ? 'primary launch' : 'secondary local-launch'}
+                        onClick={() => {
+                          if (target === 'local') {
+                            if (mode === 'local') setModal('local-setup');
+                            else if (save && !save.state.winner) setModal('new-game');
+                            else start();
+                          } else {
+                            detachOnline();
+                            setResumeRequest(undefined);
+                            setSetupTurn(false);
+                            setCreateSalon(true);
+                            setModal('online');
+                          }
+                        }}
+                        disabled={target === 'local' && mode === 'solo' && !validMinutes(minutes)}
+                      >
+                        {target === 'online'
+                          ? translate('Créer un salon en ligne')
+                          : save && !save.state.winner
+                            ? translate('Nouvelle partie sur cet appareil')
+                            : translate('Jouer sur cet appareil')}
+                        {index === 0 && <span aria-hidden="true"> →</span>}
+                      </button>
+                    ),
+                  )
                 )}
-                <button
-                  className="secondary local-launch"
-                  onClick={() => {
-                    detachOnline();
-                    setResumeRequest(undefined);
-                    setCreateSalon(false);
-                    setSetupTurn(true);
-                    setModal('online');
-                  }}
-                >
-                  {translate('Configurer le serveur TURN')}
-                </button>
+                {mode !== 'public' && (
+                  <button
+                    className="secondary local-launch"
+                    onClick={() => {
+                      detachOnline();
+                      setResumeRequest(undefined);
+                      setCreateSalon(false);
+                      setSetupTurn(true);
+                      setModal('online');
+                    }}
+                  >
+                    {translate('Configurer le serveur TURN')}
+                  </button>
+                )}
                 {(online?.state || onlineResume) && (
                   <>
                     <button
@@ -1009,9 +1041,13 @@ export default function App() {
                 <p className="setup-note">
                   {mode === 'solo'
                     ? translate('Changez les sièges en bots pour observer une partie.')
-                    : translate(
-                        'Invitez vos amis avec le lien du salon, chacun sur son écran.',
-                      )}{' '}
+                    : mode === 'public'
+                      ? translate(
+                          'Les places libres peuvent être complétées par des joueurs IA en attendant d’autres voyageurs.',
+                        )
+                      : translate(
+                          'Invitez vos amis avec le lien du salon, chacun sur son écran.',
+                        )}{' '}
                   {translate('Sauvegarde sur cet appareil.')}
                 </p>
               </div>
@@ -1086,12 +1122,17 @@ export default function App() {
                   {current.mode === 'teams'
                     ? translate('EXPÉDITION EN ÉQUIPE')
                     : online
-                      ? translate('SALON EN LIGNE')
+                      ? translate(online.publicGame ? 'SALON PUBLIC' : 'SALON EN LIGNE')
                       : translate('PARTIE LOCALE')}{' '}
                   {translate('· TOUR DE JEU ')}
                   {current.turn}
                 </span>
                 <h1 className="game-title">{translate('Le tour de la fortune')}</h1>
+                {online?.publicGame && current.players.some((player) => player.bot) && (
+                  <p className="public-game-note">
+                    {translate('Salon complété par des joueurs IA')}
+                  </p>
+                )}
               </div>
               <div className="game-tools">
                 <button
@@ -1166,6 +1207,7 @@ export default function App() {
             <PlayerProfiles
               state={current}
               self={online?.self}
+              publicGame={online?.publicGame}
               mobile={mobile}
               inspectedOwner={inspectedOwner}
               onInspectOwner={setInspectedOwner}
@@ -1327,7 +1369,9 @@ export default function App() {
                   {paused
                     ? translate('PARTIE EN PAUSE')
                     : decisionPlayer.bot
-                      ? translate('UN BOT RÉFLÉCHIT…')
+                      ? online?.publicGame
+                        ? formatText('{0} réfléchit…', decisionPlayer.name)
+                        : translate('UN BOT RÉFLÉCHIT…')
                       : online && online.self !== decisionPlayer.id
                         ? formatText('TOUR DE {0}', decisionPlayer.name.toUpperCase())
                         : formatText('À VOUS, {0}', decisionPlayer.name.toUpperCase())}
@@ -2438,6 +2482,7 @@ export default function App() {
               key={lobbyKey}
               open={modal === 'online'}
               autoCreate={createSalon}
+              publicMode={publicMode}
               setupTurn={setupTurn}
               resume={resumeRequest}
               defaults={{
@@ -2458,6 +2503,7 @@ export default function App() {
                 setOnlineResume(loadOnlineResume());
                 setResumeRequest(undefined);
                 setCreateSalon(false);
+                setPublicMode(undefined);
                 onlineSession.current = null;
                 setOnline(null);
                 onlineSeq.current = -1;
@@ -2498,8 +2544,13 @@ export default function App() {
             state={online?.state ?? save!.state}
             deadline={online?.startGate?.deadline ?? localStartDeadline!}
             participants={online?.startGate?.participants}
+            participantNames={
+              online
+                ? Object.fromEntries(online.members.map((member) => [member.id, member.name]))
+                : undefined
+            }
             ready={online?.startGate?.ready}
-            self={online?.self}
+            self={online?.selfIdentity ?? online?.self}
             onReady={() => {
               if (onlineSession.current) void onlineSession.current.readyAdventure();
               else readyLocalAdventure();
@@ -2531,11 +2582,13 @@ export default function App() {
                   state={current}
                   stats={online ? online.stats : save?.stats}
                   onRematch={
-                    !online || online.self === online.host ? () => card.run(rematch) : undefined
+                    !online || (online.selfIdentity ?? online.self) === online.host
+                      ? () => card.run(rematch)
+                      : undefined
                   }
                   rematchDisabled={!!online && (online.busy || online.blocked)}
                   rematchLabel={
-                    online && online.self !== online.host
+                    online && (online.selfIdentity ?? online.self) !== online.host
                       ? 'L’hôte peut lancer la revanche dans ce salon.'
                       : undefined
                   }
