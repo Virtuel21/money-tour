@@ -129,6 +129,35 @@ describe('shared game messages', () => {
     expect(host.querySelector('.adventure-banner')).not.toBeNull();
   });
 
+  it('keeps public AI profiles identifiable without repeating BOT on every compact card', async () => {
+    const state = game();
+    state.players[1]!.bot = true;
+    state.currentPlayer = 1;
+    await act(() =>
+      root.render(
+        createElement(PlayerProfiles, {
+          state,
+          self: 'a',
+          publicGame: true,
+          mobile: true,
+          inspectedOwner: null,
+          onInspectOwner: vi.fn(),
+          onTile: vi.fn(),
+          onBonus: vi.fn(),
+        }),
+      ),
+    );
+    const card = host.querySelector('[data-bank="b"]')!;
+    expect(card.querySelector('.player-seat-label')?.textContent).not.toBe('BOT');
+    expect(card.querySelector('.player-panel-name b')?.textContent).toBe('Max');
+    await act(() =>
+      card.querySelector<HTMLButtonElement>('[aria-label="Voir le profil de Max"]')!.click(),
+    );
+    expect(document.querySelector('dialog[open] .public-player-kind')?.textContent).toBe(
+      'Joueur IA',
+    );
+  });
+
   it('expires a victory warning after 30 seconds even while game ticks keep rerendering it', async () => {
     const state = game();
     const islands = state.config.board.filter((tile) => tile.type === 'resort');

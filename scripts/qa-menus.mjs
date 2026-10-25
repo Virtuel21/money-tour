@@ -267,6 +267,7 @@ async function homeModes(page, browser) {
   const modes = page.getByRole('group', { name: 'Mode de jeu', exact: true });
   assert.deepEqual(await modes.getByRole('button').allTextContents(), [
     'Entre amis',
+    'En ligne',
     'Solo & bots',
   ]);
   assert.equal(await page.locator('.setup .seat-list').count(), 0);
@@ -279,20 +280,30 @@ async function homeModes(page, browser) {
     'true',
     `${browser}: Entre amis must be selected on a fresh home page`,
   );
-  for (const mode of ['Entre amis', 'Solo & bots', 'Entre amis']) {
+  for (const mode of ['Entre amis', 'En ligne', 'Solo & bots', 'Entre amis']) {
     await modes.getByRole('button', { name: mode, exact: true }).click();
     assert.equal(await page.locator('.setup .seat-list').count(), mode === 'Solo & bots' ? 1 : 0);
-    const actions = page.locator('.setup > button');
+    const actions = page.locator(
+      mode === 'En ligne' ? '.public-home-actions > button' : '.setup > button',
+    );
     assert.equal(await actions.first().getAttribute('class'), 'primary launch');
     assert.match(
       await actions.nth(0).innerText(),
-      mode === 'Solo & bots' ? /Jouer sur cet appareil/ : /Créer un salon en ligne/,
+      mode === 'Solo & bots'
+        ? /Jouer sur cet appareil/
+        : mode === 'En ligne'
+          ? /Trouver une partie/
+          : /Créer un salon en ligne/,
       `${browser}/${mode}: wrong primary action`,
     );
     assert.equal(await actions.nth(1).getAttribute('class'), 'secondary local-launch');
     assert.match(
       await actions.nth(1).innerText(),
-      mode === 'Solo & bots' ? /Créer un salon en ligne/ : /Jouer sur cet appareil/,
+      mode === 'Solo & bots'
+        ? /Créer un salon en ligne/
+        : mode === 'En ligne'
+          ? /Créer un salon public/
+          : /Jouer sur cet appareil/,
       `${browser}/${mode}: wrong secondary action`,
     );
   }

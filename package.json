@@ -14,11 +14,12 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:directory": "pnpm --filter @money-tour/directory test",
     "simulate": "tsx packages/engine/scripts/simulate.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm typecheck && pnpm lint && pnpm test:coverage && pnpm build",
+    "check": "pnpm typecheck && pnpm lint && pnpm test:coverage && pnpm test:directory && pnpm build",
     "qa:board:install": "playwright install chromium firefox webkit",
     "qa:board": "node scripts/qa-board.mjs",
     "qa:menus": "node scripts/qa-menus.mjs",
@@ -28,7 +29,8 @@
     "qa:actions": "node scripts/qa-action-cards.mjs",
     "qa:profiles": "node scripts/qa-player-profiles.mjs",
     "qa:scene": "node scripts/qa-scene-interactions.mjs",
-    "qa:lobby": "node scripts/qa-lobby-delay.mjs"
+    "qa:lobby": "node scripts/qa-lobby-delay.mjs",
+    "qa:public": "node --import tsx scripts/qa-public-games.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.0",

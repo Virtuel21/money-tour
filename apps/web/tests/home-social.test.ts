@@ -68,7 +68,7 @@ it('opens a free-for-all room from the default friends CTA without overwriting a
   persistLocal(previous);
   await mount();
   const tabs = [...document.querySelectorAll<HTMLButtonElement>('.mode-tabs button')];
-  expect(tabs.map((tab) => tab.textContent)).toEqual(['Entre amis', 'Solo & bots']);
+  expect(tabs.map((tab) => tab.textContent)).toEqual(['Entre amis', 'En ligne', 'Solo & bots']);
   expect(tabs[0]!.getAttribute('aria-pressed')).toBe('true');
   expect(button('Créer un salon en ligne').classList.contains('primary')).toBe(true);
   await click('Créer un salon en ligne');
@@ -112,6 +112,26 @@ it('makes local play primary only in solo and starts with the selected bots', as
     true,
     true,
   ]);
+});
+
+it.each([
+  ['Trouver une partie', 'find'],
+  ['Créer un salon public', 'create'],
+] as const)('opens %s without changing the saved local game', async (label, publicMode) => {
+  const previous = newLocal({
+    players: [
+      { id: 'a', name: 'Alice' },
+      { id: 'b', name: 'Bob' },
+    ],
+  });
+  persistLocal(previous);
+  await mount();
+  await click('En ligne');
+  expect(document.querySelector('.setup .seat-list')).toBeNull();
+  expect(document.querySelector('.setup-note')?.textContent).toContain('joueurs IA');
+  await click(label);
+  expect(lobby.props).toMatchObject({ publicMode, autoCreate: false, open: true });
+  expect(loadLocal()?.seed).toBe(previous.seed);
 });
 
 it.each(['local', 'online'])(
@@ -160,3 +180,55 @@ it.each(['local', 'online'])(
     else expect(loadLocal()?.state.players).toHaveLength(4);
   },
 );
+
+it('uses identity names and keeps the ready button for a public guest controlling a former AI seat', async () => {
+  await mount();
+  await click('Créer un salon en ligne');
+  const readyAdventure = vi.fn();
+  const state = newLocal({
+    players: [
+      { id: 'host', name: 'Alice' },
+      { id: 'bot-1', name: 'Nico' },
+    ],
+  }).state;
+  const view: SessionView = {
+    state,
+    publicGame: true,
+    publicJoinStatus: 'joined',
+    members: [
+      { id: 'host', name: 'Alice', key: {}, order: 0 },
+      { id: 'guest-key', name: 'Nico', key: {}, order: 1, seatId: 'bot-1' },
+    ],
+    startGate: {
+      id: 'rematch-gate',
+      deadline: Date.now() + 20000,
+      participants: ['host', 'guest-key'],
+      ready: ['host'],
+    },
+    host: 'host',
+    self: 'bot-1',
+    selfIdentity: 'guest-key',
+    connected: ['host', 'guest-key'],
+    busy: false,
+    status: 'Salon prêt',
+    incidents: [],
+    hash: '',
+    epoch: 0,
+    events: [],
+    blocked: false,
+  };
+  await act(() => {
+    (lobby.props!.onSession as (session: unknown) => void)({ close: vi.fn(), readyAdventure });
+    (lobby.props!.onView as (view: SessionView) => void)(view);
+  });
+  const introduction = document.querySelector<HTMLDialogElement>('.adventure-start[open]')!;
+  expect(
+    [...introduction.querySelectorAll('.adventure-start-players li > span:first-child')].map(
+      (element) => element.textContent,
+    ),
+  ).toEqual(['Alice', 'Nico']);
+  expect(introduction.textContent).not.toContain('guest-key');
+  expect(button('Démarrer l’aventure').disabled).toBe(false);
+  await click('Démarrer l’aventure');
+  expect(readyAdventure).toHaveBeenCalledTimes(1);
+});

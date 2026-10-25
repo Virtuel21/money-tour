@@ -17,6 +17,28 @@ const mocked = vi.hoisted(() => ({
     onPersist: (value: unknown) => void;
   }[],
   transports: vi.fn(),
+  find: vi.fn(),
+  release: vi.fn().mockResolvedValue(undefined),
+  watches: vi.fn(),
+  ready: vi.fn().mockResolvedValue(undefined),
+  leaseCloses: vi.fn(),
+  starts: vi.fn(),
+  publicSeats: vi.fn(),
+  publicView: null as SessionView | null,
+}));
+vi.mock('../src/network/matchmaking', () => ({
+  PublicMatchmaker: class {
+    find = mocked.find;
+    release = mocked.release;
+    watch(...args: unknown[]) {
+      mocked.watches(...args);
+      return {
+        ready: mocked.ready,
+        close: mocked.leaseCloses,
+        authorizePublicJoin: async () => false,
+      };
+    }
+  },
 }));
 vi.mock('../src/network/trystero', () => ({
   TrysteroTransport: class {
@@ -33,19 +55,49 @@ vi.mock('../src/network/session', () => ({
   Session: class {
     onChange = (_view: SessionView) => {};
     onPersist = (_value: unknown) => {};
+    publicGame = false;
     constructor(
       _transport: unknown,
       _user: unknown,
       public name: string,
       public creator: boolean,
+      _clock?: unknown,
+      options?: { publicGame?: boolean },
     ) {
+      this.publicGame = options?.publicGame === true;
       mocked.instances.push(this);
     }
     async join(code: string) {
       await mocked.joins(code, this.name, this.creator);
+      if (mocked.publicView) this.onChange(mocked.publicView);
+    }
+    get view(): SessionView {
+      return (
+        mocked.publicView ?? {
+          state: null,
+          members: [],
+          host: this.creator ? 'guest-id' : '',
+          self: 'guest-id',
+          connected: [],
+          busy: false,
+          status: 'Salon prêt',
+          incidents: [],
+          hash: '',
+          epoch: 0,
+          events: [],
+          blocked: false,
+          publicGame: this.publicGame,
+        }
+      );
+    }
+    async requestPublicSeat(request: unknown) {
+      mocked.publicSeats(request);
     }
     close() {
       mocked.closes();
+    }
+    async start(...args: unknown[]) {
+      mocked.starts(...args);
     }
   },
 }));
@@ -60,6 +112,14 @@ afterEach(async () => {
   mocked.closes.mockClear();
   mocked.instances.length = 0;
   mocked.transports.mockClear();
+  mocked.find.mockReset();
+  mocked.release.mockClear();
+  mocked.watches.mockClear();
+  mocked.ready.mockClear();
+  mocked.leaseCloses.mockClear();
+  mocked.starts.mockClear();
+  mocked.publicSeats.mockClear();
+  mocked.publicView = null;
 });
 
 const preferences = {
@@ -503,4 +563,123 @@ it('shares only the complete invitation link and keeps the room alive while its 
   expect(onSession).toHaveBeenCalledTimes(1);
   await act(() => root.unmount());
   expect(mocked.closes).toHaveBeenCalledTimes(1);
+});
+
+it('starts an open public table with AI seats only after an empty search and a ready directory lease', async () => {
+  history.replaceState(null, '', '/');
+  mocked.find.mockResolvedValue(null);
+  const element = await mountTurnLobby({ setupTurn: false, publicMode: 'find' });
+  expect(element.textContent).toContain('joueurs IA');
+  await act(async () => {
+    [...element.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Trouver une partie')!
+      .click();
+  });
+  expect(mocked.find).toHaveBeenCalledTimes(1);
+  expect(mocked.watches).toHaveBeenCalledTimes(1);
+  expect(mocked.ready).toHaveBeenCalledTimes(1);
+  expect(mocked.starts).toHaveBeenCalledWith(4, false, 20 * 60000, 'normal');
+  expect(mocked.ready.mock.invocationCallOrder[0]).toBeLessThan(
+    mocked.starts.mock.invocationCallOrder[0]!,
+  );
+  await act(() => root.unmount());
+  expect(mocked.leaseCloses).toHaveBeenCalledTimes(1);
+});
+
+it('cancels an active public search without creating a fallback room', async () => {
+  history.replaceState(null, '', '/');
+  mocked.find.mockImplementation(
+    ({ signal }: { signal: AbortSignal }) =>
+      new Promise((_, reject) => {
+        signal.addEventListener(
+          'abort',
+          () => reject(new DOMException('Cancelled', 'AbortError')),
+          { once: true },
+        );
+      }),
+  );
+  const onClose = vi.fn();
+  const onLeave = vi.fn();
+  const element = await mountTurnLobby({ setupTurn: false, publicMode: 'find', onClose, onLeave });
+  await act(async () => {
+    [...element.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Trouver une partie')!
+      .click();
+  });
+  expect(element.textContent).toContain('Recherche d’une table');
+  await act(async () => {
+    [...element.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Annuler la recherche')!
+      .click();
+  });
+  expect(onClose).toHaveBeenCalledTimes(1);
+  expect(onLeave).toHaveBeenCalledTimes(1);
+  expect(mocked.joins).not.toHaveBeenCalled();
+  expect(mocked.starts).not.toHaveBeenCalled();
+});
+
+it('shows directory failure instead of presenting an offline fallback as a public game', async () => {
+  history.replaceState(null, '', '/');
+  mocked.find.mockRejectedValue(new Error('Annuaire indisponible'));
+  const element = await mountTurnLobby({ setupTurn: false, publicMode: 'find' });
+  await act(async () => {
+    [...element.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Trouver une partie')!
+      .click();
+  });
+  expect(element.querySelector('[role="alert"]')?.textContent).toBe('Annuaire indisponible');
+  expect(mocked.joins).not.toHaveBeenCalled();
+  expect(mocked.starts).not.toHaveBeenCalled();
+});
+
+it('pins a public seat request to the host identity supplied by the HTTPS directory before joining', async () => {
+  history.replaceState(null, '', '/');
+  const match = {
+    roomId: 'room-id',
+    code: 'a'.repeat(32),
+    phase: 'playing',
+    seatId: 'bot-1',
+    reservationId: 'reservation-id',
+    reservationToken: 'reservation-token',
+    hostId: 'host-id',
+    expiresAt: Date.now() + 45000,
+  };
+  mocked.find.mockResolvedValue(match);
+  mocked.publicView = {
+    state: null,
+    publicGame: true,
+    publicJoinStatus: 'joined',
+    members: [
+      { id: 'host-id', name: 'Alex', key: {}, order: 0 },
+      { id: 'guest-id', name: 'Camille', key: {}, order: 1, seatId: 'bot-1' },
+    ],
+    host: 'host-id',
+    self: 'bot-1',
+    selfIdentity: 'guest-id',
+    connected: ['host-id', 'guest-id'],
+    busy: false,
+    status: 'Salon prêt',
+    incidents: [],
+    hash: '',
+    epoch: 0,
+    events: [],
+    blocked: false,
+  };
+  const element = await mountTurnLobby({ setupTurn: false, publicMode: 'find' });
+  await act(async () => {
+    [...element.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Trouver une partie')!
+      .click();
+  });
+  expect(mocked.publicSeats).toHaveBeenCalledWith({
+    seatId: match.seatId,
+    reservationId: match.reservationId,
+    reservationToken: match.reservationToken,
+    expectedHostId: match.hostId,
+  });
+  expect(mocked.publicSeats.mock.invocationCallOrder[0]).toBeLessThan(
+    mocked.joins.mock.invocationCallOrder[0]!,
+  );
+  expect(mocked.starts).not.toHaveBeenCalled();
+  expect(mocked.release).not.toHaveBeenCalled();
 });
