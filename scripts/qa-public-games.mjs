@@ -120,15 +120,8 @@ try {
     undefined,
     { timeout: 45000 },
   );
-  const ready = host.getByRole('button', { name: 'Démarrer l’aventure', exact: true });
-  if (await ready.isVisible()) {
-    try {
-      await ready.click({ timeout: 2000 });
-    } catch (error) {
-      // The twenty-second automatic start can remove this control between the check and click.
-      if (await ready.isVisible()) throw error;
-    }
-  }
+  // Exercise the automatic introduction release. Clicking its disappearing readiness
+  // control races the twenty-second timer and is covered separately by app tests.
   await waitStored(guest, 'join_seat');
   let hostSave, guestSave;
   for (let attempt = 0; attempt < 40; attempt++) {
