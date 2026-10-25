@@ -59,7 +59,6 @@ import { DurationPicker, validMinutes } from './game/DurationPicker';
 import { previewScenario } from './game/preview';
 import { Soundscape, loadAudio } from './audio/synth';
 const OnlineLobby = lazy(() => import('./network/OnlineLobby'));
-const GuidedTutorial = lazy(() => import('./game/GuidedTutorial'));
 import type { Session, SessionView } from './network/session';
 import {
   applyLocal,
@@ -251,8 +250,7 @@ export default function App() {
     previewScenario() ? 'game' : 'menu',
   );
   const [modal, setModal] = useState<
-    | 'tutorial'
-    | 'rules'
+    | 'local-setup'
     | 'credits'
     | 'settings'
     | 'insurance'
@@ -324,7 +322,7 @@ export default function App() {
   const [buyoutOfferKey, setBuyoutOfferKey] = useState('');
   const [selected, setSelected] = useState<number | null>(null);
   const [count, setCount] = useState(4),
-    [mode, setMode] = useState<'solo' | 'local' | 'teams'>('local');
+    [mode, setMode] = useState<'solo' | 'local'>('local');
   const [minutes, setMinutes] = useState(20),
     [names, setNames] = useState(() => [translate('Vous'), 'Sacha', 'Lou', 'Noa']);
   const firstNameEdited = useRef(false);
@@ -332,7 +330,6 @@ export default function App() {
     if (!firstNameEdited.current) setNames((old) => [translate('Vous'), ...old.slice(1)]);
   }, [language]);
   const [bots, setBots] = useState([false, false, false, false]);
-  const tutorialPause = useRef(false);
   const [paused, setPaused] = useState(false);
   const [reduced, setReduced] = useState(
     () => window.matchMedia('(prefers-reduced-motion: reduce)').matches,
@@ -590,9 +587,8 @@ export default function App() {
           id: `p${i + 1}`,
           name: names[i]!.trim() || `Joueur ${i + 1}`,
           bot: bots[i],
-          ...(mode === 'teams' ? { team: i % 2 } : {}),
         })),
-        mode: mode === 'teams' ? 'teams' : 'free-for-all',
+        mode: 'free-for-all',
         durationMs: minutes * 60000,
         presentationPace: comfort.pace,
       }),
@@ -605,9 +601,8 @@ export default function App() {
     setScreen('game');
     setSelected(null);
   };
-  const chooseMode = (value: 'solo' | 'local' | 'teams') => {
+  const chooseMode = (value: 'solo' | 'local') => {
     setMode(value);
-    if (value === 'teams') setCount(4);
     setBots(value === 'solo' ? [false, true, true, true] : [false, false, false, false]);
   };
   const actionLabel = (action: GameAction): string => {
@@ -786,17 +781,56 @@ export default function App() {
                             : `${current.config.board[active.position]!.name} vous accueille. Achetez, construisez ou poursuivez votre voyage.`
                           : 'Deux dés. Une destination. Une nouvelle opportunité.';
 
-  if (modal === 'tutorial')
-    return (
-      <Suspense fallback={<p>{translate('Préparation de votre partie guidée…')}</p>}>
-        <GuidedTutorial
-          onClose={() => {
-            setPaused(tutorialPause.current);
-            setModal('rules');
-          }}
-        />
-      </Suspense>
-    );
+  const localSetup = (
+    <>
+      <div className="setup-options">
+        <label>
+          {translate('Voyageurs')}
+          <select
+            aria-label={translate('Voyageurs')}
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value))}
+          >
+            {[2, 3, 4].map((n) => (
+              <option key={n} value={n}>
+                {n}
+                {translate(' joueurs')}
+              </option>
+            ))}
+          </select>
+        </label>
+        <DurationPicker value={minutes} onChange={setMinutes} />
+      </div>
+      <div className="seat-list">
+        {Array.from({ length: count }, (_, i) => (
+          <div className="seat" key={i}>
+            <span className="seat-number" style={{ background: colors[i] }}>
+              {i + 1}
+            </span>
+            <input
+              aria-label={formatText('Nom du joueur {0}', i + 1)}
+              maxLength={20}
+              value={names[i]}
+              onChange={(e) => {
+                if (i === 0) firstNameEdited.current = true;
+                setNames((old) => old.map((n, j) => (j === i ? e.target.value : n)));
+              }}
+            />
+            <select
+              aria-label={formatText('Type du joueur {0}', i + 1)}
+              value={bots[i] ? 'bot' : 'human'}
+              onChange={(e) =>
+                setBots((old) => old.map((b, j) => (j === i ? e.target.value === 'bot' : b)))
+              }
+            >
+              <option value="human">{translate('Humain')}</option>
+              <option value="bot">{translate('Bot')}</option>
+            </select>
+          </div>
+        ))}
+      </div>
+    </>
+  );
 
   return (
     <GameProviders
@@ -835,10 +869,6 @@ export default function App() {
             >
               {translate('Rejoindre un salon')}
             </button>
-            <button onClick={() => setModal('rules')}>
-              {translate('Comment jouer ')}
-              <span>↗</span>
-            </button>
             <button
               className="icon-button"
               aria-label={translate('Réglages')}
@@ -875,7 +905,6 @@ export default function App() {
                   {(
                     [
                       ['local', 'Entre amis'],
-                      ['teams', '2v2'],
                       ['solo', 'Solo & bots'],
                     ] as const
                   ).map(([value, label]) => (
@@ -888,57 +917,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
-                <div className="setup-options">
-                  <label>
-                    {translate('Voyageurs')}
-                    <select
-                      value={count}
-                      disabled={mode === 'teams'}
-                      onChange={(e) => setCount(Number(e.target.value))}
-                    >
-                      {[2, 3, 4].map((n) => (
-                        <option key={n} value={n}>
-                          {n}
-                          {translate(' joueurs')}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <DurationPicker value={minutes} onChange={setMinutes} />
-                </div>
-                <div className="seat-list">
-                  {Array.from({ length: count }, (_, i) => (
-                    <div className="seat" key={i}>
-                      <span className="seat-number" style={{ background: colors[i] }}>
-                        {i + 1}
-                      </span>
-                      <input
-                        aria-label={formatText('Nom du joueur {0}', i + 1)}
-                        maxLength={20}
-                        value={names[i]}
-                        onChange={(e) => {
-                          if (i === 0) firstNameEdited.current = true;
-                          setNames((old) => old.map((n, j) => (j === i ? e.target.value : n)));
-                        }}
-                      />
-                      <select
-                        aria-label={formatText('Type du joueur {0}', i + 1)}
-                        value={bots[i] ? 'bot' : 'human'}
-                        onChange={(e) =>
-                          setBots((old) =>
-                            old.map((b, j) => (j === i ? e.target.value === 'bot' : b)),
-                          )
-                        }
-                      >
-                        <option value="human">{translate('Humain')}</option>
-                        <option value="bot">{translate('Bot')}</option>
-                      </select>
-                      {mode === 'teams' && (
-                        <span className="team-tag">{i % 2 ? translate('B') : translate('A')}</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                {mode === 'solo' && localSetup}
                 {(mode === 'solo' ? ['local', 'online'] : ['online', 'local']).map(
                   (target, index) => (
                     <button
@@ -946,7 +925,8 @@ export default function App() {
                       className={index === 0 ? 'primary launch' : 'secondary local-launch'}
                       onClick={() => {
                         if (target === 'local') {
-                          if (save && !save.state.winner) setModal('new-game');
+                          if (mode === 'local') setModal('local-setup');
+                          else if (save && !save.state.winner) setModal('new-game');
                           else start();
                         } else {
                           detachOnline();
@@ -956,7 +936,7 @@ export default function App() {
                           setModal('online');
                         }
                       }}
-                      disabled={!validMinutes(minutes)}
+                      disabled={target === 'local' && mode === 'solo' && !validMinutes(minutes)}
                     >
                       {target === 'online'
                         ? translate('Créer un salon en ligne')
@@ -969,7 +949,6 @@ export default function App() {
                 )}
                 <button
                   className="secondary local-launch"
-                  disabled={!validMinutes(minutes)}
                   onClick={() => {
                     detachOnline();
                     setResumeRequest(undefined);
@@ -1007,7 +986,6 @@ export default function App() {
                   <>
                     <button
                       className="resume"
-                      disabled={!validMinutes(minutes)}
                       onClick={() => {
                         detachOnline();
                         cinema.reset(save.state);
@@ -1652,105 +1630,6 @@ export default function App() {
             />
           </Modal>
         )}
-        {modal === 'rules' && (
-          <Modal title={translate('Comment jouer')} onClose={() => setModal(null)}>
-            <p>
-              {translate(
-                'Apprenez en jouant : un guide éclaire les commandes et vous accompagne dans une partie simulée, à votre rythme.',
-              )}
-            </p>
-            <button
-              className="primary"
-              disabled={Boolean(online)}
-              onClick={() => {
-                tutorialPause.current = paused;
-                setPaused(true);
-                setModal('tutorial');
-              }}
-            >
-              {translate('Démarrer le tutoriel interactif')}
-            </button>
-            {online && (
-              <p>
-                {translate('Le tutoriel sera disponible après avoir quitté votre salon en ligne.')}
-              </p>
-            )}
-            <details>
-              <summary>{translate('Lire toutes les règles')}</summary>
-              <div className="rules">
-                <p className="lead">{translate('Un tour de plateau, beaucoup de possibilités.')}</p>
-                <h3>{translate('1. Lancez, voyagez, investissez')}</h3>
-                <p>
-                  {translate(
-                    'Lancez deux dés. Achetez une ville libre, améliorez une de vos villes ou payez le loyer à votre arrivée chez un adversaire. Un double permet de rejouer ; trois doubles vous envoient sur l’île.',
-                  )}
-                </p>
-                <h3>{translate('2. Construisez votre fortune')}</h3>
-                <p>
-                  {translate(
-                    'Construisez sur une ville à vous sans attendre la rue complète : jusqu’à trois maisons, puis un hôtel après ',
-                  )}
-                  {current.config.hotelUnlockLaps ?? 1}
-                  {translate(
-                    ' tours complets du plateau. Chaque passage rapporte 300. Après le loyer, toute ville adverse, même avec hôtel, et toute île peuvent être rachetées au double de sa valeur foncière.',
-                  )}
-                </p>
-                <h3>{translate('3. Plusieurs façons de gagner')}</h3>
-                <p>
-                  {translate(
-                    'Possédez toutes les propriétés achetables d’un côté, île comprise, ou complétez trois rues pour gagner. Les quatre îles réunies comptent comme une rue complète : deux rues de villes et les quatre îles donnent donc le triple monopole. Elles donnent aussi un loyer de 500. Vous gagnez aussi si tous vos adversaires font faillite. À la fin du chrono, le plus grand patrimoine gagne ; une égalité se partage.',
-                  )}
-                </p>
-                <h3>{translate('4. Des escales qui changent tout')}</h3>
-                <p>
-                  {translate(
-                    '32 cases : 6 rues de deux villes et 2 rues de trois villes, 4 îles privées, 2 cases Chance, 1 taxe, 1 casino, 1 assurance, 1 duel et 4 coins spéciaux. Le paquet contient 23 cartes Chance différentes, tirées sans remise. Les loyers sont payés automatiquement par le visiteur. Les cartes se résolvent pour leur destinataire uniquement.',
-                  )}
-                </p>
-                <p>
-                  {translate(
-                    'Selon la règle tirée, trois festivals peuvent doubler les loyers. Le Festival coûte 50 et double le loyer pendant quatre retours du propriétaire. L’île vous retient jusqu’à trois tours. Le Tour du monde ouvre un voyage payant au prochain tour, ou dès l’action supplémentaire si vous arrivez avec un double. Si votre cash manque, vendez des biens à la banque à moitié de leur valeur.',
-                  )}
-                </p>
-                <h3>{translate('5. Tentez votre chance, protégez vos biens')}</h3>
-                <p>
-                  {translate(
-                    'Les casinos proposent une roulette ou une machine à sous, sans mise. Le jackpot rapporte 10 % de votre solde ; chaque résultat gagnant vaut au moins 50 avant partage éventuel d’une alliance. Ses chances augmentent à chaque visite du casino. La case Duel permet de défier un adversaire à pierre-feuille-ciseaux avec une mise acceptée par les deux joueurs.',
-                  )}
-                </p>
-                <p>
-                  {translate(
-                    'L’assurance donne un jeton unique à placer sur un bien : il bloque une destruction ou une expropriation, puis disparaît. Squatteur se garde pour éviter un loyer. Expropriation remet une ville ou île adverse à la banque ; les cafards divisent le loyer d’un hôtel par deux pendant deux tours de son propriétaire.',
-                  )}
-                </p>
-                <p>
-                  {translate(
-                    'Fraude fiscale permet un achat à moitié prix. Jusqu’au prochain passage Départ, tomber sur Taxe coûte deux fois le prix normal de cet achat. Une dette impose de choisir les biens à vendre ; la faillite survient seulement si leur valeur totale de revente et votre compte ne suffisent pas.',
-                  )}
-                </p>
-                <p>
-                  {translate(
-                    'Alliance temporaire prélève la moitié des gains d’un joueur jusqu’à la fin de son prochain tour. Une crise économique rare (au plus deux par partie, espacées de huit tours de table) divise tous les loyers par deux pendant un tour complet de tous les joueurs. Le duel propose une mise identique acceptée par les deux adversaires : pierre, feuille, ciseaux avec choix secrets ; le gagnant remporte le pot, une égalité relance les choix sans nouvelle mise jusqu’à un vainqueur.',
-                  )}
-                </p>
-                <p>
-                  {translate(
-                    'Tremblement de terre : 3 % à chaque nouveau tour de table éligible dès le quatrième, uniquement si des bâtiments existent et hors crise. Un joueur possédant des bâtiments, puis une de ses villes construites, sont tirés au sort. Une maison disparaît ; un hôtel redevient trois maisons. L’assurance de cette ville bloque le séisme une fois. Maximum deux séismes par partie, espacés d’au moins six tours de table.',
-                  )}
-                </p>
-                <h3>{translate('À quatre, jouez en équipe')}</h3>
-                <p>
-                  {translate(
-                    'Les sièges 1 et 3 affrontent les sièges 2 et 4. Pas de loyer entre alliés ; les collections se partagent pour la victoire. Le cash reste individuel.',
-                  )}
-                </p>
-              </div>
-            </details>
-            <button className="secondary" onClick={() => setModal(null)}>
-              {translate('Fermer')}
-            </button>
-          </Modal>
-        )}
         {modal === 'credits' && (
           <Modal title={translate('Le carnet des créateurs')} onClose={() => setModal(null)}>
             <pre className="credits-text">
@@ -1812,6 +1691,29 @@ export default function App() {
               />
             )}
           </ActionCard>
+        )}
+        {modal === 'local-setup' && (
+          <Modal
+            title={translate('Jouer sur cet appareil')}
+            onClose={() => setModal(null)}
+            footer={
+              <button
+                className="primary"
+                disabled={!validMinutes(minutes)}
+                onClick={() => {
+                  if (save && !save.state.winner) setModal('new-game');
+                  else {
+                    setModal(null);
+                    start();
+                  }
+                }}
+              >
+                {translate('Lancer la partie')}
+              </button>
+            }
+          >
+            {localSetup}
+          </Modal>
         )}
         {modal === 'new-game' && save && (
           <Modal
@@ -2541,7 +2443,6 @@ export default function App() {
               defaults={{
                 name: names[0]!,
                 count,
-                teams: mode === 'teams',
                 minutes,
                 pace: comfort.pace,
               }}

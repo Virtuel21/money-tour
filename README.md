@@ -1,8 +1,8 @@
 # Money Tour
 
-Un jeu de plateau original dans un archipel ensoleillé : acheter des villes, construire, réunir des collections et faire fortune. Objectif : 2 à 4 joueurs, solo contre bots, hot-seat et salons WebRTC, avec mode 2v2.
+Un jeu de plateau original dans un archipel ensoleillé : acheter des villes, construire, réunir des collections et faire fortune. Objectif : 2 à 4 joueurs, solo contre bots, hot-seat et salons WebRTC.
 
-**[Jouer à Money Tour](https://virtuel21.github.io/money-tour/)** — version bêta, solo/bots, hot-seat et salons WebRTC, équipes 2v2. La recette sur quatre réseaux différents reste ouverte.
+**[Jouer à Money Tour](https://virtuel21.github.io/money-tour/)** — version bêta, solo/bots, hot-seat et salons WebRTC. La recette sur quatre réseaux différents reste ouverte.
 
 Prérequis : Node.js 22.12 ou supérieur et pnpm 10.32.1.
 
@@ -52,11 +52,11 @@ Le workflow `Deploy Pages` vérifie format, types, lint, tests, couverture, buil
 
 ## Jouer en ligne
 
-Un lien d'invitation ouvre directement le formulaire « Votre nom → Rejoindre le salon ». L'écran de connexion reste affiché jusqu'à l'arrivée de l'hôte, avec une nouvelle tentative et une aide réseau. Le menu **Comment jouer** propose une partie guidée de 27 escales : commandes mises en lumière, vrais achats, constructions, enchères et duels simulés, navigation libre et aucune modification de la partie sauvegardée.
+Un lien d'invitation ouvre directement le formulaire « Votre nom → Rejoindre le salon ». L'écran de connexion reste affiché jusqu'à l'arrivée de l'hôte, avec une nouvelle tentative et une aide réseau.
 
 Les offres secrètes restent affichées pendant les synchronisations réseau. Les cartes tirées apparaissent sous forme de cartes animées ; après **J'ai lu · continuer**, elles s’envolent hors de l’écran. Le joueur qui tire une carte peut utiliser ce bouton également en ligne ; les autres écrans gardent leur lecture automatique. Le réglage de réduction des animations reste respecté. Le délai de décision en ligne commence après les animations partagées.
 
-Sur l’accueil, les modes sont présentés dans l’ordre **Entre amis**, **2v2**, **Solo & bots**, avec **Entre amis** sélectionné au départ. Dans Entre amis et 2v2, « Créer un salon en ligne » est le bouton principal jaune ; le jeu sur cet appareil reste disponible juste dessous. Dans Solo & bots, le jeu local est le bouton principal. L’hôte choisit la durée, les sièges et le mode 2v2 ; les places libres deviennent des bots.
+Sur l’accueil, les modes sont présentés dans l’ordre **Entre amis**, **Solo & bots**, avec **Entre amis** sélectionné au départ. Dans Entre amis, « Créer un salon en ligne » est le bouton principal jaune ; l’hôte choisit les sièges et la durée dans le salon, et les places libres deviennent des bots. « Jouer sur cet appareil » ouvre une configuration locale des joueurs et de la durée. Dans Solo & bots, la configuration locale reste visible sur l’accueil et le jeu local est le bouton principal. Les nouvelles parties se jouent chacun pour soi ; les anciennes sauvegardes en équipes restent lisibles.
 
 Une fois le salon créé, utilisez « Copier le lien d’invitation » et envoyez ce lien à vos amis. Après la copie, « Partager le lien » apparaît sous l’URL lorsque le navigateur permet le partage natif : ce bouton ouvre le menu de partage de l’appareil et ses applications disponibles. Si le partage est indisponible, collez le lien copié dans votre messagerie. « Rejoindre un salon » permet de coller le lien complet ; ouvrir directement ce lien prépare aussi l’invitation. Le salon renouvelle sa présence pour permettre une arrivée tardive tant que la fenêtre de l’hôte reste ouverte. Après une coupure, le siège reste réservé pendant 90 secondes et le chrono des décisions attend la reconnexion. Un tirage interrompu réserve aussi ce délai au lieu de passer immédiatement le joueur en bot. Le délai habituel de 30 secondes pour une décision avec une connexion active reste applicable. Après fermeture accidentelle, rouvrez le jeu et cliquez sur « Reprendre ma partie en ligne », ou rouvrez le lien du salon : l’historique est vérifié et le contrôle humain est rétabli après synchronisation. « Reprendre mon siège » reste disponible pour une reprise manuelle.
 

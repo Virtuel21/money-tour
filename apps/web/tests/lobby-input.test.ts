@@ -76,7 +76,7 @@ async function mountTurnLobby(props: Partial<Parameters<typeof OnlineLobby>[0]> 
       createElement(OnlineLobby, {
         open: true,
         setupTurn: true,
-        defaults: { name: 'Camille', count: 2, teams: false, minutes: 20 },
+        defaults: { name: 'Camille', count: 2, minutes: 20 },
         onClose: vi.fn(),
         onSession: vi.fn(),
         onView: vi.fn(),
@@ -182,7 +182,7 @@ it('can reconnect after opening connection help while a join is still pending', 
     root.render(
       createElement(OnlineLobby, {
         open: true,
-        defaults: { name: 'Camille', count: 2, teams: false, minutes: 20 },
+        defaults: { name: 'Camille', count: 2, minutes: 20 },
         onClose: vi.fn(),
         onView: vi.fn(),
         onLeave: vi.fn(),
@@ -457,7 +457,7 @@ it('shares only the complete invitation link and keeps the room alive while its 
   const props = {
     open: true,
     autoCreate: true,
-    defaults: { name: 'Camille', count: 2, teams: false, minutes: 20 },
+    defaults: { name: 'Camille', count: 2, minutes: 20 },
     onClose: vi.fn(),
     onSession,
     onView: vi.fn(),

@@ -50,7 +50,6 @@ export default function OnlineLobby({
   defaults?: {
     name: string;
     count: number;
-    teams: boolean;
     minutes: number;
     pace?: 'normal' | 'fast';
   };
@@ -85,7 +84,6 @@ export default function OnlineLobby({
   const [sharing, setSharing] = useState(false);
   const [shareError, setShareError] = useState('');
   const [count, setCount] = useState(defaults?.count ?? 4),
-    [teams, setTeams] = useState(defaults?.teams ?? false),
     [minutes, setMinutes] = useState(defaults?.minutes ?? 20);
   const [initialPreferences] = useState(loadTurnPreferences);
   const [turnUrl, setTurnUrl] = useState(initialPreferences?.url ?? ''),
@@ -613,8 +611,8 @@ export default function OnlineLobby({
                       <label>
                         {translate('Sièges')}
                         <select
+                          aria-label={translate('Sièges')}
                           value={count}
-                          disabled={teams}
                           onChange={(e) => setCount(Number(e.target.value))}
                         >
                           {[2, 3, 4].map((n) => (
@@ -634,23 +632,12 @@ export default function OnlineLobby({
                         </select>
                       </label>
                     </div>
-                    <label className="toggle">
-                      <input
-                        type="checkbox"
-                        checked={teams}
-                        onChange={(e) => {
-                          setTeams(e.target.checked);
-                          if (e.target.checked) setCount(4);
-                        }}
-                      />{' '}
-                      {translate('Équipes 2v2 · sièges 1 et 3 contre 2 et 4')}
-                    </label>
                     <p>{translate('Les sièges libres seront occupés par des bots.')}</p>
                     <button
                       className="primary"
                       disabled={view.busy || view.blocked || !validMinutes(minutes)}
                       onClick={() =>
-                        void session.current?.start(count, teams, minutes * 60000, pace)
+                        void session.current?.start(count, false, minutes * 60000, pace)
                       }
                     >
                       {view.busy

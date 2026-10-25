@@ -81,16 +81,17 @@ try {
     const tabs = page.locator('.mode-tabs button');
     assert.deepEqual(
       await tabs.allTextContents(),
-      fr ? ['Entre amis', '2v2', 'Solo & bots'] : ['With friends', '2v2', 'Solo & bots'],
+      fr ? ['Entre amis', 'Solo & bots'] : ['With friends', 'Solo & bots'],
     );
     assert.equal(await tabs.nth(0).getAttribute('aria-pressed'), 'true');
-    for (let index = 0; index < 3; index++) {
+    for (let index = 0; index < 2; index++) {
       await tabs.nth(index).click();
+      assert.equal(await page.locator('.setup .seat-list').count(), index === 0 ? 0 : 1);
       const primary = page.locator('.setup > button.primary');
       assert.equal(await primary.count(), 1);
       assert.match(
         await primary.textContent(),
-        index === 2
+        index === 1
           ? fr
             ? /Jouer sur cet appareil/
             : /Play on this device/
@@ -107,7 +108,7 @@ try {
       await capture(page, `home-${language}-${width}x${height}-${index}`);
     }
     results.checks.push(
-      `${language} ${width}x${height}: friends selected by default, ordered modes, online primary for friends/2v2, local primary for solo`,
+      `${language} ${width}x${height}: friends selected by default, ordered modes, online primary for friends, local primary for solo`,
     );
 
     for (const kind of ['card', 'tax']) {
