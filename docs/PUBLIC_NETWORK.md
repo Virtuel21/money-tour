@@ -21,8 +21,12 @@ signing identities, including after host migration or a rematch.
 
 ## Reservation and transfer
 
-The joining client calls `requestPublicSeat({seatId, reservationId,
-reservationToken})` before `join()`. Its signature binds the room, reservation,
+The joining client calls `requestPublicSeat({expectedHostId, seatId, reservationId,
+reservationToken})` before `join()`. The HTTPS match response supplies `hostId`;
+it locks the expected signing identity until admission. Reservation credentials
+are sent only to that host's peer, never broadcast to the other players. A
+different peer claiming to be the creator cannot receive the reservation or
+replace the expected host. The joining client's signature binds the room, reservation,
 requested seat, identity and display name. A host must provide the asynchronous
 `authorizePublicJoin` callback. Missing, rejected or unavailable authorization
 fails closed. The host checks authorization again at the transfer boundary.

@@ -683,3 +683,73 @@ it('pins a public seat request to the host identity supplied by the HTTPS direct
   expect(mocked.starts).not.toHaveBeenCalled();
   expect(mocked.release).not.toHaveBeenCalled();
 });
+
+it('can reserve the same table again when it starts between matchmaking and connection', async () => {
+  history.replaceState(null, '', '/');
+  const waiting = {
+    roomId: 'transitioning-room',
+    code: 'a'.repeat(32),
+    phase: 'waiting',
+    seatId: 'lobby',
+    reservationId: 'waiting-reservation',
+    reservationToken: 'waiting-token',
+    hostId: 'host-id',
+    expiresAt: Date.now() + 45000,
+  };
+  const playing = {
+    ...waiting,
+    phase: 'playing',
+    seatId: 'bot-1',
+    reservationId: 'playing-reservation',
+    reservationToken: 'playing-token',
+  };
+  const admitted: SessionView = {
+    state: null,
+    publicGame: true,
+    publicJoinStatus: 'joined',
+    members: [
+      { id: 'host-id', name: 'Alex', key: {}, order: 0 },
+      { id: 'guest-id', name: 'Camille', key: {}, order: 1, seatId: 'bot-1' },
+    ],
+    host: 'host-id',
+    self: 'bot-1',
+    selfIdentity: 'guest-id',
+    connected: ['host-id', 'guest-id'],
+    busy: false,
+    status: 'Salon prêt',
+    incidents: [],
+    hash: '',
+    epoch: 0,
+    events: [],
+    blocked: false,
+  };
+  mocked.publicView = {
+    ...admitted,
+    publicJoinStatus: 'rejected',
+    self: 'guest-id',
+    members: admitted.members.slice(0, 1),
+  };
+  mocked.find.mockResolvedValueOnce(waiting).mockResolvedValueOnce(playing);
+  mocked.joins
+    .mockImplementationOnce(async () => {})
+    .mockImplementationOnce(async () => {
+      mocked.publicView = admitted;
+    });
+  const element = await mountTurnLobby({ setupTurn: false, publicMode: 'find' });
+  await act(async () => {
+    [...element.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Trouver une partie')!
+      .click();
+  });
+  expect(mocked.find).toHaveBeenCalledTimes(2);
+  expect(mocked.find.mock.calls[1]![0].excludeRoomIds).toEqual([]);
+  expect(mocked.release).toHaveBeenCalledExactlyOnceWith(waiting);
+  expect(mocked.publicSeats).toHaveBeenNthCalledWith(2, {
+    seatId: 'bot-1',
+    reservationId: playing.reservationId,
+    reservationToken: playing.reservationToken,
+    expectedHostId: playing.hostId,
+  });
+  expect(mocked.joins).toHaveBeenCalledTimes(2);
+  expect(mocked.starts).not.toHaveBeenCalled();
+});

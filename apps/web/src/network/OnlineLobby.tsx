@@ -457,7 +457,6 @@ export default function OnlineLobby({
           if (controller.signal.aborted || (retry === 0 && request !== attempt.current)) return;
           if (!found) break;
           reservation.current = found;
-          excluded.push(found.roomId);
           setJoiningRunning(found.phase === 'playing');
           setPublicPhase('joining');
           connecting.current = false;
@@ -479,6 +478,7 @@ export default function OnlineLobby({
           await matchmaker()
             .release(found)
             .catch(() => {});
+          if (found.phase === 'playing' || retry > 0) excluded.push(found.roomId);
           reservation.current = null;
           publicLease.current?.close();
           publicLease.current = null;
